@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { FiUser, FiSettings, FiLogOut, FiChevronDown, FiBell } from 'react-icons/fi'
 import { User } from '../hooks/useAuth'
 import { API_ENDPOINTS, apiRequest } from '../config/api'
+import NotificationButton from './NotificationButton'
 
 interface UserMenuProps {
   user: User
@@ -121,6 +122,11 @@ export default function UserMenu({ user, onLogout }: UserMenuProps) {
               Mon profil
             </Link>
 
+            {/* Activer les notifications push */}
+            <NotificationButton userEmail={user.email} />
+
+            <div className="border-t border-gray-100 my-2"></div>
+
             {/* Bouton notification de test */}
             <button
               onClick={handleTestNotification}
@@ -128,7 +134,7 @@ export default function UserMenu({ user, onLogout }: UserMenuProps) {
               className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <FiBell className={`w-4 h-4 mr-3 ${isTestingNotification ? 'animate-pulse' : ''}`} />
-              {isTestingNotification ? 'Envoi...' : 'Notification de test'}
+              {isTestingNotification ? 'Envoi...' : 'Tester notification'}
             </button>
 
             {/* Message de feedback */}

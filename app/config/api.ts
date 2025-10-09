@@ -6,25 +6,35 @@ export const API_ENDPOINTS = {
   inscription: `${API_URL}/api/inscription`,
   connexion: `${API_URL}/api/connexion`,
   notificationTest: `${API_URL}/api/notification/test`,
+  vapidPublicKey: `${API_URL}/api/notifications/vapid-public-key`,
+  notificationSubscribe: `${API_URL}/api/notifications/subscribe`,
   // Ajoutez d'autres endpoints selon votre API
 };
 
 // Helper pour les requêtes API
 export async function apiRequest(endpoint: string, options: RequestInit = {}) {
-  const response = await fetch(endpoint, {
-    ...options,
-    headers: {
-      "Content-Type": "application/json",
-      ...options.headers,
-    },
-  });
+  try {
+    const response = await fetch(endpoint, {
+      ...options,
+      headers: {
+        "Content-Type": "application/json",
+        // Header ngrok pour éviter la page d'avertissement
+        "ngrok-skip-browser-warning": "true",
+        ...options.headers,
+      },
+      mode: "cors", // Activer CORS explicitement
+    });
 
-  if (!response.ok) {
-    const error = await response
-      .json()
-      .catch(() => ({ message: "Erreur réseau" }));
-    throw new Error(error.message || `Erreur ${response.status}`);
+    if (!response.ok) {
+      const error = await response
+        .json()
+        .catch(() => ({ message: "Erreur réseau" }));
+      throw new Error(error.message || `Erreur ${response.status}`);
+    }
+
+    return response.json();
+  } catch (error) {
+    console.error("API Request Error:", error);
+    throw error;
   }
-
-  return response.json();
 }
