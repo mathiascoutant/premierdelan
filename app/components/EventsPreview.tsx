@@ -13,7 +13,7 @@ export default function EventsPreview() {
     {
       title: 'Summer Vibes',
       subtitle: '15 Juillet 2025',
-      description: 'Soirée d\'été exclusive avec piscine et DJ.',
+      description: "Soirée d'été exclusive avec piscine et DJ.",
       capacity: '80 personnes',
       status: 'Bientôt complet',
       gallery: '0 photos'
@@ -71,7 +71,7 @@ export default function EventsPreview() {
                 </div>
                 <div className="flex flex-col sm:flex-row lg:flex-col gap-3">
                   <button className="btn-primary whitespace-nowrap">
-                    S'inscrire
+                    S&apos;inscrire
                   </button>
                   <button className="btn-secondary whitespace-nowrap">
                     Voir la galerie

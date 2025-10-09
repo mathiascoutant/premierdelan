@@ -12,10 +12,10 @@ export default function Footer() {
           {/* Company Info */}
           <div className="space-y-6">
             <div className="text-xl font-medium tracking-tight">
-              PREMIER DE L'AN
+              PREMIER DE L&apos;AN
             </div>
             <p className="text-gray-400 font-light leading-relaxed text-sm">
-              Organisation d'événements privés d'excellence depuis 2010.
+              Organisation d&apos;événements privés d&apos;excellence depuis 2010.
             </p>
           </div>
 
@@ -42,7 +42,7 @@ export default function Footer() {
               </li>
               <li>
                 <a href="#contact" className="text-sm text-gray-400 hover:text-white transition-colors">
-                  S'inscrire
+                  S&apos;inscrire
                 </a>
               </li>
             </ul>
@@ -83,7 +83,7 @@ export default function Footer() {
         <div className="pt-10 border-t border-gray-800">
           <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0 text-sm text-gray-500">
             <p>
-              © {currentYear} Premier de l'An. Tous droits réservés.
+              © {currentYear} Premier de l&apos;An. Tous droits réservés.
             </p>
             <div className="flex space-x-8">
               <a href="#" className="hover:text-white transition-colors">

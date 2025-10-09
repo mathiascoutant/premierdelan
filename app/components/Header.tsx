@@ -36,7 +36,7 @@ export default function Header() {
           {/* Logo */}
           <a href="#accueil" className="group">
             <span className="text-xl font-medium tracking-tight text-black">
-              PREMIER DE L'AN
+              PREMIER DE L&apos;AN
             </span>
           </a>
 
@@ -52,7 +52,7 @@ export default function Header() {
               </a>
             ))}
             <button className="btn-primary">
-              S'inscrire
+              S&apos;inscrire
             </button>
           </div>
 
@@ -85,7 +85,7 @@ export default function Header() {
                 </a>
               ))}
               <button className="btn-primary w-full">
-                S'inscrire
+                S&apos;inscrire
               </button>
             </div>
           </div>
