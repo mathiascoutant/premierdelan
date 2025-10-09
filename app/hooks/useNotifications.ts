@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { API_ENDPOINTS } from '../config/api'
+import { API_ENDPOINTS, apiRequest } from '../config/api'
 
 // Fonction utilitaire pour convertir base64 en Uint8Array
 function urlBase64ToUint8Array(base64String: string): BufferSource {
@@ -58,17 +58,9 @@ export function useNotifications() {
       }
 
       // Récupérer la clé VAPID publique
-      const vapidResponse = await fetch(API_ENDPOINTS.vapidPublicKey, {
-        headers: {
-          'ngrok-skip-browser-warning': 'true',
-        },
+      const { publicKey } = await apiRequest(API_ENDPOINTS.vapidPublicKey, {
+        method: 'GET',
       })
-      
-      if (!vapidResponse.ok) {
-        throw new Error('Erreur lors de la récupération de la clé VAPID')
-      }
-
-      const { publicKey } = await vapidResponse.json()
 
       // S'abonner aux notifications push
       const subscription = await registration.pushManager.subscribe({
@@ -77,21 +69,13 @@ export function useNotifications() {
       })
 
       // Envoyer l'abonnement au serveur
-      const subscribeResponse = await fetch(API_ENDPOINTS.notificationSubscribe, {
+      await apiRequest(API_ENDPOINTS.notificationSubscribe, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'ngrok-skip-browser-warning': 'true',
-        },
         body: JSON.stringify({
           user_id: userEmail,
           subscription: subscription.toJSON(),
         }),
       })
-
-      if (!subscribeResponse.ok) {
-        throw new Error('Erreur lors de l\'enregistrement de l\'abonnement')
-      }
 
       setNotificationStatus({
         type: 'success',
