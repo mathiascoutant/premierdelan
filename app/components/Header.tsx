@@ -1,11 +1,15 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import Link from 'next/link'
 import { FiMenu, FiX } from 'react-icons/fi'
+import { useAuth } from '../hooks/useAuth'
+import UserMenu from './UserMenu'
 
 export default function Header() {
   const [isScrolled, setIsScrolled] = useState(false)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+  const { user, isLoading, logout } = useAuth()
 
   useEffect(() => {
     const handleScroll = () => {
@@ -20,7 +24,7 @@ export default function Header() {
     { label: 'Accueil', href: '#accueil' },
     { label: 'Événements', href: '#evenements' },
     { label: 'Comment ça marche', href: '#services' },
-    { label: 'Connexion', href: '#contact' },
+    { label: 'Connexion', href: '/connexion' },
   ]
 
   return (
@@ -42,7 +46,7 @@ export default function Header() {
 
           {/* Desktop Menu */}
           <div className="hidden md:flex items-center space-x-12">
-            {menuItems.map((item) => (
+            {menuItems.filter(item => !user || item.label !== 'Connexion').map((item) => (
               <a
                 key={item.href}
                 href={item.href}
@@ -51,9 +55,18 @@ export default function Header() {
                 {item.label}
               </a>
             ))}
-            <button className="btn-primary">
-              S&apos;inscrire
-            </button>
+            
+            {!isLoading && (
+              <>
+                {user ? (
+                  <UserMenu user={user} onLogout={logout} />
+                ) : (
+                  <Link href="/inscription" className="btn-primary">
+                    S&apos;inscrire
+                  </Link>
+                )}
+              </>
+            )}
           </div>
 
           {/* Mobile Menu Button */}
@@ -74,7 +87,48 @@ export default function Header() {
         {isMobileMenuOpen && (
           <div className="md:hidden pb-6 pt-2">
             <div className="flex flex-col space-y-6">
-              {menuItems.map((item) => (
+              {/* Profil utilisateur en haut du menu mobile */}
+              {user && (
+                <div className="pb-4 border-b border-gray-200">
+                  <div className="flex items-center space-x-3 mb-4">
+                    <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary-600 to-secondary-600 flex items-center justify-center text-white font-medium">
+                      {user.photo ? (
+                        <img 
+                          src={user.photo} 
+                          alt={user.prenom} 
+                          className="w-full h-full rounded-full object-cover"
+                        />
+                      ) : (
+                        `${user.prenom?.charAt(0) || ''}${user.nom?.charAt(0) || ''}`.toUpperCase()
+                      )}
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-gray-900">
+                        {user.prenom} {user.nom}
+                      </p>
+                      <p className="text-xs text-gray-500">
+                        {user.email}
+                      </p>
+                    </div>
+                  </div>
+                  <Link
+                    href="/profil"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className="block text-sm text-gray-700 hover:text-black transition-colors mb-2"
+                  >
+                    Mon profil
+                  </Link>
+                  <Link
+                    href="/mes-evenements"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className="block text-sm text-gray-700 hover:text-black transition-colors"
+                  >
+                    Mes événements
+                  </Link>
+                </div>
+              )}
+
+              {menuItems.filter(item => !user || item.label !== 'Connexion').map((item) => (
                 <a
                   key={item.href}
                   href={item.href}
@@ -84,9 +138,26 @@ export default function Header() {
                   {item.label}
                 </a>
               ))}
-              <button className="btn-primary w-full">
-                S&apos;inscrire
-              </button>
+              
+              {!isLoading && (
+                <>
+                  {user ? (
+                    <button
+                      onClick={() => {
+                        setIsMobileMenuOpen(false)
+                        logout()
+                      }}
+                      className="btn-secondary w-full text-center text-red-600 border-red-600 hover:bg-red-600 hover:text-white"
+                    >
+                      Déconnexion
+                    </button>
+                  ) : (
+                    <Link href="/inscription" className="btn-primary w-full block text-center">
+                      S&apos;inscrire
+                    </Link>
+                  )}
+                </>
+              )}
             </div>
           </div>
         )}

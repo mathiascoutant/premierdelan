@@ -2,7 +2,8 @@
 const nextConfig = {
   reactStrictMode: true,
   output: 'export',
-  basePath: '/premierdelan',
+  // BasePath uniquement en production (GitHub Pages)
+  basePath: process.env.NODE_ENV === 'production' ? '/premierdelan' : '',
   images: {
     unoptimized: true,
   },

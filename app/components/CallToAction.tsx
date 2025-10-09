@@ -1,5 +1,7 @@
 'use client'
 
+import Link from 'next/link'
+
 export default function CallToAction() {
   return (
     <section id="contact" className="py-32 bg-white">
@@ -51,18 +53,18 @@ export default function CallToAction() {
                 />
               </div>
               <div className="pt-6">
-                <button
-                  type="submit"
-                  className="btn-primary w-full"
+                <Link
+                  href="/inscription"
+                  className="btn-primary w-full block text-center"
                 >
                   Créer mon compte
-                </button>
+                </Link>
               </div>
               <p className="text-sm text-gray-500 text-center pt-4">
                 Déjà inscrit ?{' '}
-                <a href="#" className="text-black hover:underline">
+                <Link href="/connexion" className="text-black hover:underline">
                   Se connecter
-                </a>
+                </Link>
               </p>
             </form>
           </div>

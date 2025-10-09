@@ -1,5 +1,7 @@
 'use client'
 
+import Link from 'next/link'
+
 export default function Hero() {
   return (
     <section id="accueil" className="relative min-h-screen flex items-center justify-center bg-white">
@@ -26,12 +28,12 @@ export default function Hero() {
 
           {/* CTA Buttons */}
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-8">
-            <button className="btn-primary w-full sm:w-auto">
+            <a href="#evenements" className="btn-primary w-full sm:w-auto text-center">
               Voir les événements
-            </button>
-            <button className="btn-secondary w-full sm:w-auto">
+            </a>
+            <Link href="/inscription" className="btn-secondary w-full sm:w-auto text-center">
               Créer un compte
-            </button>
+            </Link>
           </div>
         </div>
       </div>

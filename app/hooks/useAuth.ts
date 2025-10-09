@@ -1,0 +1,43 @@
+'use client'
+
+import { useState, useEffect } from 'react'
+
+export interface User {
+  prenom: string
+  nom: string
+  email: string
+  photo?: string
+}
+
+export function useAuth() {
+  const [user, setUser] = useState<User | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
+
+  useEffect(() => {
+    // Vérifier si l'utilisateur est connecté
+    const token = localStorage.getItem('auth_token')
+    const userData = localStorage.getItem('user_data')
+
+    if (token && userData) {
+      try {
+        setUser(JSON.parse(userData))
+      } catch (error) {
+        console.error('Erreur parsing user data:', error)
+        localStorage.removeItem('user_data')
+        localStorage.removeItem('auth_token')
+      }
+    }
+    
+    setIsLoading(false)
+  }, [])
+
+  const logout = () => {
+    localStorage.removeItem('auth_token')
+    localStorage.removeItem('user_data')
+    setUser(null)
+    window.location.href = '/'
+  }
+
+  return { user, isLoading, logout }
+}
+

@@ -1,5 +1,6 @@
 'use client'
 
+import Link from 'next/link'
 import { FiInstagram, FiFacebook, FiLinkedin } from 'react-icons/fi'
 
 export default function Footer() {
@@ -41,9 +42,9 @@ export default function Footer() {
                 </a>
               </li>
               <li>
-                <a href="#contact" className="text-sm text-gray-400 hover:text-white transition-colors">
+                <Link href="/inscription" className="text-sm text-gray-400 hover:text-white transition-colors">
                   S&apos;inscrire
-                </a>
+                </Link>
               </li>
             </ul>
           </div>

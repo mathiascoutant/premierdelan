@@ -1,5 +1,7 @@
 'use client'
 
+import Link from 'next/link'
+
 export default function EventsPreview() {
   const events = [
     {
@@ -70,9 +72,9 @@ export default function EventsPreview() {
                   </div>
                 </div>
                 <div className="flex flex-col sm:flex-row lg:flex-col gap-3">
-                  <button className="btn-primary whitespace-nowrap">
+                  <Link href="/inscription" className="btn-primary whitespace-nowrap text-center">
                     S&apos;inscrire
-                  </button>
+                  </Link>
                   <button className="btn-secondary whitespace-nowrap">
                     Voir la galerie
                   </button>
