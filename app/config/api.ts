@@ -5,7 +5,6 @@ export const API_URL = "https://nia-preinstructive-nola.ngrok-free.dev";
 export const API_ENDPOINTS = {
   inscription: `${API_URL}/api/inscription`,
   connexion: `${API_URL}/api/connexion`,
-  notificationTest: `${API_URL}/api/notification/test`,
   // Firebase Cloud Messaging endpoints
   fcmSubscribe: `${API_URL}/api/fcm/subscribe`,
   fcmSend: `${API_URL}/api/fcm/send`,

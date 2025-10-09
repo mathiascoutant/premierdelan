@@ -42,13 +42,18 @@ export default function Header() {
     try {
       const token = localStorage.getItem("auth_token");
 
-      await apiRequest(API_ENDPOINTS.notificationTest, {
+      await apiRequest(API_ENDPOINTS.fcmSend, {
         method: "POST",
         headers: {
           Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
           user_id: user?.email,
+          title: "🔔 Test de notification",
+          message: "Votre système de notifications fonctionne parfaitement !",
+          data: {
+            action: "test",
+          },
         }),
       });
 
