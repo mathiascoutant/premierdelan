@@ -79,6 +79,7 @@ export default function UserMenu({ user, onLogout }: UserMenuProps) {
         {/* Photo de profil ou initiales */}
         <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary-600 to-secondary-600 flex items-center justify-center text-white font-medium text-sm">
           {user.photo ? (
+            // eslint-disable-next-line @next/next/no-img-element
             <img 
               src={user.photo} 
               alt={user.prenom} 

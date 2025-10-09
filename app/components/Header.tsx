@@ -103,6 +103,7 @@ export default function Header() {
                   <div className="flex items-center space-x-3 mb-4">
                     <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary-600 to-secondary-600 flex items-center justify-center text-white font-medium">
                       {user.photo ? (
+                        // eslint-disable-next-line @next/next/no-img-element
                         <img 
                           src={user.photo} 
                           alt={user.prenom} 
