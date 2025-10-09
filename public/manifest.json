@@ -1,0 +1,25 @@
+{
+  "name": "Premier de l'An",
+  "short_name": "PremierAn",
+  "description": "Organisation d'événements privés d'excellence",
+  "start_url": "/premierdelan/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#000000",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/premierdelan/icon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/premierdelan/icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
+

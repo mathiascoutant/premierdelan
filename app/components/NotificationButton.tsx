@@ -1,7 +1,7 @@
 'use client'
 
 import { FiBell, FiBellOff, FiCheck, FiX } from 'react-icons/fi'
-import { useNotifications } from '../hooks/useNotifications'
+import { useFirebaseNotifications } from '../hooks/useFirebaseNotifications'
 
 interface NotificationButtonProps {
   userEmail: string
@@ -16,7 +16,7 @@ export default function NotificationButton({ userEmail, className = '' }: Notifi
     setNotificationStatus,
     checkPermission,
     checkIfEnabled,
-  } = useNotifications()
+  } = useFirebaseNotifications()
 
   const permission = checkPermission()
   const isEnabled = checkIfEnabled()

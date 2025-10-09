@@ -6,8 +6,9 @@ export const API_ENDPOINTS = {
   inscription: `${API_URL}/api/inscription`,
   connexion: `${API_URL}/api/connexion`,
   notificationTest: `${API_URL}/api/notification/test`,
-  vapidPublicKey: `${API_URL}/api/notifications/vapid-public-key`,
-  notificationSubscribe: `${API_URL}/api/notifications/subscribe`,
+  // Firebase Cloud Messaging endpoints
+  fcmSubscribe: `${API_URL}/api/fcm/subscribe`,
+  fcmSend: `${API_URL}/api/fcm/send`,
   // Ajoutez d'autres endpoints selon votre API
 };
 
