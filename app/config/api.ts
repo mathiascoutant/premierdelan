@@ -17,12 +17,13 @@ export async function apiRequest(endpoint: string, options: RequestInit = {}) {
     const response = await fetch(endpoint, {
       ...options,
       headers: {
-        "Content-Type": "application/json",
-        // Header ngrok pour éviter la page d'avertissement
-        "ngrok-skip-browser-warning": "true",
         ...options.headers,
+        "Content-Type": "application/json",
+        // Header ngrok pour éviter la page d'avertissement (toujours en dernier pour ne pas être écrasé)
+        "ngrok-skip-browser-warning": "true",
       },
       mode: "cors", // Activer CORS explicitement
+      credentials: "omit", // Pas de cookies pour simplifier CORS
     });
 
     if (!response.ok) {
