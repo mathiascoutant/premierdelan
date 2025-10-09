@@ -1,38 +1,83 @@
-'use client'
+"use client";
 
-import { useState, useEffect } from 'react'
-import Link from 'next/link'
-import { FiMenu, FiX } from 'react-icons/fi'
-import { useAuth } from '../hooks/useAuth'
-import UserMenu from './UserMenu'
+import { useState, useEffect } from "react";
+import Link from "next/link";
+import { FiMenu, FiX, FiBell } from "react-icons/fi";
+import { useAuth } from "../hooks/useAuth";
+import UserMenu from "./UserMenu";
+import NotificationButton from "./NotificationButton";
+import { API_ENDPOINTS, apiRequest } from "../config/api";
 
 export default function Header() {
-  const [isScrolled, setIsScrolled] = useState(false)
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
-  const { user, isLoading, logout } = useAuth()
+  const [isScrolled, setIsScrolled] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isTestingNotification, setIsTestingNotification] = useState(false);
+  const [notificationMessage, setNotificationMessage] = useState<{
+    type: "success" | "error";
+    text: string;
+  } | null>(null);
+  const { user, isLoading, logout } = useAuth();
 
   useEffect(() => {
     const handleScroll = () => {
-      setIsScrolled(window.scrollY > 20)
-    }
+      setIsScrolled(window.scrollY > 20);
+    };
 
-    window.addEventListener('scroll', handleScroll)
-    return () => window.removeEventListener('scroll', handleScroll)
-  }, [])
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
 
   const menuItems = [
-    { label: 'Accueil', href: '#accueil', isHash: true },
-    { label: 'Événements', href: '#evenements', isHash: true },
-    { label: 'Comment ça marche', href: '#services', isHash: true },
-    { label: 'Connexion', href: '/connexion', isHash: false },
-  ]
+    { label: "Accueil", href: "#accueil", isHash: true },
+    { label: "Événements", href: "#evenements", isHash: true },
+    { label: "Comment ça marche", href: "#services", isHash: true },
+    { label: "Connexion", href: "/connexion", isHash: false },
+  ];
+
+  // Fonction pour tester les notifications (mobile)
+  const handleTestNotification = async () => {
+    setIsTestingNotification(true);
+    setNotificationMessage(null);
+
+    try {
+      const token = localStorage.getItem("auth_token");
+
+      await apiRequest(API_ENDPOINTS.notificationTest, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          user_id: user?.email,
+        }),
+      });
+
+      setNotificationMessage({
+        type: "success",
+        text: "Notification envoyée !",
+      });
+
+      setTimeout(() => {
+        setNotificationMessage(null);
+      }, 3000);
+    } catch (error: any) {
+      setNotificationMessage({
+        type: "error",
+        text: error.message || "Erreur lors de l'envoi",
+      });
+
+      setTimeout(() => {
+        setNotificationMessage(null);
+      }, 3000);
+    } finally {
+      setIsTestingNotification(false);
+    }
+  };
 
   return (
     <header
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-        isScrolled
-          ? 'bg-white border-b border-gray-200'
-          : 'bg-white'
+        isScrolled ? "bg-white border-b border-gray-200" : "bg-white"
       }`}
     >
       <nav className="section-container">
@@ -46,26 +91,28 @@ export default function Header() {
 
           {/* Desktop Menu */}
           <div className="hidden md:flex items-center space-x-12">
-            {menuItems.filter(item => !user || item.label !== 'Connexion').map((item) => (
-              item.isHash ? (
-                <a
-                  key={item.href}
-                  href={item.href}
-                  className="text-sm tracking-wide text-gray-600 hover:text-black transition-colors duration-200 uppercase"
-                >
-                  {item.label}
-                </a>
-              ) : (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className="text-sm tracking-wide text-gray-600 hover:text-black transition-colors duration-200 uppercase"
-                >
-                  {item.label}
-                </Link>
-              )
-            ))}
-            
+            {menuItems
+              .filter((item) => !user || item.label !== "Connexion")
+              .map((item) =>
+                item.isHash ? (
+                  <a
+                    key={item.href}
+                    href={item.href}
+                    className="text-sm tracking-wide text-gray-600 hover:text-black transition-colors duration-200 uppercase"
+                  >
+                    {item.label}
+                  </a>
+                ) : (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    className="text-sm tracking-wide text-gray-600 hover:text-black transition-colors duration-200 uppercase"
+                  >
+                    {item.label}
+                  </Link>
+                )
+              )}
+
             {!isLoading && (
               <>
                 {user ? (
@@ -104,22 +151,22 @@ export default function Header() {
                     <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary-600 to-secondary-600 flex items-center justify-center text-white font-medium">
                       {user.photo ? (
                         // eslint-disable-next-line @next/next/no-img-element
-                        <img 
-                          src={user.photo} 
-                          alt={user.prenom} 
+                        <img
+                          src={user.photo}
+                          alt={user.prenom}
                           className="w-full h-full rounded-full object-cover"
                         />
                       ) : (
-                        `${user.prenom?.charAt(0) || ''}${user.nom?.charAt(0) || ''}`.toUpperCase()
+                        `${user.prenom?.charAt(0) || ""}${
+                          user.nom?.charAt(0) || ""
+                        }`.toUpperCase()
                       )}
                     </div>
                     <div>
                       <p className="text-sm font-medium text-gray-900">
                         {user.prenom} {user.nom}
                       </p>
-                      <p className="text-xs text-gray-500">
-                        {user.email}
-                      </p>
+                      <p className="text-xs text-gray-500">{user.email}</p>
                     </div>
                   </div>
                   <Link
@@ -129,6 +176,42 @@ export default function Header() {
                   >
                     Mon profil
                   </Link>
+
+                  {/* Notifications sur mobile */}
+                  <div className="py-2 space-y-2">
+                    <NotificationButton
+                      userEmail={user.email}
+                      className="mb-2"
+                    />
+
+                    <button
+                      onClick={handleTestNotification}
+                      disabled={isTestingNotification}
+                      className="flex items-center w-full text-sm text-gray-700 hover:text-black transition-colors disabled:opacity-50"
+                    >
+                      <FiBell
+                        className={`w-4 h-4 mr-2 ${
+                          isTestingNotification ? "animate-pulse" : ""
+                        }`}
+                      />
+                      {isTestingNotification
+                        ? "Envoi..."
+                        : "Tester notification"}
+                    </button>
+
+                    {notificationMessage && (
+                      <div
+                        className={`px-3 py-2 rounded text-xs ${
+                          notificationMessage.type === "success"
+                            ? "bg-green-50 text-green-700 border border-green-200"
+                            : "bg-red-50 text-red-700 border border-red-200"
+                        }`}
+                      >
+                        {notificationMessage.text}
+                      </div>
+                    )}
+                  </div>
+
                   <Link
                     href="/mes-evenements"
                     onClick={() => setIsMobileMenuOpen(false)}
@@ -139,42 +222,47 @@ export default function Header() {
                 </div>
               )}
 
-              {menuItems.filter(item => !user || item.label !== 'Connexion').map((item) => (
-                item.isHash ? (
-                  <a
-                    key={item.href}
-                    href={item.href}
-                    onClick={() => setIsMobileMenuOpen(false)}
-                    className="text-sm tracking-wide text-gray-600 hover:text-black transition-colors uppercase"
-                  >
-                    {item.label}
-                  </a>
-                ) : (
-                  <Link
-                    key={item.href}
-                    href={item.href}
-                    onClick={() => setIsMobileMenuOpen(false)}
-                    className="text-sm tracking-wide text-gray-600 hover:text-black transition-colors uppercase"
-                  >
-                    {item.label}
-                  </Link>
-                )
-              ))}
-              
+              {menuItems
+                .filter((item) => !user || item.label !== "Connexion")
+                .map((item) =>
+                  item.isHash ? (
+                    <a
+                      key={item.href}
+                      href={item.href}
+                      onClick={() => setIsMobileMenuOpen(false)}
+                      className="text-sm tracking-wide text-gray-600 hover:text-black transition-colors uppercase"
+                    >
+                      {item.label}
+                    </a>
+                  ) : (
+                    <Link
+                      key={item.href}
+                      href={item.href}
+                      onClick={() => setIsMobileMenuOpen(false)}
+                      className="text-sm tracking-wide text-gray-600 hover:text-black transition-colors uppercase"
+                    >
+                      {item.label}
+                    </Link>
+                  )
+                )}
+
               {!isLoading && (
                 <>
                   {user ? (
                     <button
                       onClick={() => {
-                        setIsMobileMenuOpen(false)
-                        logout()
+                        setIsMobileMenuOpen(false);
+                        logout();
                       }}
                       className="btn-secondary w-full text-center text-red-600 border-red-600 hover:bg-red-600 hover:text-white"
                     >
                       Déconnexion
                     </button>
                   ) : (
-                    <Link href="/inscription" className="btn-primary w-full block text-center">
+                    <Link
+                      href="/inscription"
+                      className="btn-primary w-full block text-center"
+                    >
                       S&apos;inscrire
                     </Link>
                   )}
@@ -185,5 +273,5 @@ export default function Header() {
         )}
       </nav>
     </header>
-  )
+  );
 }
