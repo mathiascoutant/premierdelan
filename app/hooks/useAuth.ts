@@ -35,7 +35,8 @@ export function useAuth() {
     localStorage.removeItem('auth_token')
     localStorage.removeItem('user_data')
     setUser(null)
-    window.location.href = '/'
+    const basePath = process.env.NODE_ENV === 'production' ? '/premierdelan' : ''
+    window.location.href = `${basePath}/`
   }
 
   return { user, isLoading, logout }

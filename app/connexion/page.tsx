@@ -1,104 +1,108 @@
-'use client'
+"use client";
 
-import { useState } from 'react'
-import Link from 'next/link'
-import { FiArrowLeft, FiX, FiCheck } from 'react-icons/fi'
-import { API_ENDPOINTS, apiRequest } from '../config/api'
+import { useState } from "react";
+import Link from "next/link";
+import { FiArrowLeft, FiX, FiCheck } from "react-icons/fi";
+import { API_ENDPOINTS, apiRequest } from "../config/api";
 
 export default function ConnexionPage() {
   const [formData, setFormData] = useState({
-    email: '',
-    password: '',
-  })
+    email: "",
+    password: "",
+  });
 
-  const [errors, setErrors] = useState<Record<string, string>>({})
-  const [isSubmitting, setIsSubmitting] = useState(false)
-  const [successMessage, setSuccessMessage] = useState('')
-  const [apiError, setApiError] = useState('')
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [successMessage, setSuccessMessage] = useState("");
+  const [apiError, setApiError] = useState("");
 
   // Validation email
   const validateEmail = (email: string) => {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-    return emailRegex.test(email)
-  }
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target
-    setFormData(prev => ({ ...prev, [name]: value }))
-    
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+
     // Effacer l'erreur du champ modifié
     if (errors[name]) {
-      setErrors(prev => ({ ...prev, [name]: '' }))
+      setErrors((prev) => ({ ...prev, [name]: "" }));
     }
-  }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    const newErrors: Record<string, string> = {}
+    e.preventDefault();
+    const newErrors: Record<string, string> = {};
 
     // Reset messages
-    setSuccessMessage('')
-    setApiError('')
+    setSuccessMessage("");
+    setApiError("");
 
     // Validation email
     if (!formData.email.trim()) {
-      newErrors.email = 'L&apos;email est requis'
+      newErrors.email = "L&apos;email est requis";
     } else if (!validateEmail(formData.email)) {
-      newErrors.email = 'Format d&apos;email invalide'
+      newErrors.email = "Format d&apos;email invalide";
     }
 
     // Validation mot de passe
     if (!formData.password) {
-      newErrors.password = 'Le mot de passe est requis'
+      newErrors.password = "Le mot de passe est requis";
     }
 
     if (Object.keys(newErrors).length > 0) {
-      setErrors(newErrors)
-      return
+      setErrors(newErrors);
+      return;
     }
 
-    setIsSubmitting(true)
-    
+    setIsSubmitting(true);
+
     try {
       // Envoi vers l'API
       const response = await apiRequest(API_ENDPOINTS.connexion, {
-        method: 'POST',
+        method: "POST",
         body: JSON.stringify({
           email: formData.email,
           password: formData.password,
         }),
-      })
+      });
 
-      setSuccessMessage('Connexion réussie ! Redirection...')
-      
+      setSuccessMessage("Connexion réussie ! Redirection...");
+
       // Sauvegarder le token et les données utilisateur
       if (response.token) {
-        localStorage.setItem('auth_token', response.token)
+        localStorage.setItem("auth_token", response.token);
       }
-      
+
       // Sauvegarder les infos utilisateur
       if (response.user) {
-        localStorage.setItem('user_data', JSON.stringify(response.user))
+        localStorage.setItem("user_data", JSON.stringify(response.user));
       }
 
       // Rediriger vers le dashboard ou la page d'accueil
       setTimeout(() => {
-        window.location.href = '/'
-      }, 1500)
-      
+        const basePath =
+          process.env.NODE_ENV === "production" ? "/premierdelan" : "";
+        window.location.href = `${basePath}/`;
+      }, 1500);
     } catch (error: any) {
-      setApiError(error.message || 'Email ou mot de passe incorrect')
+      setApiError(error.message || "Email ou mot de passe incorrect");
     } finally {
-      setIsSubmitting(false)
+      setIsSubmitting(false);
     }
-  }
+  };
 
   return (
     <main className="min-h-screen bg-white">
       {/* Header Simple */}
       <header className="border-b border-gray-200">
         <nav className="section-container py-6">
-          <Link href="/" className="inline-flex items-center space-x-2 text-sm text-gray-600 hover:text-black transition-colors">
+          <Link
+            href="/"
+            className="inline-flex items-center space-x-2 text-sm text-gray-600 hover:text-black transition-colors"
+          >
             <FiArrowLeft className="w-4 h-4" />
             <span>Retour à l&apos;accueil</span>
           </Link>
@@ -113,9 +117,7 @@ export default function ConnexionPage() {
             <h1 className="text-4xl md:text-5xl font-light tracking-tight text-black mb-4">
               Connexion
             </h1>
-            <p className="text-gray-600 font-light">
-              Accédez à votre compte
-            </p>
+            <p className="text-gray-600 font-light">Accédez à votre compte</p>
           </div>
 
           {/* Messages */}
@@ -141,7 +143,10 @@ export default function ConnexionPage() {
           <form onSubmit={handleSubmit} className="space-y-8">
             {/* Email */}
             <div>
-              <label htmlFor="email" className="block text-xs tracking-wider uppercase text-gray-500 mb-3">
+              <label
+                htmlFor="email"
+                className="block text-xs tracking-wider uppercase text-gray-500 mb-3"
+              >
                 Email
               </label>
               <input
@@ -152,7 +157,7 @@ export default function ConnexionPage() {
                 onChange={handleChange}
                 placeholder="exemple@email.com"
                 className={`w-full px-0 py-3 bg-transparent border-b ${
-                  errors.email ? 'border-red-500' : 'border-gray-300'
+                  errors.email ? "border-red-500" : "border-gray-300"
                 } focus:border-black focus:outline-none transition-colors text-black placeholder:text-gray-400`}
               />
               {errors.email && (
@@ -165,7 +170,10 @@ export default function ConnexionPage() {
 
             {/* Mot de passe */}
             <div>
-              <label htmlFor="password" className="block text-xs tracking-wider uppercase text-gray-500 mb-3">
+              <label
+                htmlFor="password"
+                className="block text-xs tracking-wider uppercase text-gray-500 mb-3"
+              >
                 Mot de passe
               </label>
               <input
@@ -176,7 +184,7 @@ export default function ConnexionPage() {
                 onChange={handleChange}
                 placeholder="Votre mot de passe"
                 className={`w-full px-0 py-3 bg-transparent border-b ${
-                  errors.password ? 'border-red-500' : 'border-gray-300'
+                  errors.password ? "border-red-500" : "border-gray-300"
                 } focus:border-black focus:outline-none transition-colors text-black placeholder:text-gray-400`}
               />
               {errors.password && (
@@ -189,7 +197,10 @@ export default function ConnexionPage() {
 
             {/* Mot de passe oublié */}
             <div className="text-right">
-              <a href="#" className="text-sm text-gray-600 hover:text-black transition-colors">
+              <a
+                href="#"
+                className="text-sm text-gray-600 hover:text-black transition-colors"
+              >
                 Mot de passe oublié ?
               </a>
             </div>
@@ -201,14 +212,17 @@ export default function ConnexionPage() {
                 disabled={isSubmitting}
                 className="btn-primary w-full disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {isSubmitting ? 'Connexion en cours...' : 'Se connecter'}
+                {isSubmitting ? "Connexion en cours..." : "Se connecter"}
               </button>
             </div>
 
             {/* Link to Signup */}
             <p className="text-sm text-gray-500 text-center pt-4">
-              Pas encore de compte ?{' '}
-              <Link href="/inscription" className="text-black hover:underline font-medium">
+              Pas encore de compte ?{" "}
+              <Link
+                href="/inscription"
+                className="text-black hover:underline font-medium"
+              >
                 S&apos;inscrire
               </Link>
             </p>
@@ -223,6 +237,5 @@ export default function ConnexionPage() {
         </div>
       </section>
     </main>
-  )
+  );
 }
-

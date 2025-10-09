@@ -21,10 +21,10 @@ export default function Header() {
   }, [])
 
   const menuItems = [
-    { label: 'Accueil', href: '#accueil' },
-    { label: 'Événements', href: '#evenements' },
-    { label: 'Comment ça marche', href: '#services' },
-    { label: 'Connexion', href: '/connexion' },
+    { label: 'Accueil', href: '#accueil', isHash: true },
+    { label: 'Événements', href: '#evenements', isHash: true },
+    { label: 'Comment ça marche', href: '#services', isHash: true },
+    { label: 'Connexion', href: '/connexion', isHash: false },
   ]
 
   return (
@@ -38,22 +38,32 @@ export default function Header() {
       <nav className="section-container">
         <div className="flex items-center justify-between h-20">
           {/* Logo */}
-          <a href="#accueil" className="group">
+          <Link href="/" className="group">
             <span className="text-xl font-medium tracking-tight text-black">
               PREMIER DE L&apos;AN
             </span>
-          </a>
+          </Link>
 
           {/* Desktop Menu */}
           <div className="hidden md:flex items-center space-x-12">
             {menuItems.filter(item => !user || item.label !== 'Connexion').map((item) => (
-              <a
-                key={item.href}
-                href={item.href}
-                className="text-sm tracking-wide text-gray-600 hover:text-black transition-colors duration-200 uppercase"
-              >
-                {item.label}
-              </a>
+              item.isHash ? (
+                <a
+                  key={item.href}
+                  href={item.href}
+                  className="text-sm tracking-wide text-gray-600 hover:text-black transition-colors duration-200 uppercase"
+                >
+                  {item.label}
+                </a>
+              ) : (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className="text-sm tracking-wide text-gray-600 hover:text-black transition-colors duration-200 uppercase"
+                >
+                  {item.label}
+                </Link>
+              )
             ))}
             
             {!isLoading && (
@@ -129,14 +139,25 @@ export default function Header() {
               )}
 
               {menuItems.filter(item => !user || item.label !== 'Connexion').map((item) => (
-                <a
-                  key={item.href}
-                  href={item.href}
-                  onClick={() => setIsMobileMenuOpen(false)}
-                  className="text-sm tracking-wide text-gray-600 hover:text-black transition-colors uppercase"
-                >
-                  {item.label}
-                </a>
+                item.isHash ? (
+                  <a
+                    key={item.href}
+                    href={item.href}
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className="text-sm tracking-wide text-gray-600 hover:text-black transition-colors uppercase"
+                  >
+                    {item.label}
+                  </a>
+                ) : (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className="text-sm tracking-wide text-gray-600 hover:text-black transition-colors uppercase"
+                  >
+                    {item.label}
+                  </Link>
+                )
               ))}
               
               {!isLoading && (

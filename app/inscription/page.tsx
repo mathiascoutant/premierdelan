@@ -135,7 +135,8 @@ export default function InscriptionPage() {
 
       // Rediriger vers la connexion après 2 secondes
       setTimeout(() => {
-        window.location.href = '/connexion'
+        const basePath = process.env.NODE_ENV === 'production' ? '/premierdelan' : ''
+        window.location.href = `${basePath}/connexion`
       }, 2000)
       
     } catch (error: any) {
