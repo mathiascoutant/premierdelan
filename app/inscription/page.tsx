@@ -112,10 +112,10 @@ export default function InscriptionPage() {
         method: 'POST',
         body: JSON.stringify({
           code_soiree: formData.codesoiree,
-          prenom: formData.prenom,
-          nom: formData.nom,
+          firstname: formData.prenom,
+          lastname: formData.nom,
           email: formData.email,
-          telephone: formData.telephone,
+          phone: formData.telephone,
           password: formData.password,
         }),
       })
