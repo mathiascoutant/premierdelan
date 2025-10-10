@@ -3,11 +3,6 @@
 import { useState, useEffect, use } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-
-// Required for Next.js static export
-export function generateStaticParams() {
-  return [];
-}
 import { 
   FiArrowLeft, 
   FiUpload, 
