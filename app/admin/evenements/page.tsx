@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Link from "next/link";
 import {
   FiPlus,
   FiCalendar,
@@ -188,16 +189,23 @@ export default function EvenementsPage() {
                     </div>
                   </div>
                   <div className="flex sm:flex-col items-center gap-2">
+                    <Link
+                      href={`/admin/evenement-details?event=${event.id}`}
+                      className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                      title="Voir les inscrits"
+                    >
+                      <FiUsers className="w-5 h-5" />
+                    </Link>
                     <button
                       onClick={() => setEditingEvent(event)}
-                      className="p-2 text-gray-600 hover:text-black transition-colors"
+                      className="p-2 text-gray-600 hover:bg-gray-50 rounded-lg transition-colors"
                       title="Modifier"
                     >
                       <FiEdit className="w-5 h-5" />
                     </button>
                     <button
                       onClick={() => setDeletingEvent(event)}
-                      className="p-2 text-red-600 hover:text-red-700 transition-colors"
+                      className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
                       title="Supprimer"
                     >
                       <FiTrash2 className="w-5 h-5" />
