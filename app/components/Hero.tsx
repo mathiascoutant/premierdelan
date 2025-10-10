@@ -1,10 +1,15 @@
-'use client'
+"use client";
 
-import Link from 'next/link'
+import Link from "next/link";
+import { useAuth } from "../hooks/useAuth";
 
 export default function Hero() {
+  const { user, isLoading } = useAuth();
   return (
-    <section id="accueil" className="relative min-h-screen flex items-center justify-center bg-white">
+    <section
+      id="accueil"
+      className="relative min-h-screen flex items-center justify-center bg-white"
+    >
       {/* Content */}
       <div className="section-container py-32 text-center">
         <div className="max-w-4xl mx-auto space-y-12">
@@ -13,9 +18,7 @@ export default function Hero() {
             <h1 className="text-6xl md:text-7xl lg:text-8xl font-light tracking-tight text-black leading-none">
               Vivez & Partagez
               <br />
-              <span className="font-normal">
-                vos Moments
-              </span>
+              <span className="font-normal">vos Moments</span>
             </h1>
 
             {/* Subheading */}
@@ -28,12 +31,20 @@ export default function Hero() {
 
           {/* CTA Buttons */}
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-8">
-            <a href="#evenements" className="btn-primary w-full sm:w-auto text-center">
+            <a
+              href="#evenements"
+              className="btn-primary w-full sm:w-auto text-center"
+            >
               Voir les événements
             </a>
-            <Link href="/inscription" className="btn-secondary w-full sm:w-auto text-center">
-              Créer un compte
-            </Link>
+            {!isLoading && !user && (
+              <Link
+                href="/inscription"
+                className="btn-secondary w-full sm:w-auto text-center"
+              >
+                Créer un compte
+              </Link>
+            )}
           </div>
         </div>
       </div>
@@ -43,5 +54,5 @@ export default function Hero() {
         <div className="w-px h-16 bg-gradient-to-b from-black to-transparent"></div>
       </div>
     </section>
-  )
+  );
 }
