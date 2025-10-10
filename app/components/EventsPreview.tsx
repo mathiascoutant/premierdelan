@@ -32,6 +32,7 @@ export default function EventsPreview() {
 
   useEffect(() => {
     fetchEvents();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]); // Re-fetch quand l'utilisateur change
 
   const fetchEvents = async () => {

@@ -3,6 +3,11 @@
 import { useState, useEffect, use } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+
+// Required for Next.js static export
+export function generateStaticParams() {
+  return [];
+}
 import { 
   FiArrowLeft, 
   FiUpload, 
@@ -56,6 +61,7 @@ export default function GaleriePage({ params }: { params: Promise<{ id: string }
     if (!authLoading) {
       fetchEventAndMedias();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [eventId, authLoading]);
 
   const fetchEventAndMedias = async () => {

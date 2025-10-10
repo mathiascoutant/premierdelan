@@ -7,11 +7,13 @@ Cette documentation spécifie les endpoints nécessaires pour gérer les médias
 ## 🎯 ARCHITECTURE : Frontend (Firebase Storage) + Backend (Base de données)
 
 ### **Stockage des fichiers** : Firebase Storage
+
 - Le frontend upload directement les fichiers vers Firebase Storage
 - Firebase retourne une URL publique du fichier uploadé
 - Pas besoin de gérer l'upload côté backend
 
 ### **Base de données** : Backend MongoDB/PostgreSQL
+
 - Le backend stocke uniquement les **métadonnées** (URL, user, date, etc.)
 - Le backend ne gère PAS les fichiers eux-mêmes
 
@@ -160,10 +162,10 @@ Après l'ajout d'un média, **mettre à jour le compteur `photos_count`** dans l
 
 ```sql
 -- Recalculer le nombre total de médias
-UPDATE evenements 
+UPDATE evenements
 SET photos_count = (
-  SELECT COUNT(*) 
-  FROM medias 
+  SELECT COUNT(*)
+  FROM medias
   WHERE event_id = {event_id}
 )
 WHERE id = {event_id};
@@ -228,10 +230,10 @@ Après la suppression, **mettre à jour le compteur `photos_count`** :
 
 ```sql
 -- Recalculer le nombre total de médias
-UPDATE evenements 
+UPDATE evenements
 SET photos_count = (
-  SELECT COUNT(*) 
-  FROM medias 
+  SELECT COUNT(*)
+  FROM medias
   WHERE event_id = {event_id}
 )
 WHERE id = {event_id};
@@ -275,7 +277,7 @@ Récupère les détails d'un événement (déjà documenté dans `API_BACKEND_EV
     "description": "...",
     "capacite": 100,
     "inscrits": 45,
-    "photos_count": 324,  // ← COMPTEUR DE MÉDIAS
+    "photos_count": 324, // ← COMPTEUR DE MÉDIAS
     "statut": "ouvert",
     "lieu": "Villa Privée"
   }
@@ -300,7 +302,7 @@ CREATE TABLE medias (
   filename VARCHAR(500) NOT NULL,
   size BIGINT NOT NULL,
   uploaded_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  
+
   -- Index et contraintes
   INDEX idx_event_id (event_id),
   INDEX idx_user_email (user_email),
@@ -371,12 +373,12 @@ CREATE TABLE medias (
 
 ## 🎯 ENDPOINTS À IMPLÉMENTER
 
-| Action | Endpoint | Méthode | Auth |
-|--------|----------|---------|------|
-| Liste des médias | `/api/evenements/{event_id}/medias` | GET | Non |
-| Ajouter un média | `/api/evenements/{event_id}/medias` | POST | Oui |
-| Supprimer un média | `/api/evenements/{event_id}/medias/{media_id}` | DELETE | Oui |
-| Détails événement | `/api/evenements/{event_id}` | GET | Non |
+| Action             | Endpoint                                       | Méthode | Auth |
+| ------------------ | ---------------------------------------------- | ------- | ---- |
+| Liste des médias   | `/api/evenements/{event_id}/medias`            | GET     | Non  |
+| Ajouter un média   | `/api/evenements/{event_id}/medias`            | POST    | Oui  |
+| Supprimer un média | `/api/evenements/{event_id}/medias/{media_id}` | DELETE  | Oui  |
+| Détails événement  | `/api/evenements/{event_id}`                   | GET     | Non  |
 
 ---
 
@@ -413,15 +415,15 @@ service firebase.storage {
     // Permettre à tout le monde de lire les médias d'événements
     match /events/{eventId}/media/{allPaths=**} {
       allow read: if true;
-      
+
       // Permettre l'upload seulement aux utilisateurs authentifiés
       allow write: if request.auth != null
                    && request.resource.size < 100 * 1024 * 1024  // 100 MB max
-                   && (request.resource.contentType.matches('image/.*') 
+                   && (request.resource.contentType.matches('image/.*')
                        || request.resource.contentType.matches('video/.*'));
-      
+
       // Permettre la suppression seulement au propriétaire
-      allow delete: if request.auth != null 
+      allow delete: if request.auth != null
                     && request.auth.token.email == resource.metadata.userEmail;
     }
   }
@@ -433,12 +435,14 @@ service firebase.storage {
 ## 📋 RÉSUMÉ POUR LE BACKEND
 
 ### **Ce que le backend DOIT faire :**
+
 1. ✅ Stocker les métadonnées des médias (URL, user, date, etc.)
 2. ✅ Vérifier que seul le propriétaire peut supprimer son média
 3. ✅ Mettre à jour le compteur `photos_count` après ajout/suppression
 4. ✅ Retourner la liste des médias avec les infos utilisateur
 
 ### **Ce que le backend NE fait PAS :**
+
 1. ❌ Gérer l'upload des fichiers (fait par Firebase)
 2. ❌ Stocker les fichiers eux-mêmes (fait par Firebase)
 3. ❌ Redimensionner/compresser les images (peut être ajouté plus tard avec Firebase Functions)
@@ -450,7 +454,7 @@ service firebase.storage {
 CREATE TRIGGER update_photos_count_insert AFTER INSERT ON medias
 FOR EACH ROW
 BEGIN
-  UPDATE evenements 
+  UPDATE evenements
   SET photos_count = (SELECT COUNT(*) FROM medias WHERE event_id = NEW.event_id)
   WHERE id = NEW.event_id;
 END;
@@ -459,7 +463,7 @@ END;
 CREATE TRIGGER update_photos_count_delete AFTER DELETE ON medias
 FOR EACH ROW
 BEGIN
-  UPDATE evenements 
+  UPDATE evenements
   SET photos_count = (SELECT COUNT(*) FROM medias WHERE event_id = OLD.event_id)
   WHERE id = OLD.event_id;
 END;
@@ -470,12 +474,13 @@ END;
 ## 🚀 PRÊT À IMPLÉMENTER !
 
 Le frontend envoie :
+
 - ✅ Les URLs Firebase des médias
 - ✅ Les métadonnées (type, taille, nom de fichier)
 - ✅ L'email de l'utilisateur uploadeur
 
 Le backend stocke :
+
 - ✅ Les métadonnées en base de données
 - ✅ Le compteur de médias par événement
 - ✅ Les permissions de suppression (vérification propriétaire)
-
