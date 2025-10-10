@@ -28,15 +28,11 @@ export default function EditEventModal({
   onClose,
   onSave,
 }: EditEventModalProps) {
-  // Convertir la date ISO UTC en format datetime-local (heure locale)
+  // Extraire la date/heure SANS conversion (ignorer le Z)
   const formatDateForInput = (isoDate: string) => {
-    const date = new Date(isoDate);
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, "0");
-    const day = String(date.getDate()).padStart(2, "0");
-    const hours = String(date.getHours()).padStart(2, "0");
-    const minutes = String(date.getMinutes()).padStart(2, "0");
-    return `${year}-${month}-${day}T${hours}:${minutes}`;
+    // Extraire directement de la chaîne sans conversion de fuseau horaire
+    // "2025-10-10T13:45:00Z" → "2025-10-10T13:45"
+    return isoDate.slice(0, 16);
   };
 
   const [formData, setFormData] = useState({
