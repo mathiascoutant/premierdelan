@@ -56,10 +56,7 @@ function GalerieContent() {
   >([]);
   const [selectedMedia, setSelectedMedia] = useState<Media | null>(null);
   const [filter, setFilter] = useState<"all" | "images" | "videos">("all");
-  const [isSelectionMode, setIsSelectionMode] = useState(false);
-  const [selectedForDeletion, setSelectedForDeletion] = useState<Set<string>>(
-    new Set()
-  );
+  const [selectedItems, setSelectedItems] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     if (!authLoading && eventId) {
@@ -263,22 +260,35 @@ function GalerieContent() {
     }
   };
 
-  const toggleSelection = (mediaId: string) => {
-    const newSelection = new Set(selectedForDeletion);
+  const toggleSelection = (mediaId: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    const newSelection = new Set(selectedItems);
     if (newSelection.has(mediaId)) {
       newSelection.delete(mediaId);
     } else {
       newSelection.add(mediaId);
     }
-    setSelectedForDeletion(newSelection);
+    setSelectedItems(newSelection);
+  };
+
+  const handleDownloadSelected = async () => {
+    if (selectedItems.size === 0) return;
+
+    for (const mediaId of selectedItems) {
+      const media = medias.find((m) => m.id === mediaId);
+      if (media) {
+        await handleDownload(media);
+      }
+    }
+    setSelectedItems(new Set());
   };
 
   const handleDeleteSelected = async () => {
-    if (!eventId || selectedForDeletion.size === 0) return;
+    if (!eventId || selectedItems.size === 0) return;
 
     if (
       !confirm(
-        `Êtes-vous sûr de vouloir supprimer ${selectedForDeletion.size} média(s) ?`
+        `Êtes-vous sûr de vouloir supprimer ${selectedItems.size} média(s) ?`
       )
     )
       return;
@@ -287,7 +297,7 @@ function GalerieContent() {
     let successCount = 0;
     let errorCount = 0;
 
-    for (const mediaId of selectedForDeletion) {
+    for (const mediaId of selectedItems) {
       try {
         const apiUrl = API_ENDPOINTS.connexion.replace(
           "/api/connexion",
@@ -307,12 +317,8 @@ function GalerieContent() {
       }
     }
 
-    // Rafraîchir la galerie
     await fetchEventAndMedias();
-
-    // Réinitialiser la sélection
-    setSelectedForDeletion(new Set());
-    setIsSelectionMode(false);
+    setSelectedItems(new Set());
 
     if (errorCount > 0) {
       alert(
@@ -321,9 +327,28 @@ function GalerieContent() {
     }
   };
 
-  const cancelSelection = () => {
-    setSelectedForDeletion(new Set());
-    setIsSelectionMode(false);
+  const handleShareSelected = () => {
+    if (selectedItems.size === 0) return;
+
+    const selectedMedias = medias.filter((m) => selectedItems.has(m.id));
+    const urls = selectedMedias.map((m) => m.url).join("\n");
+
+    if (navigator.share) {
+      navigator
+        .share({
+          title: `${selectedItems.size} média(s) - ${event?.titre}`,
+          text: `Découvrez ces ${selectedItems.size} média(s) de ${event?.titre}`,
+          url: window.location.href,
+        })
+        .catch(() => {
+          // Fallback: copier dans le presse-papier
+          navigator.clipboard.writeText(urls);
+          alert("Liens copiés dans le presse-papier !");
+        });
+    } else {
+      navigator.clipboard.writeText(urls);
+      alert("Liens copiés dans le presse-papier !");
+    }
   };
 
   const filteredMedias = medias.filter((media) => {
@@ -393,7 +418,7 @@ function GalerieContent() {
             </div>
 
             {user && (
-              <div className="flex items-center gap-3">
+              <div>
                 <label className="btn-primary cursor-pointer inline-flex items-center">
                   <FiUpload className="w-4 h-4 mr-2" />
                   Ajouter des médias
@@ -406,17 +431,6 @@ function GalerieContent() {
                     disabled={isUploading}
                   />
                 </label>
-                {!isSelectionMode &&
-                  medias.filter((m) => m.user_email === user.email).length >
-                    0 && (
-                    <button
-                      onClick={() => setIsSelectionMode(true)}
-                      className="btn-secondary inline-flex items-center"
-                    >
-                      <FiTrash2 className="w-4 h-4 mr-2" />
-                      Sélectionner
-                    </button>
-                  )}
               </div>
             )}
           </div>
@@ -464,33 +478,57 @@ function GalerieContent() {
           </div>
         )}
 
-        {/* Barre de sélection */}
-        {isSelectionMode && (
-          <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-blue-900">
-                Mode sélection
-              </p>
-              <p className="text-xs text-blue-700 mt-1">
-                {selectedForDeletion.size} média(s) sélectionné(s)
-              </p>
-            </div>
-            <div className="flex items-center gap-2">
-              <button
-                onClick={cancelSelection}
-                className="px-4 py-2 text-sm text-gray-700 hover:bg-white rounded-lg transition-colors"
-              >
-                Annuler
-              </button>
-              {selectedForDeletion.size > 0 && (
+        {/* Barre d'actions flottante */}
+        {selectedItems.size > 0 && (
+          <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-white border-2 border-gray-300 rounded-full shadow-2xl px-6 py-4">
+            <div className="flex items-center gap-4">
+              <span className="text-sm font-medium text-gray-900">
+                {selectedItems.size} sélectionné
+                {selectedItems.size > 1 ? "s" : ""}
+              </span>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={handleDownloadSelected}
+                  className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                  title="Télécharger"
+                >
+                  <FiDownload className="w-5 h-5 text-gray-700" />
+                </button>
+                <button
+                  onClick={handleShareSelected}
+                  className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                  title="Partager"
+                >
+                  <svg
+                    className="w-5 h-5 text-gray-700"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"
+                    />
+                  </svg>
+                </button>
                 <button
                   onClick={handleDeleteSelected}
-                  className="px-4 py-2 bg-red-600 text-white text-sm font-medium rounded-lg hover:bg-red-700 transition-colors flex items-center"
+                  className="p-2 hover:bg-red-50 rounded-lg transition-colors"
+                  title="Supprimer"
                 >
-                  <FiTrash2 className="w-4 h-4 mr-2" />
-                  Supprimer ({selectedForDeletion.size})
+                  <FiTrash2 className="w-5 h-5 text-red-600" />
                 </button>
-              )}
+                <div className="w-px h-6 bg-gray-300 mx-2"></div>
+                <button
+                  onClick={() => setSelectedItems(new Set())}
+                  className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                  title="Annuler"
+                >
+                  <FiX className="w-5 h-5 text-gray-700" />
+                </button>
+              </div>
             </div>
           </div>
         )}
@@ -560,7 +598,7 @@ function GalerieContent() {
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
             {filteredMedias.map((media) => {
               const isMyMedia = user && media.user_email === user.email;
-              const isSelected = selectedForDeletion.has(media.id);
+              const isSelected = selectedItems.has(media.id);
 
               return (
                 <div
@@ -570,13 +608,7 @@ function GalerieContent() {
                       ? "border-blue-600 ring-2 ring-blue-600"
                       : "border-gray-200 hover:border-black"
                   }`}
-                  onClick={() => {
-                    if (isSelectionMode && isMyMedia) {
-                      toggleSelection(media.id);
-                    } else if (!isSelectionMode) {
-                      setSelectedMedia(media);
-                    }
-                  }}
+                  onClick={() => setSelectedMedia(media)}
                 >
                   {media.type === "image" ? (
                     // eslint-disable-next-line @next/next/no-img-element
@@ -596,14 +628,17 @@ function GalerieContent() {
                       </div>
                     </div>
                   )}
-                  {/* Checkbox de sélection */}
-                  {isSelectionMode && isMyMedia && (
-                    <div className="absolute top-2 right-2 z-10">
+                  {/* Checkbox de sélection - Toujours visible si c'est ton média */}
+                  {isMyMedia && (
+                    <div
+                      className="absolute top-2 right-2 z-10"
+                      onClick={(e) => toggleSelection(media.id, e)}
+                    >
                       <div
-                        className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all ${
+                        className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all shadow-lg ${
                           isSelected
                             ? "bg-blue-600 border-blue-600"
-                            : "bg-white/80 border-white"
+                            : "bg-white/90 border-white hover:bg-white"
                         }`}
                       >
                         {isSelected && (
