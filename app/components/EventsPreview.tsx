@@ -163,7 +163,15 @@ export default function EventsPreview() {
                           {event.inscrits} / {event.capacite} inscrits
                         </span>
                         <span className="border-l border-gray-300 pl-6">
-                          {placesRestantes > 0 ? (
+                          {isBeforeOpening ? (
+                            <span className="text-orange-600 font-medium">
+                              Prochainement
+                            </span>
+                          ) : isAfterClosing ? (
+                            <span className="text-gray-600 font-medium">
+                              Inscriptions fermées
+                            </span>
+                          ) : placesRestantes > 0 ? (
                             <span
                               className={
                                 placesRestantes <= 10
