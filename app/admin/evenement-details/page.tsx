@@ -536,18 +536,21 @@ function EventDetailsContent() {
                     </td>
                     <td className="px-6 py-4">
                       <span className="text-sm text-gray-600">
-                        {new Date(inscription.created_at).toLocaleDateString(
-                          "fr-FR"
-                        )}
+                        {new Date(inscription.created_at).toLocaleDateString("fr-FR", {
+                          day: '2-digit',
+                          month: '2-digit',
+                          year: 'numeric'
+                        })}
                       </span>
                     </td>
                     <td className="px-6 py-4 text-right">
                       <button
                         onClick={() => handleDeleteInscription(inscription)}
-                        className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                        className="px-3 py-1.5 bg-red-600 text-white text-xs font-medium rounded hover:bg-red-700 transition-colors inline-flex items-center"
                         title="Supprimer toute l'inscription"
                       >
-                        <FiTrash2 className="w-4 h-4" />
+                        <FiTrash2 className="w-3 h-3 mr-1" />
+                        Supprimer tout
                       </button>
                     </td>
                   </tr>
@@ -592,13 +595,12 @@ function EventDetailsContent() {
                       </td>
                       <td className="px-6 py-3 text-right">
                         <button
-                          onClick={() =>
-                            handleDeleteAccompagnant(inscription, idx)
-                          }
-                          className="p-1.5 text-red-600 hover:bg-red-50 rounded transition-colors"
+                          onClick={() => handleDeleteAccompagnant(inscription, idx)}
+                          className="px-3 py-1 bg-red-100 text-red-700 text-xs font-medium rounded hover:bg-red-200 transition-colors inline-flex items-center"
                           title="Retirer cet accompagnant"
                         >
-                          <FiTrash2 className="w-4 h-4" />
+                          <FiTrash2 className="w-3 h-3 mr-1" />
+                          Retirer
                         </button>
                       </td>
                     </tr>
