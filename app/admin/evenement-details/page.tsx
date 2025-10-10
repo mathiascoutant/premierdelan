@@ -16,7 +16,6 @@ import {
 import { API_ENDPOINTS, apiRequest } from "../../config/api";
 import { useAuth } from "../../hooks/useAuth";
 import { useRouter } from "next/navigation";
-import InscriptionDetailsModal from "../../components/admin/InscriptionDetailsModal";
 
 interface Accompagnant {
   firstname: string;
@@ -129,7 +128,7 @@ function EventDetailsContent() {
 
     if (
       !confirm(
-        `Supprimer l'inscription de ${inscription.user_name} (${inscription.nombre_personnes} personne(s)) ?`
+        `Supprimer l'inscription complète de ${inscription.user_name} (${inscription.nombre_personnes} personne(s)) ?`
       )
     ) {
       return;
@@ -140,6 +139,39 @@ function EventDetailsContent() {
       const apiUrl = API_ENDPOINTS.connexion.replace(
         "/api/connexion",
         `/api/admin/evenements/${eventId}/inscrits/${inscription.id}`
+      );
+
+      await apiRequest(apiUrl, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      await fetchEventDetails();
+    } catch (error: any) {
+      alert(error.message || "Erreur lors de la suppression");
+    }
+  };
+
+  const handleDeleteAccompagnant = async (
+    inscription: Inscription,
+    accompagnantIndex: number
+  ) => {
+    if (!eventId) return;
+
+    const accompagnant = inscription.accompagnants[accompagnantIndex];
+    if (
+      !confirm(
+        `Supprimer ${accompagnant.firstname} ${accompagnant.lastname} de cette inscription ?`
+      )
+    ) {
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem("auth_token");
+      const apiUrl = API_ENDPOINTS.connexion.replace(
+        "/api/connexion",
+        `/api/admin/evenements/${eventId}/inscrits/${inscription.id}/accompagnant/${accompagnantIndex}`
       );
 
       await apiRequest(apiUrl, {
@@ -354,10 +386,10 @@ function EventDetailsContent() {
                   </div>
                 </div>
                 <button
-                  onClick={() => setSelectedInscription(inscription)}
-                  className="text-xs px-3 py-1 text-blue-600 hover:bg-blue-50 rounded transition-colors"
+                  onClick={() => handleDeleteInscription(inscription)}
+                  className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
                 >
-                  Voir détails
+                  <FiTrash2 className="w-5 h-5" />
                 </button>
               </div>
 
@@ -375,25 +407,43 @@ function EventDetailsContent() {
               </div>
 
               {inscription.accompagnants.length > 0 && (
-                <div className="pt-3 border-t border-gray-100">
+                <div className="pt-3 border-t border-gray-100 space-y-2">
                   <p className="text-xs font-medium text-gray-700 mb-2">
                     Accompagnants ({inscription.accompagnants.length})
                   </p>
-                  <div className="space-y-1">
-                    {inscription.accompagnants.map((acc, idx) => (
-                      <div
-                        key={idx}
-                        className="flex items-center justify-between text-xs"
-                      >
-                        <span className="text-gray-700">
+                  {inscription.accompagnants.map((acc, idx) => (
+                    <div
+                      key={idx}
+                      className="flex items-center justify-between bg-gray-50 rounded p-2 pl-6"
+                    >
+                      <div className="flex items-center space-x-2">
+                        <span className="text-xs text-gray-500">
+                          {idx + 2}.
+                        </span>
+                        <span className="text-xs text-gray-900">
                           {acc.firstname} {acc.lastname}
                         </span>
-                        <span className="text-gray-500">
+                        <span
+                          className={`text-xs px-2 py-0.5 rounded-full ${
+                            acc.is_adult
+                              ? "bg-green-100 text-green-700"
+                              : "bg-orange-100 text-orange-700"
+                          }`}
+                        >
                           {acc.is_adult ? "Majeur" : "Mineur"}
                         </span>
                       </div>
-                    ))}
-                  </div>
+                      <button
+                        onClick={() =>
+                          handleDeleteAccompagnant(inscription, idx)
+                        }
+                        className="p-1 text-red-600 hover:bg-red-50 rounded transition-colors"
+                        title="Retirer"
+                      >
+                        <FiTrash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                  ))}
                 </div>
               )}
 
@@ -426,10 +476,7 @@ function EventDetailsContent() {
                   Contact
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Personnes
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Accompagnants
+                  Statut
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Date
@@ -441,95 +488,127 @@ function EventDetailsContent() {
             </thead>
             <tbody className="divide-y divide-gray-200">
               {filteredInscriptions.map((inscription) => (
-                <tr
-                  key={inscription.id}
-                  className="hover:bg-gray-50 transition-colors"
-                >
-                  <td className="px-6 py-4">
-                    <div className="flex items-center space-x-3">
-                      <div className="w-10 h-10 bg-gradient-to-br from-gray-700 to-gray-900 rounded-full flex items-center justify-center text-white text-sm font-medium">
-                        {inscription.user_name
-                          .split(" ")
-                          .map((n) => n.charAt(0))
-                          .join("")
-                          .toUpperCase()}
-                      </div>
-                      <div>
-                        <p className="font-medium text-black">
-                          {inscription.user_name}
-                        </p>
-                      </div>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4">
-                    <div className="space-y-1">
-                      <div className="flex items-center text-sm text-gray-600">
-                        <FiMail className="w-4 h-4 mr-2" />
-                        <span>{inscription.user_email}</span>
-                      </div>
-                      {inscription.user_phone && (
-                        <div className="flex items-center text-sm text-gray-600">
-                          <FiPhone className="w-4 h-4 mr-2" />
-                          <span>{inscription.user_phone}</span>
+                <>
+                  {/* Ligne principale */}
+                  <tr
+                    key={inscription.id}
+                    className="hover:bg-gray-50 transition-colors"
+                  >
+                    <td className="px-6 py-4">
+                      <div className="flex items-center space-x-3">
+                        <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-blue-800 rounded-full flex items-center justify-center text-white text-sm font-medium">
+                          {inscription.user_name
+                            .split(" ")
+                            .map((n) => n.charAt(0))
+                            .join("")
+                            .toUpperCase()}
                         </div>
-                      )}
-                    </div>
-                  </td>
-                  <td className="px-6 py-4">
-                    <span className="text-sm font-medium text-black">
-                      {inscription.nombre_personnes}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4">
-                    {inscription.accompagnants.length > 0 ? (
-                      <div className="space-y-1">
-                        {inscription.accompagnants.map((acc, idx) => (
-                          <div key={idx} className="text-xs text-gray-700">
-                            {acc.firstname} {acc.lastname}
-                            <span className="text-gray-500 ml-2">
-                              ({acc.is_adult ? "Majeur" : "Mineur"})
-                            </span>
-                          </div>
-                        ))}
+                        <div>
+                          <p className="font-medium text-black">
+                            {inscription.user_name}
+                          </p>
+                          <p className="text-xs text-gray-500">
+                            Organisateur - {inscription.nombre_personnes}{" "}
+                            personne
+                            {inscription.nombre_personnes > 1 ? "s" : ""}
+                          </p>
+                        </div>
                       </div>
-                    ) : (
-                      <span className="text-sm text-gray-500">-</span>
-                    )}
-                  </td>
-                  <td className="px-6 py-4">
-                    <span className="text-sm text-gray-600">
-                      {new Date(inscription.created_at).toLocaleDateString(
-                        "fr-FR"
-                      )}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 text-right">
-                    <button
-                      onClick={() => setSelectedInscription(inscription)}
-                      className="text-sm px-4 py-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="space-y-1">
+                        <div className="flex items-center text-sm text-gray-600">
+                          <FiMail className="w-4 h-4 mr-2" />
+                          <span>{inscription.user_email}</span>
+                        </div>
+                        {inscription.user_phone && (
+                          <div className="flex items-center text-sm text-gray-600">
+                            <FiPhone className="w-4 h-4 mr-2" />
+                            <span>{inscription.user_phone}</span>
+                          </div>
+                        )}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <span className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-medium">
+                        Majeur
+                      </span>
+                    </td>
+                    <td className="px-6 py-4">
+                      <span className="text-sm text-gray-600">
+                        {new Date(inscription.created_at).toLocaleDateString(
+                          "fr-FR"
+                        )}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 text-right">
+                      <button
+                        onClick={() => handleDeleteInscription(inscription)}
+                        className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                        title="Supprimer toute l'inscription"
+                      >
+                        <FiTrash2 className="w-4 h-4" />
+                      </button>
+                    </td>
+                  </tr>
+
+                  {/* Sous-lignes pour les accompagnants */}
+                  {inscription.accompagnants.map((acc, idx) => (
+                    <tr
+                      key={`${inscription.id}-acc-${idx}`}
+                      className="bg-gray-50/50 hover:bg-gray-100/50 transition-colors"
                     >
-                      Détails
-                    </button>
-                  </td>
-                </tr>
+                      <td className="px-6 py-3 pl-16">
+                        <div className="flex items-center space-x-3">
+                          <div className="w-8 h-8 bg-gray-400 rounded-full flex items-center justify-center text-white text-xs font-medium">
+                            {idx + 2}
+                          </div>
+                          <div>
+                            <p className="text-sm text-gray-900">
+                              {acc.firstname} {acc.lastname}
+                            </p>
+                            <p className="text-xs text-gray-500">
+                              Accompagnant
+                            </p>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-6 py-3">
+                        <span className="text-xs text-gray-500">-</span>
+                      </td>
+                      <td className="px-6 py-3">
+                        <span
+                          className={`px-2 py-1 rounded-full text-xs font-medium ${
+                            acc.is_adult
+                              ? "bg-green-100 text-green-700"
+                              : "bg-orange-100 text-orange-700"
+                          }`}
+                        >
+                          {acc.is_adult ? "Majeur" : "Mineur"}
+                        </span>
+                      </td>
+                      <td className="px-6 py-3">
+                        <span className="text-xs text-gray-500">-</span>
+                      </td>
+                      <td className="px-6 py-3 text-right">
+                        <button
+                          onClick={() =>
+                            handleDeleteAccompagnant(inscription, idx)
+                          }
+                          className="p-1.5 text-red-600 hover:bg-red-50 rounded transition-colors"
+                          title="Retirer cet accompagnant"
+                        >
+                          <FiTrash2 className="w-4 h-4" />
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </>
               ))}
             </tbody>
           </table>
         )}
       </div>
-
-      {/* Modal détails inscription */}
-      {selectedInscription && event && (
-        <InscriptionDetailsModal
-          inscription={selectedInscription}
-          eventTitre={event.titre}
-          onClose={() => setSelectedInscription(null)}
-          onDelete={() => {
-            handleDeleteInscription(selectedInscription);
-            setSelectedInscription(null);
-          }}
-        />
-      )}
     </div>
   );
 }
