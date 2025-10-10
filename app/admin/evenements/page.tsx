@@ -141,10 +141,13 @@ export default function EvenementsPage() {
             {evenements.map((event) => (
               <div
                 key={event.id}
-                className="bg-white p-4 md:p-6 hover:bg-gray-50 transition-colors"
+                className="bg-white hover:bg-gray-50 transition-colors"
               >
-                <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
-                  <div className="flex-1 min-w-0">
+                <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 p-4 md:p-6">
+                  <Link
+                    href={`/admin/evenement-details?event=${event.id}`}
+                    className="flex-1 min-w-0 cursor-pointer"
+                  >
                     <div className="flex flex-wrap items-center gap-2 md:gap-3 mb-3">
                       <h3 className="text-lg md:text-xl font-medium text-black">
                         {event.titre}
@@ -187,24 +190,23 @@ export default function EvenementsPage() {
                         {event.photos_count || 0} photos
                       </div>
                     </div>
-                  </div>
+                  </Link>
                   <div className="flex sm:flex-col items-center gap-2">
-                    <Link
-                      href={`/admin/evenement-details?event=${event.id}`}
-                      className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                      title="Voir les inscrits"
-                    >
-                      <FiUsers className="w-5 h-5" />
-                    </Link>
                     <button
-                      onClick={() => setEditingEvent(event)}
-                      className="p-2 text-gray-600 hover:bg-gray-50 rounded-lg transition-colors"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setEditingEvent(event);
+                      }}
+                      className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
                       title="Modifier"
                     >
                       <FiEdit className="w-5 h-5" />
                     </button>
                     <button
-                      onClick={() => setDeletingEvent(event)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setDeletingEvent(event);
+                      }}
                       className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
                       title="Supprimer"
                     >
