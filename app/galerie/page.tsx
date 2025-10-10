@@ -344,64 +344,45 @@ function GalerieContent() {
           </div>
         </div>
 
-        {/* Upload Progress - Multiple files */}
+        {/* Upload Progress - Barre unique */}
         {uploadQueue.length > 0 && (
-          <div className="mb-6 p-4 bg-white border border-gray-200 rounded-lg space-y-3">
-            <div className="flex items-center justify-between">
+          <div className="mb-6 p-4 bg-white border border-gray-200 rounded-lg">
+            <div className="flex items-center justify-between mb-3">
               <span className="text-sm font-medium text-gray-900">
-                Upload en cours (
-                {uploadQueue.filter((f) => f.status === "done").length}/
-                {uploadQueue.length})
+                Upload en cours...
+              </span>
+              <span className="text-sm text-gray-600">
+                {uploadQueue.filter((f) => f.status === "done").length} /{" "}
+                {uploadQueue.length} fichiers
               </span>
             </div>
-            <div className="space-y-2 max-h-60 overflow-y-auto">
-              {uploadQueue.map((file, index) => (
-                <div key={index} className="space-y-1">
-                  <div className="flex items-center justify-between text-xs">
-                    <span className="text-gray-700 truncate flex-1 pr-2">
-                      {file.name}
-                    </span>
-                    <span
-                      className={`font-medium whitespace-nowrap ${
-                        file.status === "done"
-                          ? "text-green-600"
-                          : file.status === "error"
-                          ? "text-red-600"
-                          : file.status === "uploading"
-                          ? "text-blue-600"
-                          : "text-gray-500"
-                      }`}
-                    >
-                      {file.status === "done"
-                        ? "✓ Terminé"
-                        : file.status === "error"
-                        ? "✗ Erreur"
-                        : file.status === "uploading"
-                        ? `${file.progress}%`
-                        : "En attente"}
-                    </span>
-                  </div>
-                  {file.status === "uploading" && (
-                    <div className="w-full bg-gray-200 rounded-full h-1.5">
-                      <div
-                        className="bg-blue-600 h-1.5 rounded-full transition-all duration-300"
-                        style={{ width: `${file.progress}%` }}
-                      ></div>
-                    </div>
+            <div className="w-full bg-gray-200 rounded-full h-3">
+              <div
+                className="bg-black h-3 rounded-full transition-all duration-300 flex items-center justify-center"
+                style={{
+                  width: `${
+                    (uploadQueue.filter((f) => f.status === "done").length /
+                      uploadQueue.length) *
+                    100
+                  }%`,
+                }}
+              >
+                <span className="text-xs text-white font-medium px-2">
+                  {Math.round(
+                    (uploadQueue.filter((f) => f.status === "done").length /
+                      uploadQueue.length) *
+                      100
                   )}
-                  {file.status === "done" && (
-                    <div className="w-full bg-green-200 rounded-full h-1.5">
-                      <div className="bg-green-600 h-1.5 rounded-full w-full"></div>
-                    </div>
-                  )}
-                  {file.status === "error" && (
-                    <div className="w-full bg-red-200 rounded-full h-1.5">
-                      <div className="bg-red-600 h-1.5 rounded-full w-full"></div>
-                    </div>
-                  )}
-                </div>
-              ))}
+                  %
+                </span>
+              </div>
             </div>
+            {uploadQueue.some((f) => f.status === "uploading") && (
+              <p className="text-xs text-gray-500 mt-2">
+                En cours :{" "}
+                {uploadQueue.find((f) => f.status === "uploading")?.name}
+              </p>
+            )}
           </div>
         )}
 
