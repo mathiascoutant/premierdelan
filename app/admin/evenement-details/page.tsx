@@ -552,7 +552,7 @@ function EventDetailsContent() {
                             {acc.firstname} {acc.lastname}
                           </p>
                           <p className="text-xs text-gray-500">
-                            Inscrit avec {inscription.user_name.split(" ")[0]}
+                            Invité de {inscription.user_name.split(" ")[0]}
                           </p>
                         </div>
                       </div>
