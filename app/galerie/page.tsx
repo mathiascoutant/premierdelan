@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { 
@@ -38,7 +38,7 @@ interface Event {
   description: string;
 }
 
-export default function GaleriePage() {
+function GalerieContent() {
   const searchParams = useSearchParams();
   const eventId = searchParams.get('event');
   const { user, isLoading: authLoading } = useAuth();
@@ -469,6 +469,18 @@ export default function GaleriePage() {
         </div>
       )}
     </div>
+  );
+}
+
+export default function GaleriePage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="w-12 h-12 border-4 border-gray-200 border-t-black rounded-full animate-spin"></div>
+      </div>
+    }>
+      <GalerieContent />
+    </Suspense>
   );
 }
 
