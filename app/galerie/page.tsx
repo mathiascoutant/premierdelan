@@ -56,6 +56,10 @@ function GalerieContent() {
   >([]);
   const [selectedMedia, setSelectedMedia] = useState<Media | null>(null);
   const [filter, setFilter] = useState<"all" | "images" | "videos">("all");
+  const [isSelectionMode, setIsSelectionMode] = useState(false);
+  const [selectedForDeletion, setSelectedForDeletion] = useState<Set<string>>(
+    new Set()
+  );
 
   useEffect(() => {
     if (!authLoading && eventId) {
@@ -259,6 +263,69 @@ function GalerieContent() {
     }
   };
 
+  const toggleSelection = (mediaId: string) => {
+    const newSelection = new Set(selectedForDeletion);
+    if (newSelection.has(mediaId)) {
+      newSelection.delete(mediaId);
+    } else {
+      newSelection.add(mediaId);
+    }
+    setSelectedForDeletion(newSelection);
+  };
+
+  const handleDeleteSelected = async () => {
+    if (!eventId || selectedForDeletion.size === 0) return;
+
+    if (
+      !confirm(
+        `Êtes-vous sûr de vouloir supprimer ${selectedForDeletion.size} média(s) ?`
+      )
+    )
+      return;
+
+    const token = localStorage.getItem("auth_token");
+    let successCount = 0;
+    let errorCount = 0;
+
+    for (const mediaId of selectedForDeletion) {
+      try {
+        const apiUrl = API_ENDPOINTS.connexion.replace(
+          "/api/connexion",
+          `/api/evenements/${eventId}/medias/${mediaId}`
+        );
+
+        await apiRequest(apiUrl, {
+          method: "DELETE",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        successCount++;
+      } catch (error) {
+        console.error(`Erreur suppression ${mediaId}:`, error);
+        errorCount++;
+      }
+    }
+
+    // Rafraîchir la galerie
+    await fetchEventAndMedias();
+
+    // Réinitialiser la sélection
+    setSelectedForDeletion(new Set());
+    setIsSelectionMode(false);
+
+    if (errorCount > 0) {
+      alert(
+        `Suppression terminée: ${successCount} réussis, ${errorCount} échoués`
+      );
+    }
+  };
+
+  const cancelSelection = () => {
+    setSelectedForDeletion(new Set());
+    setIsSelectionMode(false);
+  };
+
   const filteredMedias = medias.filter((media) => {
     if (filter === "images") return media.type === "image";
     if (filter === "videos") return media.type === "video";
@@ -339,15 +406,17 @@ function GalerieContent() {
                     disabled={isUploading}
                   />
                 </label>
-                {!isSelectionMode && medias.filter(m => m.user_email === user.email).length > 0 && (
-                  <button
-                    onClick={() => setIsSelectionMode(true)}
-                    className="btn-secondary inline-flex items-center"
-                  >
-                    <FiTrash2 className="w-4 h-4 mr-2" />
-                    Sélectionner
-                  </button>
-                )}
+                {!isSelectionMode &&
+                  medias.filter((m) => m.user_email === user.email).length >
+                    0 && (
+                    <button
+                      onClick={() => setIsSelectionMode(true)}
+                      className="btn-secondary inline-flex items-center"
+                    >
+                      <FiTrash2 className="w-4 h-4 mr-2" />
+                      Sélectionner
+                    </button>
+                  )}
               </div>
             )}
           </div>
@@ -492,48 +561,78 @@ function GalerieContent() {
             {filteredMedias.map((media) => {
               const isMyMedia = user && media.user_email === user.email;
               const isSelected = selectedForDeletion.has(media.id);
-              
+
               return (
-              <div
-                key={media.id}
-                className={`group relative aspect-square bg-white rounded-lg overflow-hidden border-2 transition-all cursor-pointer ${
-                  isSelected 
-                    ? 'border-blue-600 ring-2 ring-blue-600' 
-                    : 'border-gray-200 hover:border-black'
-                }`}
-                onClick={() => {
-                  if (isSelectionMode && isMyMedia) {
-                    toggleSelection(media.id);
-                  } else if (!isSelectionMode) {
-                    setSelectedMedia(media);
-                  }
-                }}
-              >
-                {media.type === "image" ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
-                    src={media.url}
-                    alt={media.filename}
-                    className="w-full h-full object-cover"
-                  />
-                ) : (
-                  <div className="relative w-full h-full bg-black">
-                    <video
+                <div
+                  key={media.id}
+                  className={`group relative aspect-square bg-white rounded-lg overflow-hidden border-2 transition-all cursor-pointer ${
+                    isSelected
+                      ? "border-blue-600 ring-2 ring-blue-600"
+                      : "border-gray-200 hover:border-black"
+                  }`}
+                  onClick={() => {
+                    if (isSelectionMode && isMyMedia) {
+                      toggleSelection(media.id);
+                    } else if (!isSelectionMode) {
+                      setSelectedMedia(media);
+                    }
+                  }}
+                >
+                  {media.type === "image" ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
                       src={media.url}
+                      alt={media.filename}
                       className="w-full h-full object-cover"
                     />
-                    <div className="absolute inset-0 flex items-center justify-center bg-black/30">
-                      <FiPlay className="w-12 h-12 text-white" />
+                  ) : (
+                    <div className="relative w-full h-full bg-black">
+                      <video
+                        src={media.url}
+                        className="w-full h-full object-cover"
+                      />
+                      <div className="absolute inset-0 flex items-center justify-center bg-black/30">
+                        <FiPlay className="w-12 h-12 text-white" />
+                      </div>
                     </div>
+                  )}
+                  {/* Checkbox de sélection */}
+                  {isSelectionMode && isMyMedia && (
+                    <div className="absolute top-2 right-2 z-10">
+                      <div
+                        className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all ${
+                          isSelected
+                            ? "bg-blue-600 border-blue-600"
+                            : "bg-white/80 border-white"
+                        }`}
+                      >
+                        {isSelected && (
+                          <svg
+                            className="w-4 h-4 text-white"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={3}
+                              d="M5 13l4 4L19 7"
+                            />
+                          </svg>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-3 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <p className="text-white text-xs truncate">
+                      {media.user_name}
+                    </p>
                   </div>
-                )}
-                <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-3 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <p className="text-white text-xs truncate">
-                    {media.user_name}
-                  </p>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </div>
