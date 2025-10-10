@@ -221,11 +221,20 @@ function EventDetailsContent() {
     link.click();
   };
 
-  const filteredInscriptions = inscriptions.filter(
-    (insc) =>
-      insc.user_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      insc.user_email.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredInscriptions = inscriptions.filter((insc) => {
+    const searchLower = searchTerm.toLowerCase();
+
+    // Recherche dans l'organisateur
+    if (insc.user_name.toLowerCase().includes(searchLower)) return true;
+    if (insc.user_email.toLowerCase().includes(searchLower)) return true;
+
+    // Recherche dans les accompagnants
+    return insc.accompagnants.some(
+      (acc) =>
+        acc.firstname.toLowerCase().includes(searchLower) ||
+        acc.lastname.toLowerCase().includes(searchLower)
+    );
+  });
 
   if (isLoading) {
     return (
