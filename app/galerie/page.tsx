@@ -97,59 +97,116 @@ function GalerieContent() {
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files || !user || !eventId) return;
 
-    const file = e.target.files[0];
+    const files = Array.from(e.target.files);
 
-    // Validation du fichier
-    const validation = validateFile(file);
-    if (!validation.valid) {
-      alert(validation.error);
-      return;
+    // Validation de tous les fichiers
+    for (const file of files) {
+      const validation = validateFile(file);
+      if (!validation.valid) {
+        alert(`${file.name}: ${validation.error}`);
+        return;
+      }
     }
 
     setIsUploading(true);
-    setUploadProgress(0);
 
-    try {
-      // 1. Upload vers Cloudinary
-      const cloudinaryResult = await uploadToCloudinary(
-        file,
-        eventId,
-        user.email,
-        (progress) => setUploadProgress(progress)
-      );
+    // Initialiser la file d'attente
+    const queue = files.map((file) => ({
+      name: file.name,
+      progress: 0,
+      status: "pending" as const,
+    }));
+    setUploadQueue(queue);
 
-      // 2. Enregistrer les métadonnées dans le backend
-      const token = localStorage.getItem("auth_token");
-      const apiUrl = API_ENDPOINTS.connexion.replace(
-        "/api/connexion",
-        `/api/evenements/${eventId}/medias`
-      );
+    const token = localStorage.getItem("auth_token");
+    let successCount = 0;
+    let errorCount = 0;
 
-      await apiRequest(apiUrl, {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          user_email: user.email,
-          type: cloudinaryResult.type,
-          url: cloudinaryResult.url,
-          storage_path: cloudinaryResult.storage_path,
-          filename: cloudinaryResult.filename,
-          size: cloudinaryResult.size,
-        }),
-      });
+    // Upload des fichiers un par un
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
 
-      // 3. Rafraîchir la galerie
-      await fetchEventAndMedias();
-      setIsUploading(false);
-      setUploadProgress(0);
-    } catch (error) {
-      console.error("Erreur upload:", error);
-      alert("Erreur lors de l'upload");
-      setIsUploading(false);
-      setUploadProgress(0);
+      try {
+        // Mettre à jour le statut: uploading
+        setUploadQueue((prev) =>
+          prev.map((item, idx) =>
+            idx === i ? { ...item, status: "uploading" } : item
+          )
+        );
+
+        // 1. Upload vers Cloudinary avec progression
+        const cloudinaryResult = await uploadToCloudinary(
+          file,
+          eventId,
+          user.email,
+          (progress) => {
+            setUploadQueue((prev) =>
+              prev.map((item, idx) =>
+                idx === i ? { ...item, progress } : item
+              )
+            );
+          }
+        );
+
+        // 2. Enregistrer les métadonnées dans le backend
+        const apiUrl = API_ENDPOINTS.connexion.replace(
+          "/api/connexion",
+          `/api/evenements/${eventId}/medias`
+        );
+
+        await apiRequest(apiUrl, {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            user_email: user.email,
+            type: cloudinaryResult.type,
+            url: cloudinaryResult.url,
+            storage_path: cloudinaryResult.storage_path,
+            filename: cloudinaryResult.filename,
+            size: cloudinaryResult.size,
+          }),
+        });
+
+        // Marquer comme terminé
+        setUploadQueue((prev) =>
+          prev.map((item, idx) =>
+            idx === i ? { ...item, status: "done", progress: 100 } : item
+          )
+        );
+
+        successCount++;
+      } catch (error) {
+        console.error(`Erreur upload ${file.name}:`, error);
+
+        // Marquer comme erreur
+        setUploadQueue((prev) =>
+          prev.map((item, idx) =>
+            idx === i ? { ...item, status: "error" } : item
+          )
+        );
+
+        errorCount++;
+      }
     }
+
+    // Rafraîchir la galerie
+    await fetchEventAndMedias();
+
+    // Afficher le résumé
+    if (errorCount > 0) {
+      alert(`Upload terminé: ${successCount} réussis, ${errorCount} échoués`);
+    }
+
+    // Nettoyer après 3 secondes
+    setTimeout(() => {
+      setUploadQueue([]);
+      setIsUploading(false);
+    }, 3000);
+
+    // Réinitialiser l'input pour permettre de re-uploader les mêmes fichiers
+    e.target.value = "";
   };
 
   const handleDelete = async (media: Media) => {
@@ -287,20 +344,63 @@ function GalerieContent() {
           </div>
         </div>
 
-        {/* Upload Progress */}
-        {isUploading && (
-          <div className="mb-6 p-4 bg-white border border-gray-200 rounded-lg">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-sm text-gray-700">Upload en cours...</span>
-              <span className="text-sm font-medium text-black">
-                {uploadProgress}%
+        {/* Upload Progress - Multiple files */}
+        {uploadQueue.length > 0 && (
+          <div className="mb-6 p-4 bg-white border border-gray-200 rounded-lg space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="text-sm font-medium text-gray-900">
+                Upload en cours (
+                {uploadQueue.filter((f) => f.status === "done").length}/
+                {uploadQueue.length})
               </span>
             </div>
-            <div className="w-full bg-gray-200 rounded-full h-2">
-              <div
-                className="bg-black h-2 rounded-full transition-all duration-300"
-                style={{ width: `${uploadProgress}%` }}
-              ></div>
+            <div className="space-y-2 max-h-60 overflow-y-auto">
+              {uploadQueue.map((file, index) => (
+                <div key={index} className="space-y-1">
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="text-gray-700 truncate flex-1 pr-2">
+                      {file.name}
+                    </span>
+                    <span
+                      className={`font-medium whitespace-nowrap ${
+                        file.status === "done"
+                          ? "text-green-600"
+                          : file.status === "error"
+                          ? "text-red-600"
+                          : file.status === "uploading"
+                          ? "text-blue-600"
+                          : "text-gray-500"
+                      }`}
+                    >
+                      {file.status === "done"
+                        ? "✓ Terminé"
+                        : file.status === "error"
+                        ? "✗ Erreur"
+                        : file.status === "uploading"
+                        ? `${file.progress}%`
+                        : "En attente"}
+                    </span>
+                  </div>
+                  {file.status === "uploading" && (
+                    <div className="w-full bg-gray-200 rounded-full h-1.5">
+                      <div
+                        className="bg-blue-600 h-1.5 rounded-full transition-all duration-300"
+                        style={{ width: `${file.progress}%` }}
+                      ></div>
+                    </div>
+                  )}
+                  {file.status === "done" && (
+                    <div className="w-full bg-green-200 rounded-full h-1.5">
+                      <div className="bg-green-600 h-1.5 rounded-full w-full"></div>
+                    </div>
+                  )}
+                  {file.status === "error" && (
+                    <div className="w-full bg-red-200 rounded-full h-1.5">
+                      <div className="bg-red-600 h-1.5 rounded-full w-full"></div>
+                    </div>
+                  )}
+                </div>
+              ))}
             </div>
           </div>
         )}
