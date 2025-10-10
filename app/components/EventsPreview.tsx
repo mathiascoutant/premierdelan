@@ -200,14 +200,12 @@ export default function EventsPreview() {
                           S&apos;inscrire
                         </Link>
                       )}
-                      <button
+                      <Link
+                        href={`/galerie?event=${event.id}`}
                         className="btn-secondary whitespace-nowrap text-center"
-                        onClick={() =>
-                          alert("La galerie sera bientôt disponible !")
-                        }
                       >
                         Voir la galerie
-                      </button>
+                      </Link>
                     </div>
                   </div>
                 </div>
