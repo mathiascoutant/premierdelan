@@ -53,7 +53,7 @@ export default function Header() {
           message: `Bonjour ${user?.prenom} ! Test de notification réussi.`,
           data: {
             action: "test",
-            url: "/mes-evenements"
+            url: "/mes-evenements",
           },
         }),
       });
