@@ -492,14 +492,9 @@ function EventDetailsContent() {
                         .toUpperCase()}
                     </div>
                     <div>
-                      <div className="flex items-center gap-2 mb-1">
-                        <p className="text-lg font-medium text-black">
-                          {inscription.user_name}
-                        </p>
-                        <span className="px-2 py-1 bg-blue-600 text-white rounded text-xs font-medium">
-                          Inscrit par
-                        </span>
-                      </div>
+                      <p className="text-lg font-medium text-black mb-1">
+                        {inscription.user_name}
+                      </p>
                       <div className="flex items-center gap-4 text-sm text-gray-600">
                         <span className="flex items-center">
                           <FiMail className="w-4 h-4 mr-1.5" />
@@ -552,7 +547,7 @@ function EventDetailsContent() {
                             {acc.firstname} {acc.lastname}
                           </p>
                           <p className="text-xs text-gray-500">
-                            Invité de {inscription.user_name.split(" ")[0]}
+                            Inscrit par {inscription.user_name.split(" ")[0]}
                           </p>
                         </div>
                       </div>
