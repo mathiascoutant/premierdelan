@@ -57,7 +57,7 @@ function EventDetailsContent() {
   const searchParams = useSearchParams();
   const eventId = searchParams.get("event");
   const router = useRouter();
-  const { isAdmin } = useAuth();
+  const { isAdmin, isLoading: authLoading } = useAuth();
 
   const [event, setEvent] = useState<Event | null>(null);
   const [inscriptions, setInscriptions] = useState<Inscription[]>([]);
