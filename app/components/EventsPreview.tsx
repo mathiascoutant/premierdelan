@@ -6,6 +6,7 @@ import { API_ENDPOINTS, apiRequest } from "../config/api";
 import { useAuth } from "../hooks/useAuth";
 import InscriptionEventModal from "./InscriptionEventModal";
 import GererInscriptionModal from "./GererInscriptionModal";
+import Countdown from "./Countdown";
 
 interface Event {
   id: string;
@@ -17,6 +18,8 @@ interface Event {
   photos_count: number;
   statut: string;
   lieu?: string;
+  date_ouverture_inscription?: string;
+  date_fermeture_inscription?: string;
   user_inscription?: any; // Données d'inscription si l'utilisateur est inscrit
 }
 
@@ -118,6 +121,20 @@ export default function EventsPreview() {
           <div className="space-y-px bg-black">
             {events.map((event) => {
               const placesRestantes = event.capacite - event.inscrits;
+              const now = new Date();
+              const dateOuverture = event.date_ouverture_inscription
+                ? new Date(event.date_ouverture_inscription)
+                : null;
+              const dateFermeture = event.date_fermeture_inscription
+                ? new Date(event.date_fermeture_inscription)
+                : null;
+
+              const isBeforeOpening = dateOuverture && now < dateOuverture;
+              const isAfterClosing = dateFermeture && now > dateFermeture;
+              const isOpen =
+                !isBeforeOpening &&
+                !isAfterClosing &&
+                event.statut === "ouvert";
 
               return (
                 <div
@@ -171,7 +188,21 @@ export default function EventsPreview() {
                       </div>
                     </div>
                     <div className="flex flex-col sm:flex-row lg:flex-col gap-3">
-                      {user ? (
+                      {isBeforeOpening ? (
+                        <button
+                          disabled
+                          className="btn-primary whitespace-nowrap text-center opacity-50 cursor-not-allowed"
+                        >
+                          Prochainement
+                        </button>
+                      ) : isAfterClosing ? (
+                        <button
+                          disabled
+                          className="btn-primary whitespace-nowrap text-center opacity-50 cursor-not-allowed"
+                        >
+                          Inscriptions fermées
+                        </button>
+                      ) : user ? (
                         event.user_inscription ? (
                           <button
                             onClick={() =>
