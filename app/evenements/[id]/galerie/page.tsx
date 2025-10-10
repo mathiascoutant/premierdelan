@@ -12,6 +12,7 @@ export default function GaleriePage({
   params: Promise<{ id: string }>;
 }) {
   const resolvedParams = use(params);
+  const eventId = resolvedParams.id;
 
   return <GalerieClient eventId={eventId} />;
 }
