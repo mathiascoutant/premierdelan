@@ -1,6 +1,4 @@
-// Service Worker pour Firebase Cloud Messaging
-// Version avec contrôle total (pas de "from ...")
-
+// Service Worker Firebase Cloud Messaging
 importScripts(
   "https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"
 );
@@ -9,53 +7,47 @@ importScripts(
 );
 
 // Configuration Firebase
-const firebaseConfig = {
+firebase.initializeApp({
   apiKey: "AIzaSyBdQ8j21Vx7N2myh6ir8gY_zZkRCl-25qI",
   authDomain: "premier-de-lan.firebaseapp.com",
   projectId: "premier-de-lan",
   storageBucket: "premier-de-lan.firebasestorage.app",
   messagingSenderId: "220494656911",
   appId: "1:220494656911:web:2ff99839c5f7271ddf07fa",
-};
+});
 
-// Initialiser Firebase
-firebase.initializeApp(firebaseConfig);
 const messaging = firebase.messaging();
 
-// Intercepter l'événement push AVANT Firebase pour avoir le contrôle total
-self.addEventListener("push", function (event) {
-  console.log("📩 Push event reçu:", event);
+// Gérer les notifications en arrière-plan
+// IMPORTANT: Si vous recevez 2 notifications, c'est que le backend envoie
+// un "notification message" au lieu d'un "data message"
+// Voir BACKEND_FCM_FORMAT.md pour la solution
+messaging.onBackgroundMessage((payload) => {
+  console.log("📩 Notification Firebase reçue:", payload);
 
-  if (!event.data) {
-    console.log("Pas de données dans le push");
-    return;
-  }
+  // Extraire titre et message
+  // Si backend envoie "data message" → payload.data.title, payload.data.message
+  // Si backend envoie "notification message" → payload.notification.title, payload.notification.body
+  const title =
+    payload.notification?.title || payload.data?.title || "Notification";
+  const body =
+    payload.notification?.body ||
+    payload.data?.message ||
+    payload.data?.body ||
+    "";
 
-  try {
-    const payload = event.data.json();
-    console.log("Payload:", payload);
+  const options = {
+    body: body,
+    icon: "/premierdelan/icon-192x192.png",
+    badge: "/premierdelan/icon-192x192.png",
+    vibrate: [200, 100, 200],
+    tag: "fcm-notification",
+    requireInteraction: false,
+    data: payload.data || {},
+  };
 
-    // Extraire les données (format Firebase)
-    const notificationData = payload.notification || payload.data || {};
-    const title =
-      notificationData.title || payload.data?.title || "Notification";
-    const body = notificationData.body || payload.data?.message || "";
-
-    const options = {
-      body: body,
-      icon: "/premierdelan/icon-192x192.png",
-      badge: "/premierdelan/icon-192x192.png",
-      vibrate: [200, 100, 200],
-      data: payload.data || {},
-      tag: "premier-notification",
-      requireInteraction: false,
-      silent: false,
-    };
-
-    event.waitUntil(self.registration.showNotification(title, options));
-  } catch (error) {
-    console.error("Erreur parsing notification:", error);
-  }
+  // Afficher la notification
+  return self.registration.showNotification(title, options);
 });
 
 // Gérer le clic sur la notification
