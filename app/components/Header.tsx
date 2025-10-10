@@ -34,6 +34,8 @@ export default function Header() {
     { label: "Connexion", href: "/connexion", isHash: false },
   ];
 
+  const isUserAdmin = user?.admin === 1;
+
   // Fonction pour tester les notifications (mobile)
   const handleTestNotification = async () => {
     setIsTestingNotification(true);
@@ -118,6 +120,16 @@ export default function Header() {
                   </Link>
                 )
               )}
+
+            {/* Lien Admin si user est admin */}
+            {isUserAdmin && (
+              <Link
+                href="/admin"
+                className="text-sm tracking-wide text-black font-medium hover:text-gray-600 transition-colors duration-200 uppercase border-b-2 border-black"
+              >
+                Admin
+              </Link>
+            )}
 
             {!isLoading && (
               <>

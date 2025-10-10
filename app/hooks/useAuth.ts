@@ -7,6 +7,7 @@ export interface User {
   nom: string
   email: string
   photo?: string
+  admin?: number  // 1 = admin, 0 ou undefined = user normal
 }
 
 export function useAuth() {
@@ -39,6 +40,9 @@ export function useAuth() {
     window.location.href = `${basePath}/`
   }
 
-  return { user, isLoading, logout }
-}
+  const isAdmin = () => {
+    return user?.admin === 1
+  }
 
+  return { user, isLoading, logout, isAdmin }
+}

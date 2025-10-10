@@ -137,6 +137,17 @@ export default function UserMenu({ user, onLogout }: UserMenuProps) {
 
           {/* Options du menu */}
           <div className="py-2">
+            {user.admin === 1 && (
+              <Link
+                href="/admin"
+                className="flex items-center px-4 py-2 text-sm text-black font-medium hover:bg-gray-50 transition-colors border-b border-gray-100"
+                onClick={() => setIsOpen(false)}
+              >
+                <FiSettings className="w-4 h-4 mr-3" />
+                Espace Admin
+              </Link>
+            )}
+
             <Link
               href="/profil"
               className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
