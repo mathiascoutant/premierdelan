@@ -1,68 +1,68 @@
-'use client'
+"use client";
 
-import { useState, useEffect } from 'react'
-import { FiSearch, FiMail, FiPhone, FiShield, FiTrash2, FiEdit } from 'react-icons/fi'
-import { API_ENDPOINTS, apiRequest } from '../../config/api'
-import EditUserModal from '../../components/admin/EditUserModal'
-import DeleteUserModal from '../../components/admin/DeleteUserModal'
+import { useState, useEffect } from "react";
+import {
+  FiSearch,
+  FiMail,
+  FiPhone,
+  FiShield,
+  FiTrash2,
+  FiEdit,
+} from "react-icons/fi";
+import { API_ENDPOINTS, apiRequest } from "../../config/api";
+import EditUserModal from "../../components/admin/EditUserModal";
+import DeleteUserModal from "../../components/admin/DeleteUserModal";
 
 interface Utilisateur {
-  id: string
-  firstname: string
-  lastname: string
-  email: string
-  phone: string
-  admin: number
-  created_at: string
-  code_soiree?: string
+  id: string;
+  firstname: string;
+  lastname: string;
+  email: string;
+  phone: string;
+  admin: number;
+  created_at: string;
+  code_soiree?: string;
 }
 
 export default function UtilisateursPage() {
-  const [utilisateurs, setUtilisateurs] = useState<Utilisateur[]>([])
-  const [isLoading, setIsLoading] = useState(true)
-  const [searchTerm, setSearchTerm] = useState('')
-  const [editingUser, setEditingUser] = useState<Utilisateur | null>(null)
-  const [deletingUser, setDeletingUser] = useState<Utilisateur | null>(null)
+  const [utilisateurs, setUtilisateurs] = useState<Utilisateur[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [editingUser, setEditingUser] = useState<Utilisateur | null>(null);
+  const [deletingUser, setDeletingUser] = useState<Utilisateur | null>(null);
 
   useEffect(() => {
-    fetchUtilisateurs()
-  }, [])
+    fetchUtilisateurs();
+  }, []);
 
   const fetchUtilisateurs = async () => {
     try {
-      const token = localStorage.getItem('auth_token')
-      const apiUrl = API_ENDPOINTS.connexion.replace('/api/connexion', '/api/admin/utilisateurs')
+      const token = localStorage.getItem("auth_token");
+      const apiUrl = API_ENDPOINTS.connexion.replace(
+        "/api/connexion",
+        "/api/admin/utilisateurs"
+      );
       const response = await apiRequest(apiUrl, {
-        method: 'GET',
+        method: "GET",
         headers: {
-          'Authorization': `Bearer ${token}`,
+          Authorization: `Bearer ${token}`,
         },
-      })
-      setUtilisateurs(response.utilisateurs || [])
+      });
+      setUtilisateurs(response.utilisateurs || []);
     } catch (error) {
-      console.error('Erreur chargement utilisateurs:', error)
-      // Données de test en cas d'erreur
-      setUtilisateurs([
-        {
-          id: '1',
-          firstname: 'Test',
-          lastname: 'User',
-          email: 'test@example.com',
-          phone: '0612345678',
-          admin: 0,
-          created_at: new Date().toISOString()
-        }
-      ])
+      console.error("Erreur chargement utilisateurs:", error);
+      setUtilisateurs([]);
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
-  const filteredUsers = utilisateurs.filter(user =>
-    (user.firstname || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (user.lastname || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (user.email || '').toLowerCase().includes(searchTerm.toLowerCase())
-  )
+  const filteredUsers = utilisateurs.filter(
+    (user) =>
+      (user.firstname || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (user.lastname || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (user.email || "").toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   return (
     <div>
@@ -96,14 +96,16 @@ export default function UtilisateursPage() {
           <p className="text-xs tracking-wider uppercase text-gray-500 mb-1 md:mb-2">
             Total Utilisateurs
           </p>
-          <p className="text-2xl md:text-3xl font-light text-black">{utilisateurs.length}</p>
+          <p className="text-2xl md:text-3xl font-light text-black">
+            {utilisateurs.length}
+          </p>
         </div>
         <div className="bg-white border border-gray-200 rounded-lg p-4 md:p-6">
           <p className="text-xs tracking-wider uppercase text-gray-500 mb-1 md:mb-2">
             Administrateurs
           </p>
           <p className="text-2xl md:text-3xl font-light text-black">
-            {utilisateurs.filter(u => u.admin === 1).length}
+            {utilisateurs.filter((u) => u.admin === 1).length}
           </p>
         </div>
         <div className="bg-white border border-gray-200 rounded-lg p-4 md:p-6 col-span-2 lg:col-span-1">
@@ -111,13 +113,13 @@ export default function UtilisateursPage() {
             Utilisateurs Standards
           </p>
           <p className="text-2xl md:text-3xl font-light text-black">
-            {utilisateurs.filter(u => u.admin !== 1).length}
+            {utilisateurs.filter((u) => u.admin !== 1).length}
           </p>
         </div>
       </div>
 
       {/* Liste des utilisateurs - Mobile: Cards, Desktop: Table */}
-      
+
       {/* Version Mobile */}
       <div className="md:hidden space-y-4">
         {isLoading ? (
@@ -131,11 +133,15 @@ export default function UtilisateursPage() {
           </div>
         ) : (
           filteredUsers.map((utilisateur) => (
-            <div key={utilisateur.id} className="bg-white border border-gray-200 rounded-lg p-4">
+            <div
+              key={utilisateur.id}
+              className="bg-white border border-gray-200 rounded-lg p-4"
+            >
               <div className="flex items-start justify-between mb-3">
                 <div className="flex items-center space-x-3">
                   <div className="w-12 h-12 bg-gradient-to-br from-gray-700 to-gray-900 rounded-full flex items-center justify-center text-white text-sm font-medium">
-                    {(utilisateur.firstname?.charAt(0) || '').toUpperCase()}{(utilisateur.lastname?.charAt(0) || '').toUpperCase()}
+                    {(utilisateur.firstname?.charAt(0) || "").toUpperCase()}
+                    {(utilisateur.lastname?.charAt(0) || "").toUpperCase()}
                   </div>
                   <div>
                     <p className="font-medium text-gray-900">
@@ -157,26 +163,28 @@ export default function UtilisateursPage() {
               <div className="space-y-2 mb-3">
                 <div className="flex items-center text-sm text-gray-600">
                   <FiMail className="w-4 h-4 mr-2 flex-shrink-0" />
-                  <span className="truncate">{utilisateur.email || 'Non renseigné'}</span>
+                  <span className="truncate">
+                    {utilisateur.email || "Non renseigné"}
+                  </span>
                 </div>
                 <div className="flex items-center text-sm text-gray-600">
                   <FiPhone className="w-4 h-4 mr-2 flex-shrink-0" />
-                  <span>{utilisateur.phone || 'Non renseigné'}</span>
+                  <span>{utilisateur.phone || "Non renseigné"}</span>
                 </div>
               </div>
               <div className="flex items-center justify-between pt-3 border-t border-gray-100">
                 <span className="text-xs text-gray-500">
-                  {new Date(utilisateur.created_at).toLocaleDateString('fr-FR')}
+                  {new Date(utilisateur.created_at).toLocaleDateString("fr-FR")}
                 </span>
                 <div className="flex items-center space-x-2">
-                  <button 
+                  <button
                     onClick={() => setEditingUser(utilisateur)}
                     className="p-2 text-gray-600 hover:text-black transition-colors"
                     title="Modifier"
                   >
                     <FiEdit className="w-4 h-4" />
                   </button>
-                  <button 
+                  <button
                     onClick={() => setDeletingUser(utilisateur)}
                     className="p-2 text-red-600 hover:text-red-700 transition-colors"
                     title="Supprimer"
@@ -222,11 +230,19 @@ export default function UtilisateursPage() {
               </thead>
               <tbody className="divide-y divide-gray-200">
                 {filteredUsers.map((utilisateur) => (
-                  <tr key={utilisateur.id} className="hover:bg-gray-50 transition-colors">
+                  <tr
+                    key={utilisateur.id}
+                    className="hover:bg-gray-50 transition-colors"
+                  >
                     <td className="px-4 py-4">
                       <div className="flex items-center space-x-3">
                         <div className="w-10 h-10 bg-gradient-to-br from-gray-700 to-gray-900 rounded-full flex items-center justify-center text-white text-sm font-medium flex-shrink-0">
-                          {(utilisateur.firstname?.charAt(0) || '').toUpperCase()}{(utilisateur.lastname?.charAt(0) || '').toUpperCase()}
+                          {(
+                            utilisateur.firstname?.charAt(0) || ""
+                          ).toUpperCase()}
+                          {(
+                            utilisateur.lastname?.charAt(0) || ""
+                          ).toUpperCase()}
                         </div>
                         <div className="min-w-0">
                           <p className="font-medium text-gray-900 truncate">
@@ -239,11 +255,13 @@ export default function UtilisateursPage() {
                       <div className="space-y-1 min-w-0">
                         <div className="flex items-center text-sm text-gray-600">
                           <FiMail className="w-4 h-4 mr-2 flex-shrink-0" />
-                          <span className="truncate">{utilisateur.email || 'Non renseigné'}</span>
+                          <span className="truncate">
+                            {utilisateur.email || "Non renseigné"}
+                          </span>
                         </div>
                         <div className="flex items-center text-sm text-gray-600">
                           <FiPhone className="w-4 h-4 mr-2 flex-shrink-0" />
-                          <span>{utilisateur.phone || 'Non renseigné'}</span>
+                          <span>{utilisateur.phone || "Non renseigné"}</span>
                         </div>
                       </div>
                     </td>
@@ -261,16 +279,16 @@ export default function UtilisateursPage() {
                     </td>
                     <td className="px-4 py-4 text-right">
                       <div className="flex items-center justify-end space-x-1">
-                        <button 
+                        <button
                           onClick={() => setEditingUser(utilisateur)}
-                          className="p-2 text-gray-600 hover:text-black transition-colors" 
+                          className="p-2 text-gray-600 hover:text-black transition-colors"
                           title="Modifier"
                         >
                           <FiEdit className="w-4 h-4" />
                         </button>
-                        <button 
+                        <button
                           onClick={() => setDeletingUser(utilisateur)}
-                          className="p-2 text-red-600 hover:text-red-700 transition-colors" 
+                          className="p-2 text-red-600 hover:text-red-700 transition-colors"
                           title="Supprimer"
                         >
                           <FiTrash2 className="w-4 h-4" />
@@ -292,8 +310,8 @@ export default function UtilisateursPage() {
           user={editingUser}
           onClose={() => setEditingUser(null)}
           onSave={() => {
-            fetchUtilisateurs()
-            setEditingUser(null)
+            fetchUtilisateurs();
+            setEditingUser(null);
           }}
         />
       )}
@@ -303,12 +321,11 @@ export default function UtilisateursPage() {
           user={deletingUser}
           onClose={() => setDeletingUser(null)}
           onDelete={() => {
-            fetchUtilisateurs()
-            setDeletingUser(null)
+            fetchUtilisateurs();
+            setDeletingUser(null);
           }}
         />
       )}
     </div>
-  )
+  );
 }
-

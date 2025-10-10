@@ -1,66 +1,64 @@
-'use client'
+"use client";
 
-import { useState, useEffect } from 'react'
-import { FiPlus, FiCalendar, FiUsers, FiImage, FiEdit, FiTrash2 } from 'react-icons/fi'
-import { API_ENDPOINTS, apiRequest } from '../../config/api'
-import CreateEventModal from '../../components/admin/CreateEventModal'
-import EditEventModal from '../../components/admin/EditEventModal'
-import DeleteEventModal from '../../components/admin/DeleteEventModal'
+import { useState, useEffect } from "react";
+import {
+  FiPlus,
+  FiCalendar,
+  FiUsers,
+  FiImage,
+  FiEdit,
+  FiTrash2,
+} from "react-icons/fi";
+import { API_ENDPOINTS, apiRequest } from "../../config/api";
+import CreateEventModal from "../../components/admin/CreateEventModal";
+import EditEventModal from "../../components/admin/EditEventModal";
+import DeleteEventModal from "../../components/admin/DeleteEventModal";
 
 interface Evenement {
-  id: string
-  titre: string
-  date: string
-  description: string
-  capacite: number
-  inscrits: number
-  photos_count: number
-  statut: string
-  lieu?: string
-  code_soiree?: string
+  id: string;
+  titre: string;
+  date: string;
+  description: string;
+  capacite: number;
+  inscrits: number;
+  photos_count: number;
+  statut: string;
+  lieu?: string;
+  code_soiree?: string;
 }
 
 export default function EvenementsPage() {
-  const [evenements, setEvenements] = useState<Evenement[]>([])
-  const [isLoading, setIsLoading] = useState(true)
-  const [isCreating, setIsCreating] = useState(false)
-  const [editingEvent, setEditingEvent] = useState<Evenement | null>(null)
-  const [deletingEvent, setDeletingEvent] = useState<Evenement | null>(null)
+  const [evenements, setEvenements] = useState<Evenement[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isCreating, setIsCreating] = useState(false);
+  const [editingEvent, setEditingEvent] = useState<Evenement | null>(null);
+  const [deletingEvent, setDeletingEvent] = useState<Evenement | null>(null);
 
   useEffect(() => {
-    fetchEvenements()
-  }, [])
+    fetchEvenements();
+  }, []);
 
   const fetchEvenements = async () => {
     try {
-      const token = localStorage.getItem('auth_token')
-      const apiUrl = API_ENDPOINTS.connexion.replace('/api/connexion', '/api/admin/evenements')
+      const token = localStorage.getItem("auth_token");
+      const apiUrl = API_ENDPOINTS.connexion.replace(
+        "/api/connexion",
+        "/api/admin/evenements"
+      );
       const response = await apiRequest(apiUrl, {
-        method: 'GET',
+        method: "GET",
         headers: {
-          'Authorization': `Bearer ${token}`,
+          Authorization: `Bearer ${token}`,
         },
-      })
-      setEvenements(response.evenements || [])
+      });
+      setEvenements(response.evenements || []);
     } catch (error) {
-      console.error('Erreur chargement événements:', error)
-      // Données de test en cas d'erreur
-      setEvenements([
-        {
-          id: '1',
-          titre: 'Réveillon 2026',
-          date: '2025-12-31T20:00:00Z',
-          description: 'Célébrez la nouvelle année',
-          capacite: 100,
-          inscrits: 45,
-          photos_count: 247,
-          statut: 'ouvert'
-        }
-      ])
+      console.error("Erreur chargement événements:", error);
+      setEvenements([]);
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   return (
     <div>
@@ -75,7 +73,7 @@ export default function EvenementsPage() {
               Créez et gérez vos événements privés
             </p>
           </div>
-          <button 
+          <button
             onClick={() => setIsCreating(true)}
             className="btn-primary flex items-center justify-center whitespace-nowrap"
           >
@@ -91,14 +89,16 @@ export default function EvenementsPage() {
           <p className="text-xs tracking-wider uppercase text-gray-500 mb-1 md:mb-2">
             Total Événements
           </p>
-          <p className="text-2xl md:text-3xl font-light text-black">{evenements.length}</p>
+          <p className="text-2xl md:text-3xl font-light text-black">
+            {evenements.length}
+          </p>
         </div>
         <div className="bg-white border border-gray-200 rounded-lg p-4 md:p-6">
           <p className="text-xs tracking-wider uppercase text-gray-500 mb-1 md:mb-2">
             À venir
           </p>
           <p className="text-2xl md:text-3xl font-light text-black">
-            {evenements.filter(e => e.statut === 'ouvert').length}
+            {evenements.filter((e) => e.statut === "ouvert").length}
           </p>
         </div>
         <div className="bg-white border border-gray-200 rounded-lg p-4 md:p-6">
@@ -130,10 +130,7 @@ export default function EvenementsPage() {
           <div className="p-12 text-center">
             <FiCalendar className="w-16 h-16 text-gray-300 mx-auto mb-4" />
             <p className="text-gray-600 mb-4">Aucun événement créé</p>
-            <button 
-              onClick={() => setIsCreating(true)}
-              className="btn-primary"
-            >
+            <button onClick={() => setIsCreating(true)} className="btn-primary">
               <FiPlus className="inline-block w-4 h-4 mr-2" />
               Créer le premier événement
             </button>
@@ -141,20 +138,25 @@ export default function EvenementsPage() {
         ) : (
           <div className="grid grid-cols-1 gap-px bg-gray-200">
             {evenements.map((event) => (
-              <div key={event.id} className="bg-white p-4 md:p-6 hover:bg-gray-50 transition-colors">
+              <div
+                key={event.id}
+                className="bg-white p-4 md:p-6 hover:bg-gray-50 transition-colors"
+              >
                 <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
                   <div className="flex-1 min-w-0">
                     <div className="flex flex-wrap items-center gap-2 md:gap-3 mb-3">
                       <h3 className="text-lg md:text-xl font-medium text-black">
                         {event.titre}
                       </h3>
-                      <span className={`px-3 py-1 rounded-full text-xs font-medium ${
-                        event.statut === 'ouvert' 
-                          ? 'bg-green-100 text-green-700'
-                          : event.statut === 'complet'
-                          ? 'bg-red-100 text-red-700'
-                          : 'bg-gray-100 text-gray-700'
-                      }`}>
+                      <span
+                        className={`px-3 py-1 rounded-full text-xs font-medium ${
+                          event.statut === "ouvert"
+                            ? "bg-green-100 text-green-700"
+                            : event.statut === "complet"
+                            ? "bg-red-100 text-red-700"
+                            : "bg-gray-100 text-gray-700"
+                        }`}
+                      >
                         {event.statut}
                       </span>
                     </div>
@@ -165,14 +167,14 @@ export default function EvenementsPage() {
                       <div className="flex items-center">
                         <FiCalendar className="w-4 h-4 mr-2 flex-shrink-0" />
                         <span className="hidden sm:inline">
-                          {new Date(event.date).toLocaleDateString('fr-FR', {
-                            day: 'numeric',
-                            month: 'long',
-                            year: 'numeric'
+                          {new Date(event.date).toLocaleDateString("fr-FR", {
+                            day: "numeric",
+                            month: "long",
+                            year: "numeric",
                           })}
                         </span>
                         <span className="sm:hidden">
-                          {new Date(event.date).toLocaleDateString('fr-FR')}
+                          {new Date(event.date).toLocaleDateString("fr-FR")}
                         </span>
                       </div>
                       <div className="flex items-center">
@@ -186,14 +188,14 @@ export default function EvenementsPage() {
                     </div>
                   </div>
                   <div className="flex sm:flex-col items-center gap-2">
-                    <button 
+                    <button
                       onClick={() => setEditingEvent(event)}
                       className="p-2 text-gray-600 hover:text-black transition-colors"
                       title="Modifier"
                     >
                       <FiEdit className="w-5 h-5" />
                     </button>
-                    <button 
+                    <button
                       onClick={() => setDeletingEvent(event)}
                       className="p-2 text-red-600 hover:text-red-700 transition-colors"
                       title="Supprimer"
@@ -213,8 +215,8 @@ export default function EvenementsPage() {
         <CreateEventModal
           onClose={() => setIsCreating(false)}
           onCreate={() => {
-            fetchEvenements()
-            setIsCreating(false)
+            fetchEvenements();
+            setIsCreating(false);
           }}
         />
       )}
@@ -224,8 +226,8 @@ export default function EvenementsPage() {
           event={editingEvent}
           onClose={() => setEditingEvent(null)}
           onSave={() => {
-            fetchEvenements()
-            setEditingEvent(null)
+            fetchEvenements();
+            setEditingEvent(null);
           }}
         />
       )}
@@ -235,12 +237,11 @@ export default function EvenementsPage() {
           event={deletingEvent}
           onClose={() => setDeletingEvent(null)}
           onDelete={() => {
-            fetchEvenements()
-            setDeletingEvent(null)
+            fetchEvenements();
+            setDeletingEvent(null);
           }}
         />
       )}
     </div>
-  )
+  );
 }
-

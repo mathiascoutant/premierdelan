@@ -42,43 +42,7 @@ export default function EventsPreview() {
       setEvents(openEvents);
     } catch (error) {
       console.error("Erreur chargement événements:", error);
-      // Données de fallback en cas d'erreur
-      setEvents([
-        {
-          id: "1",
-          titre: "Réveillon 2026",
-          date: "2025-12-31T20:00:00Z",
-          description:
-            "Célébrez la nouvelle année et partagez vos meilleurs moments.",
-          capacite: 100,
-          inscrits: 45,
-          photos_count: 0,
-          statut: "ouvert",
-          lieu: "Villa Privée",
-        },
-        {
-          id: "2",
-          titre: "Summer Vibes",
-          date: "2025-07-15T19:00:00Z",
-          description: "Soirée d'été exclusive avec piscine et DJ.",
-          capacite: 80,
-          inscrits: 75,
-          photos_count: 0,
-          statut: "ouvert",
-          lieu: "Beach Club",
-        },
-        {
-          id: "3",
-          titre: "White Party",
-          date: "2025-06-20T20:00:00Z",
-          description: "Soirée élégante sur le thème blanc.",
-          capacite: 120,
-          inscrits: 0,
-          photos_count: 247,
-          statut: "ouvert",
-          lieu: "Club Privé",
-        },
-      ]);
+      setEvents([]);
     } finally {
       setIsLoading(false);
     }
