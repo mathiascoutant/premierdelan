@@ -13,6 +13,8 @@ interface Event {
   lieu?: string
   code_soiree?: string
   statut: string
+  date_ouverture_inscription?: string
+  date_fermeture_inscription?: string
 }
 
 interface EditEventModalProps {
