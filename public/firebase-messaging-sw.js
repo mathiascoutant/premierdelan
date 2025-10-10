@@ -19,9 +19,19 @@ firebase.initializeApp(firebaseConfig);
 const messaging = firebase.messaging();
 
 // Gérer les notifications en arrière-plan
+// IMPORTANT: Firebase affiche automatiquement les notifications
+// On utilise juste onBackgroundMessage pour logger ou personnaliser
 messaging.onBackgroundMessage((payload) => {
   console.log('📩 Notification reçue en arrière-plan:', payload);
   
+  // Firebase affiche automatiquement la notification
+  // Pas besoin d'appeler showNotification() manuellement
+  // sinon on a 2 notifications !
+  
+  // Si vous voulez personnaliser l'affichage, décommentez ci-dessous
+  // et Firebase n'affichera PAS automatiquement
+  
+  /*
   const notificationTitle = payload.notification?.title || 'Nouvelle notification';
   const notificationOptions = {
     body: payload.notification?.body || '',
@@ -30,8 +40,9 @@ messaging.onBackgroundMessage((payload) => {
     data: payload.data || {},
     vibrate: [200, 100, 200]
   };
-
-  self.registration.showNotification(notificationTitle, notificationOptions);
+  
+  return self.registration.showNotification(notificationTitle, notificationOptions);
+  */
 });
 
 // Gérer le clic sur la notification
