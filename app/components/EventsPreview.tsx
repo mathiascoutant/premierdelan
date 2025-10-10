@@ -122,11 +122,13 @@ export default function EventsPreview() {
             {events.map((event) => {
               const placesRestantes = event.capacite - event.inscrits;
               const now = new Date();
+
+              // Traiter les dates comme locales (ignorer le Z)
               const dateOuverture = event.date_ouverture_inscription
-                ? new Date(event.date_ouverture_inscription)
+                ? new Date(event.date_ouverture_inscription.replace("Z", ""))
                 : null;
               const dateFermeture = event.date_fermeture_inscription
-                ? new Date(event.date_fermeture_inscription)
+                ? new Date(event.date_fermeture_inscription.replace("Z", ""))
                 : null;
 
               const isBeforeOpening = dateOuverture && now < dateOuverture;
