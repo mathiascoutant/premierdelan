@@ -389,7 +389,7 @@ function EventDetailsContent() {
                       {inscription.user_name}
                     </p>
                     <p className="text-xs text-gray-500">
-                      {inscription.nombre_personnes} personne
+                      A inscrit {inscription.nombre_personnes} personne
                       {inscription.nombre_personnes > 1 ? "s" : ""}
                     </p>
                   </div>
@@ -418,7 +418,7 @@ function EventDetailsContent() {
               {inscription.accompagnants.length > 0 && (
                 <div className="pt-3 border-t border-gray-100 space-y-2">
                   <p className="text-xs font-medium text-gray-700 mb-2">
-                    Accompagnants ({inscription.accompagnants.length})
+                    Autres personnes ({inscription.accompagnants.length})
                   </p>
                   {inscription.accompagnants.map((acc, idx) => (
                     <div
@@ -497,7 +497,7 @@ function EventDetailsContent() {
                           {inscription.user_name}
                         </p>
                         <span className="px-2 py-1 bg-blue-600 text-white rounded text-xs font-medium">
-                          Organisateur
+                          Inscrit par
                         </span>
                       </div>
                       <div className="flex items-center gap-4 text-sm text-gray-600">
@@ -532,11 +532,11 @@ function EventDetailsContent() {
                 </div>
               </div>
 
-              {/* Accompagnants */}
+              {/* Autres personnes inscrites */}
               {inscription.accompagnants.length > 0 && (
                 <div className="p-6 space-y-3">
                   <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-3">
-                    Accompagnants ({inscription.accompagnants.length})
+                    Autres personnes ({inscription.accompagnants.length})
                   </p>
                   {inscription.accompagnants.map((acc, idx) => (
                     <div
@@ -551,7 +551,9 @@ function EventDetailsContent() {
                           <p className="font-medium text-black">
                             {acc.firstname} {acc.lastname}
                           </p>
-                          <p className="text-xs text-gray-500">Accompagnant</p>
+                          <p className="text-xs text-gray-500">
+                            Inscrit avec {inscription.user_name.split(" ")[0]}
+                          </p>
                         </div>
                       </div>
                       <div className="flex items-center gap-3">
