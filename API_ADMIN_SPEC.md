@@ -60,10 +60,10 @@ Authorization: Bearer <token>
 
 ```json
 {
-  "prenom": "Jean",
-  "nom": "Dupont",
+  "firstname": "Jean",
+  "lastname": "Dupont",
   "email": "jean@newemail.com",
-  "telephone": "0612345678",
+  "phone": "0612345678",
   "admin": 1
 }
 ```
