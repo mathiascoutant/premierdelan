@@ -60,7 +60,7 @@ export default function AdminLayout({
               </h1>
             </div>
             <div className="text-sm text-gray-400">
-              {user?.prenom} {user?.nom}
+              {user?.firstname} {user?.lastname}
             </div>
           </div>
         </div>
