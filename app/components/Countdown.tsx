@@ -17,7 +17,9 @@ export default function Countdown({ targetDate, type }: CountdownProps) {
 
   useEffect(() => {
     const calculateTimeLeft = () => {
-      const difference = new Date(targetDate).getTime() - new Date().getTime();
+      // Ignorer le Z pour traiter comme heure locale
+      const targetDateLocal = targetDate.replace('Z', '');
+      const difference = new Date(targetDateLocal).getTime() - new Date().getTime();
       
       if (difference > 0) {
         return {
