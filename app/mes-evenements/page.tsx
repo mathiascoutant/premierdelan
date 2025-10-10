@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "../hooks/useAuth";
-import { apiRequest } from "../config/api";
+import { apiRequest, API_URL } from "../config/api";
 import { FiCalendar, FiMapPin, FiUsers, FiImage, FiClock } from "react-icons/fi";
 
 interface Event {
@@ -46,7 +46,12 @@ export default function MesEvenementsPage() {
   const fetchMyEvents = async () => {
     try {
       setLoading(true);
-      const data = await apiRequest("/api/mes-evenements");
+      const token = localStorage.getItem("auth_token");
+      const data = await apiRequest(`${API_URL}/api/mes-evenements`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
       setEvents(data.evenements || []);
     } catch (error) {
       console.error("Erreur lors de la récupération des événements:", error);
