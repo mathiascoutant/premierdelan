@@ -4,18 +4,19 @@ Cette documentation spécifie les endpoints nécessaires pour gérer les médias
 
 ---
 
-## 🎯 ARCHITECTURE : Frontend (Firebase Storage) + Backend (Base de données)
+## 🎯 ARCHITECTURE : Frontend (Cloudinary) + Backend (Base de données)
 
-### **Stockage des fichiers** : Firebase Storage
+### **Stockage des fichiers** : Cloudinary
 
-- Le frontend upload directement les fichiers vers Firebase Storage
-- Firebase retourne une URL publique du fichier uploadé
+- Le frontend upload directement les fichiers vers Cloudinary
+- Cloudinary retourne une URL publique du fichier uploadé
 - Pas besoin de gérer l'upload côté backend
 
 ### **Base de données** : Backend MongoDB/PostgreSQL
 
 - Le backend stocke uniquement les **métadonnées** (URL, user, date, etc.)
 - Le backend ne gère PAS les fichiers eux-mêmes
+- Le backend supprime les fichiers de Cloudinary lors de la suppression
 
 ---
 
@@ -382,11 +383,15 @@ CREATE TABLE medias (
 
 ---
 
-## ⚙️ CONFIGURATION FIREBASE (FRONTEND)
+## ⚙️ CONFIGURATION CLOUDINARY (FRONTEND)
 
-Le frontend utilise Firebase Storage avec cette configuration :
+Le frontend utilise Cloudinary avec cette configuration :
 
 ```typescript
+// Configuration
+const CLOUD_NAME = "dxwhngg8g";
+const UPLOAD_PRESET = "premierdelan_events";
+
 // Limites
 - Images : Max 10 MB
 - Vidéos : Max 100 MB
@@ -395,38 +400,47 @@ Le frontend utilise Firebase Storage avec cette configuration :
 - Images : JPEG, PNG, GIF, WebP
 - Vidéos : MP4, MOV, AVI, WebM
 
-// Chemin de stockage
-events/{event_id}/media/{user_email}/{timestamp}_{filename}
+// Chemin de stockage (dossier Cloudinary)
+events/{event_id}/media/{user_email_sanitized}/{timestamp}_{filename}
 
 // Exemple
-events/event-456/media/mathias@example.com/1696234567890_photo.jpg
+events/event-456/media/mathias_example_com/1696234567890_photo.jpg
 ```
 
 ---
 
-## 🔒 RÈGLES DE SÉCURITÉ FIREBASE STORAGE
+## 🔒 CONFIGURATION CLOUDINARY
 
-Ajouter ces règles dans la console Firebase :
+### **Upload Preset** : `premierdelan_events`
 
-```javascript
-rules_version = '2';
-service firebase.storage {
-  match /b/{bucket}/o {
-    // Permettre à tout le monde de lire les médias d'événements
-    match /events/{eventId}/media/{allPaths=**} {
-      allow read: if true;
+Paramètres du preset (dans le dashboard Cloudinary) :
 
-      // Permettre l'upload seulement aux utilisateurs authentifiés
-      allow write: if request.auth != null
-                   && request.resource.size < 100 * 1024 * 1024  // 100 MB max
-                   && (request.resource.contentType.matches('image/.*')
-                       || request.resource.contentType.matches('video/.*'));
+- **Mode** : Unsigned (pas besoin de signature côté client)
+- **Folder** : Défini dynamiquement par le client
+- **Access mode** : Public (URLs accessibles sans authentification)
+- **Max file size** : 100 MB
+- **Allowed formats** : jpg, png, gif, webp, mp4, mov, avi, webm
 
-      // Permettre la suppression seulement au propriétaire
-      allow delete: if request.auth != null
-                    && request.auth.token.email == resource.metadata.userEmail;
-    }
-  }
+### **Suppression des médias**
+
+La suppression de Cloudinary **DOIT se faire côté backend** car elle nécessite l'API Secret :
+
+```go
+// Exemple Go
+import (
+  "github.com/cloudinary/cloudinary-go/v2"
+  "github.com/cloudinary/cloudinary-go/v2/api/uploader"
+)
+
+func deleteFromCloudinary(publicID string) error {
+  cld, _ := cloudinary.NewFromParams(CLOUD_NAME, API_KEY, API_SECRET)
+  ctx := context.Background()
+
+  _, err := cld.Upload.Destroy(ctx, uploader.DestroyParams{
+    PublicID: publicID,
+  })
+
+  return err
 }
 ```
 

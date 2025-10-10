@@ -13,8 +13,7 @@ import {
   FiX,
   FiPlay
 } from 'react-icons/fi';
-import { ref, uploadBytesResumable, getDownloadURL, deleteObject } from 'firebase/storage';
-import { storage, STORAGE_CONFIG } from '../config/firebaseStorage';
+import { uploadToCloudinary, validateFile } from '../config/cloudinary';
 import { API_ENDPOINTS, apiRequest } from '../config/api';
 import { useAuth } from '../hooks/useAuth';
 
@@ -86,17 +85,11 @@ function GalerieContent() {
     if (!e.target.files || !user || !eventId) return;
 
     const file = e.target.files[0];
-    const isImage = STORAGE_CONFIG.allowedImageTypes.includes(file.type);
-    const isVideo = STORAGE_CONFIG.allowedVideoTypes.includes(file.type);
 
-    if (!isImage && !isVideo) {
-      alert('Format de fichier non supporté. Utilisez JPG, PNG, GIF, MP4, MOV ou WebM.');
-      return;
-    }
-
-    const maxSize = isImage ? STORAGE_CONFIG.maxImageSize : STORAGE_CONFIG.maxVideoSize;
-    if (file.size > maxSize) {
-      alert(`Fichier trop volumineux. Taille max: ${isImage ? '10MB' : '100MB'}`);
+    // Validation du fichier
+    const validation = validateFile(file);
+    if (!validation.valid) {
+      alert(validation.error);
       return;
     }
 
@@ -104,53 +97,42 @@ function GalerieContent() {
     setUploadProgress(0);
 
     try {
-      // Upload vers Firebase Storage
-      const storagePath = STORAGE_CONFIG.storagePath(eventId, user.email, file.name);
-      const storageRef = ref(storage, storagePath);
-      const uploadTask = uploadBytesResumable(storageRef, file);
-
-      uploadTask.on('state_changed', 
-        (snapshot) => {
-          const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-          setUploadProgress(Math.round(progress));
-        },
-        (error) => {
-          console.error('Erreur upload:', error);
-          alert('Erreur lors de l\'upload');
-          setIsUploading(false);
-        },
-        async () => {
-          // Upload terminé, récupérer l'URL
-          const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
-
-          // Enregistrer en base de données
-          const token = localStorage.getItem('auth_token');
-          const apiUrl = API_ENDPOINTS.connexion.replace('/api/connexion', `/api/evenements/${eventId}/medias`);
-          
-          await apiRequest(apiUrl, {
-            method: 'POST',
-            headers: {
-              'Authorization': `Bearer ${token}`,
-            },
-            body: JSON.stringify({
-              user_email: user.email,
-              type: isImage ? 'image' : 'video',
-              url: downloadURL,
-              storage_path: storagePath,
-              filename: file.name,
-              size: file.size,
-            }),
-          });
-
-          // Rafraîchir la galerie
-          await fetchEventAndMedias();
-          setIsUploading(false);
-          setUploadProgress(0);
-        }
+      // 1. Upload vers Cloudinary
+      const cloudinaryResult = await uploadToCloudinary(
+        file,
+        eventId,
+        user.email,
+        (progress) => setUploadProgress(progress)
       );
-    } catch (error) {
-      console.error('Erreur:', error);
+
+      // 2. Enregistrer les métadonnées dans le backend
+      const token = localStorage.getItem('auth_token');
+      const apiUrl = API_ENDPOINTS.connexion.replace('/api/connexion', `/api/evenements/${eventId}/medias`);
+      
+      await apiRequest(apiUrl, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          user_email: user.email,
+          type: cloudinaryResult.type,
+          url: cloudinaryResult.url,
+          storage_path: cloudinaryResult.storage_path,
+          filename: cloudinaryResult.filename,
+          size: cloudinaryResult.size,
+        }),
+      });
+
+      // 3. Rafraîchir la galerie
+      await fetchEventAndMedias();
       setIsUploading(false);
+      setUploadProgress(0);
+    } catch (error) {
+      console.error('Erreur upload:', error);
+      alert('Erreur lors de l\'upload');
+      setIsUploading(false);
+      setUploadProgress(0);
     }
   };
 
@@ -163,11 +145,7 @@ function GalerieContent() {
     if (!confirm('Êtes-vous sûr de vouloir supprimer ce média ?')) return;
 
     try {
-      // Supprimer de Firebase Storage
-      const storageRef = ref(storage, media.storage_path);
-      await deleteObject(storageRef);
-
-      // Supprimer de la base de données
+      // Supprimer via le backend (qui supprime de Cloudinary ET de la BDD)
       const token = localStorage.getItem('auth_token');
       const apiUrl = API_ENDPOINTS.connexion.replace('/api/connexion', `/api/evenements/${eventId}/medias/${media.id}`);
       
