@@ -32,19 +32,19 @@ Authorization: Bearer <token>
   "utilisateurs": [
     {
       "id": "user-123",
-      "prenom": "Jean",
-      "nom": "Dupont",
+      "firstname": "Jean",
+      "lastname": "Dupont",
       "email": "jean@email.com",
-      "telephone": "0612345678",
+      "phone": "0612345678",
       "admin": 0,
       "created_at": "2025-01-15T10:30:00Z"
     },
     {
       "id": "user-456",
-      "prenom": "Marie",
-      "nom": "Martin",
+      "firstname": "Marie",
+      "lastname": "Martin",
       "email": "marie@email.com",
-      "telephone": "0623456789",
+      "phone": "0623456789",
       "admin": 1,
       "created_at": "2025-01-10T14:20:00Z"
     }

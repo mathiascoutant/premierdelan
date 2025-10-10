@@ -40,8 +40,8 @@ export default function UserMenu({ user, onLogout }: UserMenuProps) {
   }, []);
 
   // Initiales pour l'avatar
-  const initials = `${user.prenom?.charAt(0) || ""}${
-    user.nom?.charAt(0) || ""
+  const initials = `${user.firstname?.charAt(0) || ""}${
+    user.lastname?.charAt(0) || ""
   }`.toUpperCase();
 
   // Envoyer une notification de test
@@ -59,8 +59,8 @@ export default function UserMenu({ user, onLogout }: UserMenuProps) {
         },
         body: JSON.stringify({
           user_id: user.email,
-          title: "🔔 Test de notification",
-          message: "Votre système de notifications fonctionne parfaitement !",
+          title: "🎉 Premier de l'An",
+          message: `Bonjour ${user.firstname} ! Test de notification réussi.`,
           data: {
             action: "test",
           },
@@ -103,7 +103,7 @@ export default function UserMenu({ user, onLogout }: UserMenuProps) {
             // eslint-disable-next-line @next/next/no-img-element
             <img
               src={user.photo}
-              alt={user.prenom}
+              alt={user.firstname}
               className="w-full h-full rounded-full object-cover"
             />
           ) : (
@@ -114,7 +114,7 @@ export default function UserMenu({ user, onLogout }: UserMenuProps) {
         {/* Prénom (caché sur mobile) */}
         <div className="hidden md:flex items-center space-x-1">
           <span className="text-sm font-medium text-gray-900">
-            {user.prenom}
+            {user.firstname}
           </span>
           <FiChevronDown
             className={`w-4 h-4 text-gray-600 transition-transform ${
@@ -130,7 +130,7 @@ export default function UserMenu({ user, onLogout }: UserMenuProps) {
           {/* Info utilisateur */}
           <div className="px-4 py-3 border-b border-gray-100">
             <p className="text-sm font-medium text-gray-900">
-              {user.prenom} {user.nom}
+              {user.firstname} {user.lastname}
             </p>
             <p className="text-xs text-gray-500 mt-1">{user.email}</p>
           </div>

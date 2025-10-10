@@ -52,7 +52,7 @@ export default function Header() {
         body: JSON.stringify({
           user_id: user?.email,
           title: "🎉 Premier de l'An",
-          message: `Bonjour ${user?.prenom} ! Test de notification réussi.`,
+          message: `Bonjour ${user?.firstname} ! Test de notification réussi.`,
           data: {
             action: "test",
             url: "/mes-evenements",
@@ -171,18 +171,18 @@ export default function Header() {
                         // eslint-disable-next-line @next/next/no-img-element
                         <img
                           src={user.photo}
-                          alt={user.prenom}
+                          alt={user.firstname}
                           className="w-full h-full rounded-full object-cover"
                         />
                       ) : (
-                        `${user.prenom?.charAt(0) || ""}${
-                          user.nom?.charAt(0) || ""
+                        `${user.firstname?.charAt(0) || ""}${
+                          user.lastname?.charAt(0) || ""
                         }`.toUpperCase()
                       )}
                     </div>
                     <div>
                       <p className="text-sm font-medium text-gray-900">
-                        {user.prenom} {user.nom}
+                        {user.firstname} {user.lastname}
                       </p>
                       <p className="text-xs text-gray-500">{user.email}</p>
                     </div>
