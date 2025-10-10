@@ -3,6 +3,9 @@
 import { useState, useEffect } from 'react'
 import { FiPlus, FiCalendar, FiUsers, FiImage, FiEdit, FiTrash2 } from 'react-icons/fi'
 import { API_ENDPOINTS, apiRequest } from '../../config/api'
+import CreateEventModal from '../../components/admin/CreateEventModal'
+import EditEventModal from '../../components/admin/EditEventModal'
+import DeleteEventModal from '../../components/admin/DeleteEventModal'
 
 interface Evenement {
   id: string
@@ -13,11 +16,16 @@ interface Evenement {
   inscrits: number
   photos_count: number
   statut: string
+  lieu?: string
+  code_soiree?: string
 }
 
 export default function EvenementsPage() {
   const [evenements, setEvenements] = useState<Evenement[]>([])
   const [isLoading, setIsLoading] = useState(true)
+  const [isCreating, setIsCreating] = useState(false)
+  const [editingEvent, setEditingEvent] = useState<Evenement | null>(null)
+  const [deletingEvent, setDeletingEvent] = useState<Evenement | null>(null)
 
   useEffect(() => {
     fetchEvenements()
@@ -67,7 +75,10 @@ export default function EvenementsPage() {
               Créez et gérez vos événements privés
             </p>
           </div>
-          <button className="btn-primary flex items-center justify-center whitespace-nowrap">
+          <button 
+            onClick={() => setIsCreating(true)}
+            className="btn-primary flex items-center justify-center whitespace-nowrap"
+          >
             <FiPlus className="w-4 h-4 mr-2" />
             Créer un événement
           </button>
@@ -119,7 +130,10 @@ export default function EvenementsPage() {
           <div className="p-12 text-center">
             <FiCalendar className="w-16 h-16 text-gray-300 mx-auto mb-4" />
             <p className="text-gray-600 mb-4">Aucun événement créé</p>
-            <button className="btn-primary">
+            <button 
+              onClick={() => setIsCreating(true)}
+              className="btn-primary"
+            >
               <FiPlus className="inline-block w-4 h-4 mr-2" />
               Créer le premier événement
             </button>
@@ -172,10 +186,18 @@ export default function EvenementsPage() {
                     </div>
                   </div>
                   <div className="flex sm:flex-col items-center gap-2">
-                    <button className="p-2 text-gray-600 hover:text-black transition-colors">
+                    <button 
+                      onClick={() => setEditingEvent(event)}
+                      className="p-2 text-gray-600 hover:text-black transition-colors"
+                      title="Modifier"
+                    >
                       <FiEdit className="w-5 h-5" />
                     </button>
-                    <button className="p-2 text-red-600 hover:text-red-700 transition-colors">
+                    <button 
+                      onClick={() => setDeletingEvent(event)}
+                      className="p-2 text-red-600 hover:text-red-700 transition-colors"
+                      title="Supprimer"
+                    >
                       <FiTrash2 className="w-5 h-5" />
                     </button>
                   </div>
@@ -185,6 +207,39 @@ export default function EvenementsPage() {
           </div>
         )}
       </div>
+
+      {/* Modales */}
+      {isCreating && (
+        <CreateEventModal
+          onClose={() => setIsCreating(false)}
+          onCreate={() => {
+            fetchEvenements()
+            setIsCreating(false)
+          }}
+        />
+      )}
+
+      {editingEvent && (
+        <EditEventModal
+          event={editingEvent}
+          onClose={() => setEditingEvent(null)}
+          onSave={() => {
+            fetchEvenements()
+            setEditingEvent(null)
+          }}
+        />
+      )}
+
+      {deletingEvent && (
+        <DeleteEventModal
+          event={deletingEvent}
+          onClose={() => setDeletingEvent(null)}
+          onDelete={() => {
+            fetchEvenements()
+            setDeletingEvent(null)
+          }}
+        />
+      )}
     </div>
   )
 }
