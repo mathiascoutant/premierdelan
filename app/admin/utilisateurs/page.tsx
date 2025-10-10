@@ -63,11 +63,11 @@ export default function UtilisateursPage() {
   return (
     <div>
       {/* Header */}
-      <div className="mb-8">
-        <h1 className="text-3xl font-light tracking-tight text-black mb-2">
+      <div className="mb-6 md:mb-8">
+        <h1 className="text-2xl md:text-3xl font-light tracking-tight text-black mb-2">
           Gestion des <span className="font-normal">Utilisateurs</span>
         </h1>
-        <p className="text-gray-600 font-light">
+        <p className="text-sm md:text-base text-gray-600 font-light">
           Liste complète des utilisateurs inscrits sur la plateforme
         </p>
       </div>
@@ -87,33 +87,99 @@ export default function UtilisateursPage() {
       </div>
 
       {/* Statistiques */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        <div className="bg-white border border-gray-200 rounded-lg p-6">
-          <p className="text-xs tracking-wider uppercase text-gray-500 mb-2">
+      <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 md:gap-6 mb-6 md:mb-8">
+        <div className="bg-white border border-gray-200 rounded-lg p-4 md:p-6">
+          <p className="text-xs tracking-wider uppercase text-gray-500 mb-1 md:mb-2">
             Total Utilisateurs
           </p>
-          <p className="text-3xl font-light text-black">{utilisateurs.length}</p>
+          <p className="text-2xl md:text-3xl font-light text-black">{utilisateurs.length}</p>
         </div>
-        <div className="bg-white border border-gray-200 rounded-lg p-6">
-          <p className="text-xs tracking-wider uppercase text-gray-500 mb-2">
+        <div className="bg-white border border-gray-200 rounded-lg p-4 md:p-6">
+          <p className="text-xs tracking-wider uppercase text-gray-500 mb-1 md:mb-2">
             Administrateurs
           </p>
-          <p className="text-3xl font-light text-black">
+          <p className="text-2xl md:text-3xl font-light text-black">
             {utilisateurs.filter(u => u.admin === 1).length}
           </p>
         </div>
-        <div className="bg-white border border-gray-200 rounded-lg p-6">
-          <p className="text-xs tracking-wider uppercase text-gray-500 mb-2">
+        <div className="bg-white border border-gray-200 rounded-lg p-4 md:p-6 col-span-2 lg:col-span-1">
+          <p className="text-xs tracking-wider uppercase text-gray-500 mb-1 md:mb-2">
             Utilisateurs Standards
           </p>
-          <p className="text-3xl font-light text-black">
+          <p className="text-2xl md:text-3xl font-light text-black">
             {utilisateurs.filter(u => u.admin !== 1).length}
           </p>
         </div>
       </div>
 
-      {/* Liste des utilisateurs */}
-      <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
+      {/* Liste des utilisateurs - Mobile: Cards, Desktop: Table */}
+      
+      {/* Version Mobile */}
+      <div className="md:hidden space-y-4">
+        {isLoading ? (
+          <div className="p-12 text-center bg-white rounded-lg border border-gray-200">
+            <div className="w-12 h-12 border-4 border-gray-200 border-t-black rounded-full animate-spin mx-auto mb-4"></div>
+            <p className="text-gray-600">Chargement...</p>
+          </div>
+        ) : filteredUsers.length === 0 ? (
+          <div className="p-12 text-center bg-white rounded-lg border border-gray-200">
+            <p className="text-gray-600">Aucun utilisateur trouvé</p>
+          </div>
+        ) : (
+          filteredUsers.map((utilisateur) => (
+            <div key={utilisateur.id} className="bg-white border border-gray-200 rounded-lg p-4">
+              <div className="flex items-start justify-between mb-3">
+                <div className="flex items-center space-x-3">
+                  <div className="w-12 h-12 bg-gradient-to-br from-gray-700 to-gray-900 rounded-full flex items-center justify-center text-white text-sm font-medium">
+                    {(utilisateur.firstname?.charAt(0) || '').toUpperCase()}{(utilisateur.lastname?.charAt(0) || '').toUpperCase()}
+                  </div>
+                  <div>
+                    <p className="font-medium text-gray-900">
+                      {utilisateur.firstname} {utilisateur.lastname}
+                    </p>
+                    {utilisateur.admin === 1 ? (
+                      <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-black text-white mt-1">
+                        <FiShield className="w-3 h-3 mr-1" />
+                        Admin
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-700 mt-1">
+                        Utilisateur
+                      </span>
+                    )}
+                  </div>
+                </div>
+              </div>
+              <div className="space-y-2 mb-3">
+                <div className="flex items-center text-sm text-gray-600">
+                  <FiMail className="w-4 h-4 mr-2 flex-shrink-0" />
+                  <span className="truncate">{utilisateur.email || 'Non renseigné'}</span>
+                </div>
+                <div className="flex items-center text-sm text-gray-600">
+                  <FiPhone className="w-4 h-4 mr-2 flex-shrink-0" />
+                  <span>{utilisateur.phone || 'Non renseigné'}</span>
+                </div>
+              </div>
+              <div className="flex items-center justify-between pt-3 border-t border-gray-100">
+                <span className="text-xs text-gray-500">
+                  {new Date(utilisateur.created_at).toLocaleDateString('fr-FR')}
+                </span>
+                <div className="flex items-center space-x-2">
+                  <button className="p-2 text-gray-600 hover:text-black transition-colors">
+                    <FiEdit className="w-4 h-4" />
+                  </button>
+                  <button className="p-2 text-red-600 hover:text-red-700 transition-colors">
+                    <FiTrash2 className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+            </div>
+          ))
+        )}
+      </div>
+
+      {/* Version Desktop (Tableau) */}
+      <div className="hidden md:block bg-white border border-gray-200 rounded-lg overflow-hidden">
         {isLoading ? (
           <div className="p-12 text-center">
             <div className="w-12 h-12 border-4 border-gray-200 border-t-black rounded-full animate-spin mx-auto mb-4"></div>
@@ -204,6 +270,7 @@ export default function UtilisateursPage() {
           </div>
         )}
       </div>
+      {/* Fin version desktop */}
     </div>
   )
 }

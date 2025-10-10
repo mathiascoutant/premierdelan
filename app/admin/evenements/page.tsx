@@ -57,50 +57,52 @@ export default function EvenementsPage() {
   return (
     <div>
       {/* Header */}
-      <div className="mb-8 flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-light tracking-tight text-black mb-2">
-            Gestion des <span className="font-normal">Événements</span>
-          </h1>
-          <p className="text-gray-600 font-light">
-            Créez et gérez vos événements privés
-          </p>
+      <div className="mb-6 md:mb-8">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div>
+            <h1 className="text-2xl md:text-3xl font-light tracking-tight text-black mb-2">
+              Gestion des <span className="font-normal">Événements</span>
+            </h1>
+            <p className="text-sm md:text-base text-gray-600 font-light">
+              Créez et gérez vos événements privés
+            </p>
+          </div>
+          <button className="btn-primary flex items-center justify-center whitespace-nowrap">
+            <FiPlus className="w-4 h-4 mr-2" />
+            Créer un événement
+          </button>
         </div>
-        <button className="btn-primary flex items-center">
-          <FiPlus className="w-4 h-4 mr-2" />
-          Créer un événement
-        </button>
       </div>
 
       {/* Statistiques */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-        <div className="bg-white border border-gray-200 rounded-lg p-6">
-          <p className="text-xs tracking-wider uppercase text-gray-500 mb-2">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-6 mb-6 md:mb-8">
+        <div className="bg-white border border-gray-200 rounded-lg p-4 md:p-6">
+          <p className="text-xs tracking-wider uppercase text-gray-500 mb-1 md:mb-2">
             Total Événements
           </p>
-          <p className="text-3xl font-light text-black">{evenements.length}</p>
+          <p className="text-2xl md:text-3xl font-light text-black">{evenements.length}</p>
         </div>
-        <div className="bg-white border border-gray-200 rounded-lg p-6">
-          <p className="text-xs tracking-wider uppercase text-gray-500 mb-2">
+        <div className="bg-white border border-gray-200 rounded-lg p-4 md:p-6">
+          <p className="text-xs tracking-wider uppercase text-gray-500 mb-1 md:mb-2">
             À venir
           </p>
-          <p className="text-3xl font-light text-black">
+          <p className="text-2xl md:text-3xl font-light text-black">
             {evenements.filter(e => e.statut === 'ouvert').length}
           </p>
         </div>
-        <div className="bg-white border border-gray-200 rounded-lg p-6">
-          <p className="text-xs tracking-wider uppercase text-gray-500 mb-2">
+        <div className="bg-white border border-gray-200 rounded-lg p-4 md:p-6">
+          <p className="text-xs tracking-wider uppercase text-gray-500 mb-1 md:mb-2">
             Total Inscrits
           </p>
-          <p className="text-3xl font-light text-black">
+          <p className="text-2xl md:text-3xl font-light text-black">
             {evenements.reduce((sum, e) => sum + (e.inscrits || 0), 0)}
           </p>
         </div>
-        <div className="bg-white border border-gray-200 rounded-lg p-6">
-          <p className="text-xs tracking-wider uppercase text-gray-500 mb-2">
+        <div className="bg-white border border-gray-200 rounded-lg p-4 md:p-6">
+          <p className="text-xs tracking-wider uppercase text-gray-500 mb-1 md:mb-2">
             Photos Totales
           </p>
-          <p className="text-3xl font-light text-black">
+          <p className="text-2xl md:text-3xl font-light text-black">
             {evenements.reduce((sum, e) => sum + (e.photos_count || 0), 0)}
           </p>
         </div>
@@ -125,11 +127,11 @@ export default function EvenementsPage() {
         ) : (
           <div className="grid grid-cols-1 gap-px bg-gray-200">
             {evenements.map((event) => (
-              <div key={event.id} className="bg-white p-6 hover:bg-gray-50 transition-colors">
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <div className="flex items-center space-x-3 mb-3">
-                      <h3 className="text-xl font-medium text-black">
+              <div key={event.id} className="bg-white p-4 md:p-6 hover:bg-gray-50 transition-colors">
+                <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex flex-wrap items-center gap-2 md:gap-3 mb-3">
+                      <h3 className="text-lg md:text-xl font-medium text-black">
                         {event.titre}
                       </h3>
                       <span className={`px-3 py-1 rounded-full text-xs font-medium ${
@@ -142,29 +144,34 @@ export default function EvenementsPage() {
                         {event.statut}
                       </span>
                     </div>
-                    <p className="text-gray-600 mb-4 font-light">
+                    <p className="text-sm md:text-base text-gray-600 mb-4 font-light line-clamp-2">
                       {event.description}
                     </p>
-                    <div className="flex flex-wrap gap-6 text-sm text-gray-500">
+                    <div className="flex flex-wrap gap-3 md:gap-6 text-xs md:text-sm text-gray-500">
                       <div className="flex items-center">
-                        <FiCalendar className="w-4 h-4 mr-2" />
-                        {new Date(event.date).toLocaleDateString('fr-FR', {
-                          day: 'numeric',
-                          month: 'long',
-                          year: 'numeric'
-                        })}
+                        <FiCalendar className="w-4 h-4 mr-2 flex-shrink-0" />
+                        <span className="hidden sm:inline">
+                          {new Date(event.date).toLocaleDateString('fr-FR', {
+                            day: 'numeric',
+                            month: 'long',
+                            year: 'numeric'
+                          })}
+                        </span>
+                        <span className="sm:hidden">
+                          {new Date(event.date).toLocaleDateString('fr-FR')}
+                        </span>
                       </div>
                       <div className="flex items-center">
-                        <FiUsers className="w-4 h-4 mr-2" />
-                        {event.inscrits || 0} / {event.capacite} inscrits
+                        <FiUsers className="w-4 h-4 mr-2 flex-shrink-0" />
+                        {event.inscrits || 0} / {event.capacite}
                       </div>
                       <div className="flex items-center">
-                        <FiImage className="w-4 h-4 mr-2" />
+                        <FiImage className="w-4 h-4 mr-2 flex-shrink-0" />
                         {event.photos_count || 0} photos
                       </div>
                     </div>
                   </div>
-                  <div className="flex items-center space-x-2 ml-4">
+                  <div className="flex sm:flex-col items-center gap-2">
                     <button className="p-2 text-gray-600 hover:text-black transition-colors">
                       <FiEdit className="w-5 h-5" />
                     </button>
