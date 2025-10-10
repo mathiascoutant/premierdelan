@@ -1,60 +1,70 @@
-'use client'
+"use client";
 
-import { useState } from 'react'
-import { FiX, FiSave, FiCalendar } from 'react-icons/fi'
-import { API_ENDPOINTS, apiRequest } from '../../config/api'
+import { useState } from "react";
+import { FiX, FiSave, FiCalendar } from "react-icons/fi";
+import { API_ENDPOINTS, apiRequest } from "../../config/api";
 
 interface CreateEventModalProps {
-  onClose: () => void
-  onCreate: () => void
+  onClose: () => void;
+  onCreate: () => void;
 }
 
-export default function CreateEventModal({ onClose, onCreate }: CreateEventModalProps) {
+export default function CreateEventModal({
+  onClose,
+  onCreate,
+}: CreateEventModalProps) {
   const [formData, setFormData] = useState({
-    titre: '',
-    date: '',
-    description: '',
-    capacite: '',
-    lieu: '',
-    code_soiree: '',
-  })
-  const [isSaving, setIsSaving] = useState(false)
-  const [error, setError] = useState('')
+    titre: "",
+    date: "",
+    description: "",
+    capacite: "",
+    lieu: "",
+    code_soiree: "",
+    date_ouverture_inscription: "",
+    date_fermeture_inscription: "",
+  });
+  const [isSaving, setIsSaving] = useState(false);
+  const [error, setError] = useState("");
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target
-    setFormData(prev => ({ ...prev, [name]: value }))
-  }
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setIsSaving(true)
-    setError('')
+    e.preventDefault();
+    setIsSaving(true);
+    setError("");
 
     try {
-      const token = localStorage.getItem('auth_token')
-      const apiUrl = API_ENDPOINTS.connexion.replace('/api/connexion', '/api/admin/evenements')
-      
+      const token = localStorage.getItem("auth_token");
+      const apiUrl = API_ENDPOINTS.connexion.replace(
+        "/api/connexion",
+        "/api/admin/evenements"
+      );
+
       await apiRequest(apiUrl, {
-        method: 'POST',
+        method: "POST",
         headers: {
-          'Authorization': `Bearer ${token}`,
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
           ...formData,
           capacite: parseInt(formData.capacite),
-          statut: 'ouvert'
+          statut: "ouvert",
         }),
-      })
+      });
 
-      onCreate()
-      onClose()
+      onCreate();
+      onClose();
     } catch (err: any) {
-      setError(err.message || 'Erreur lors de la création')
+      setError(err.message || "Erreur lors de la création");
     } finally {
-      setIsSaving(false)
+      setIsSaving(false);
     }
-  }
+  };
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
@@ -63,7 +73,9 @@ export default function CreateEventModal({ onClose, onCreate }: CreateEventModal
         <div className="flex items-center justify-between p-4 md:p-6 border-b border-gray-200 sticky top-0 bg-white z-10">
           <div className="flex items-center space-x-2">
             <FiCalendar className="w-5 h-5 text-black" />
-            <h2 className="text-lg md:text-xl font-medium text-black">Créer un événement</h2>
+            <h2 className="text-lg md:text-xl font-medium text-black">
+              Créer un événement
+            </h2>
           </div>
           <button
             onClick={onClose}
@@ -96,21 +108,55 @@ export default function CreateEventModal({ onClose, onCreate }: CreateEventModal
             />
           </div>
 
+          <div>
+            <label className="block text-xs tracking-wider uppercase text-gray-500 mb-2">
+              Date et heure de l&apos;événement *
+            </label>
+            <input
+              type="datetime-local"
+              name="date"
+              value={formData.date}
+              onChange={handleChange}
+              className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:border-black transition-colors"
+              required
+            />
+          </div>
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="block text-xs tracking-wider uppercase text-gray-500 mb-2">
-                Date et heure *
+                Ouverture inscriptions *
               </label>
               <input
                 type="datetime-local"
-                name="date"
-                value={formData.date}
+                name="date_ouverture_inscription"
+                value={formData.date_ouverture_inscription}
                 onChange={handleChange}
                 className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:border-black transition-colors"
                 required
               />
+              <p className="text-xs text-gray-500 mt-1">
+                Début des inscriptions
+              </p>
             </div>
 
+            <div>
+              <label className="block text-xs tracking-wider uppercase text-gray-500 mb-2">
+                Fermeture inscriptions *
+              </label>
+              <input
+                type="datetime-local"
+                name="date_fermeture_inscription"
+                value={formData.date_fermeture_inscription}
+                onChange={handleChange}
+                className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:border-black transition-colors"
+                required
+              />
+              <p className="text-xs text-gray-500 mt-1">Fin des inscriptions</p>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="block text-xs tracking-wider uppercase text-gray-500 mb-2">
                 Capacité (nombre de personnes) *
@@ -202,6 +248,5 @@ export default function CreateEventModal({ onClose, onCreate }: CreateEventModal
         </form>
       </div>
     </div>
-  )
+  );
 }
-

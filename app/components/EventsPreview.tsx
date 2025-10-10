@@ -186,6 +186,24 @@ export default function EventsPreview() {
                           {event.photos_count > 1 ? "s" : ""}
                         </span>
                       </div>
+
+                      {/* Compteur à rebours */}
+                      {isBeforeOpening && dateOuverture && (
+                        <div className="pt-3">
+                          <Countdown
+                            targetDate={event.date_ouverture_inscription!}
+                            type="opening"
+                          />
+                        </div>
+                      )}
+                      {isOpen && dateFermeture && (
+                        <div className="pt-3">
+                          <Countdown
+                            targetDate={event.date_fermeture_inscription!}
+                            type="closing"
+                          />
+                        </div>
+                      )}
                     </div>
                     <div className="flex flex-col sm:flex-row lg:flex-col gap-3">
                       {isBeforeOpening ? (
