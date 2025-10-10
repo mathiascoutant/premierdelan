@@ -66,15 +66,19 @@ function EventDetailsContent() {
   const [searchTerm, setSearchTerm] = useState("");
 
   useEffect(() => {
-    if (!isAdmin()) {
-      router.push("/");
-      return;
-    }
     if (eventId) {
       fetchEventDetails();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [eventId]);
+
+  // Redirection si pas admin (après chargement)
+  useEffect(() => {
+    if (!authLoading && !isAdmin()) {
+      router.push("/admin");
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [authLoading]);
 
   const fetchEventDetails = async () => {
     if (!eventId) return;
