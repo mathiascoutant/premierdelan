@@ -6,12 +6,13 @@ import { API_ENDPOINTS, apiRequest } from '../../config/api'
 
 interface Utilisateur {
   id: string
-  prenom: string
-  nom: string
+  firstname: string
+  lastname: string
   email: string
-  telephone: string
+  phone: string
   admin: number
   created_at: string
+  code_soiree?: string
 }
 
 export default function UtilisateursPage() {
@@ -40,10 +41,10 @@ export default function UtilisateursPage() {
       setUtilisateurs([
         {
           id: '1',
-          prenom: 'Test',
-          nom: 'User',
+          firstname: 'Test',
+          lastname: 'User',
           email: 'test@example.com',
-          telephone: '0612345678',
+          phone: '0612345678',
           admin: 0,
           created_at: new Date().toISOString()
         }
@@ -54,8 +55,8 @@ export default function UtilisateursPage() {
   }
 
   const filteredUsers = utilisateurs.filter(user =>
-    (user.prenom || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (user.nom || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (user.firstname || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (user.lastname || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
     (user.email || '').toLowerCase().includes(searchTerm.toLowerCase())
   )
 
@@ -150,11 +151,11 @@ export default function UtilisateursPage() {
                     <td className="px-6 py-4">
                       <div className="flex items-center space-x-3">
                         <div className="w-10 h-10 bg-gradient-to-br from-gray-700 to-gray-900 rounded-full flex items-center justify-center text-white text-sm font-medium">
-                          {(utilisateur.prenom?.charAt(0) || '').toUpperCase()}{(utilisateur.nom?.charAt(0) || '').toUpperCase()}
+                          {(utilisateur.firstname?.charAt(0) || '').toUpperCase()}{(utilisateur.lastname?.charAt(0) || '').toUpperCase()}
                         </div>
                         <div>
                           <p className="font-medium text-gray-900">
-                            {utilisateur.prenom} {utilisateur.nom}
+                            {utilisateur.firstname} {utilisateur.lastname}
                           </p>
                         </div>
                       </div>
@@ -167,7 +168,7 @@ export default function UtilisateursPage() {
                         </div>
                         <div className="flex items-center text-sm text-gray-600">
                           <FiPhone className="w-4 h-4 mr-2" />
-                          {utilisateur.telephone || 'Non renseigné'}
+                          {utilisateur.phone || 'Non renseigné'}
                         </div>
                       </div>
                     </td>
