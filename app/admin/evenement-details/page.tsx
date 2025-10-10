@@ -389,7 +389,8 @@ function EventDetailsContent() {
                       {inscription.user_name}
                     </p>
                     <p className="text-xs text-gray-500">
-                      A inscrit {inscription.nombre_personnes} personne
+                      {inscription.nombre_personnes} personne
+                      {inscription.nombre_personnes > 1 ? "s" : ""} inscrite
                       {inscription.nombre_personnes > 1 ? "s" : ""}
                     </p>
                   </div>
