@@ -21,6 +21,7 @@ Authorization: Bearer {auth_token}
 Permet à un utilisateur de s'inscrire à un événement avec des accompagnants.
 
 #### **Headers requis**
+
 ```json
 {
   "Authorization": "Bearer {auth_token}",
@@ -29,6 +30,7 @@ Permet à un utilisateur de s'inscrire à un événement avec des accompagnants.
 ```
 
 #### **Corps de la requête**
+
 ```json
 {
   "user_email": "mathias@example.com",
@@ -49,6 +51,7 @@ Permet à un utilisateur de s'inscrire à un événement avec des accompagnants.
 ```
 
 #### **Explications des champs**
+
 - `user_email` (string, requis) : Email de l'utilisateur qui s'inscrit (personne principale)
 - `nombre_personnes` (number, requis) : Nombre total de personnes (utilisateur + accompagnants)
 - `accompagnants` (array, optionnel) : Liste des accompagnants (vide si `nombre_personnes = 1`)
@@ -57,6 +60,7 @@ Permet à un utilisateur de s'inscrire à un événement avec des accompagnants.
   - `is_adult` (boolean, requis) : `true` si majeur (+18 ans), `false` sinon
 
 #### **Validations côté backend**
+
 - ✅ Vérifier que l'événement existe et a le statut `"ouvert"`
 - ✅ Vérifier que l'utilisateur n'est pas déjà inscrit
 - ✅ Vérifier que `nombre_personnes <= (capacite - inscrits)` (places disponibles)
@@ -64,6 +68,7 @@ Permet à un utilisateur de s'inscrire à un événement avec des accompagnants.
 - ✅ Vérifier que tous les accompagnants ont un `firstname` et `lastname` non vides
 
 #### **Réponse en cas de succès (201 Created)**
+
 ```json
 {
   "message": "Inscription réussie",
@@ -95,6 +100,7 @@ Permet à un utilisateur de s'inscrire à un événement avec des accompagnants.
 ```
 
 #### **Réponses d'erreur**
+
 ```json
 // 400 Bad Request - Pas assez de places
 {
@@ -129,6 +135,7 @@ Permet à un utilisateur de s'inscrire à un événement avec des accompagnants.
 Récupère l'inscription de l'utilisateur connecté pour un événement donné.
 
 #### **Headers requis**
+
 ```json
 {
   "Authorization": "Bearer {auth_token}"
@@ -136,11 +143,13 @@ Récupère l'inscription de l'utilisateur connecté pour un événement donné.
 ```
 
 #### **Query Params**
+
 ```
 ?user_email=mathias@example.com
 ```
 
 #### **Réponse en cas de succès (200 OK)**
+
 ```json
 {
   "inscription": {
@@ -167,6 +176,7 @@ Récupère l'inscription de l'utilisateur connecté pour un événement donné.
 ```
 
 #### **Réponse si pas inscrit (404 Not Found)**
+
 ```json
 {
   "error": "Aucune inscription trouvée",
@@ -183,6 +193,7 @@ Récupère l'inscription de l'utilisateur connecté pour un événement donné.
 Permet de modifier le nombre de personnes et les accompagnants d'une inscription existante.
 
 #### **Headers requis**
+
 ```json
 {
   "Authorization": "Bearer {auth_token}",
@@ -191,6 +202,7 @@ Permet de modifier le nombre de personnes et les accompagnants d'une inscription
 ```
 
 #### **Corps de la requête**
+
 ```json
 {
   "user_email": "mathias@example.com",
@@ -216,6 +228,7 @@ Permet de modifier le nombre de personnes et les accompagnants d'une inscription
 ```
 
 #### **Validations côté backend**
+
 - ✅ Vérifier que l'inscription existe
 - ✅ Vérifier que l'événement est toujours ouvert
 - ✅ Si augmentation du nombre de personnes : vérifier les places disponibles
@@ -224,6 +237,7 @@ Permet de modifier le nombre de personnes et les accompagnants d'une inscription
 - ✅ Vérifier que tous les accompagnants ont un `firstname` et `lastname` non vides
 
 #### **Réponse en cas de succès (200 OK)**
+
 ```json
 {
   "message": "Inscription modifiée",
@@ -260,6 +274,7 @@ Permet de modifier le nombre de personnes et les accompagnants d'une inscription
 ```
 
 #### **Réponses d'erreur**
+
 ```json
 // 400 Bad Request - Pas assez de places pour l'augmentation
 {
@@ -289,6 +304,7 @@ Permet de modifier le nombre de personnes et les accompagnants d'une inscription
 Supprime l'inscription de l'utilisateur (et tous ses accompagnants).
 
 #### **Headers requis**
+
 ```json
 {
   "Authorization": "Bearer {auth_token}",
@@ -297,6 +313,7 @@ Supprime l'inscription de l'utilisateur (et tous ses accompagnants).
 ```
 
 #### **Corps de la requête**
+
 ```json
 {
   "user_email": "mathias@example.com"
@@ -304,6 +321,7 @@ Supprime l'inscription de l'utilisateur (et tous ses accompagnants).
 ```
 
 #### **Réponse en cas de succès (200 OK)**
+
 ```json
 {
   "message": "Désinscription réussie",
@@ -317,6 +335,7 @@ Supprime l'inscription de l'utilisateur (et tous ses accompagnants).
 ```
 
 #### **Réponses d'erreur**
+
 ```json
 // 404 Not Found - Inscription inexistante
 {
@@ -339,6 +358,7 @@ Supprime l'inscription de l'utilisateur (et tous ses accompagnants).
 Récupère la liste complète des inscrits à un événement (réservé aux admins).
 
 #### **Headers requis**
+
 ```json
 {
   "Authorization": "Bearer {auth_token}"
@@ -346,6 +366,7 @@ Récupère la liste complète des inscrits à un événement (réservé aux admi
 ```
 
 #### **Réponse en cas de succès (200 OK)**
+
 ```json
 {
   "event_id": "event-456",
@@ -390,6 +411,7 @@ Récupère la liste complète des inscrits à un événement (réservé aux admi
 ## 📊 BASE DE DONNÉES - Structure suggérée
 
 ### **Table: `inscriptions_evenements`**
+
 ```sql
 CREATE TABLE inscriptions_evenements (
   id VARCHAR(255) PRIMARY KEY,
@@ -399,7 +421,7 @@ CREATE TABLE inscriptions_evenements (
   accompagnants JSON,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  
+
   -- Index et contraintes
   UNIQUE KEY unique_user_event (event_id, user_email),
   FOREIGN KEY (event_id) REFERENCES evenements(id) ON DELETE CASCADE,
@@ -408,6 +430,7 @@ CREATE TABLE inscriptions_evenements (
 ```
 
 ### **Format JSON pour `accompagnants`**
+
 ```json
 [
   {
@@ -431,22 +454,23 @@ CREATE TABLE inscriptions_evenements (
 
 ```sql
 -- Lors d'une inscription
-UPDATE evenements 
-SET inscrits = inscrits + {nombre_personnes} 
+UPDATE evenements
+SET inscrits = inscrits + {nombre_personnes}
 WHERE id = {event_id};
 
 -- Lors d'une modification
-UPDATE evenements 
-SET inscrits = inscrits + ({nouveau_nombre} - {ancien_nombre}) 
+UPDATE evenements
+SET inscrits = inscrits + ({nouveau_nombre} - {ancien_nombre})
 WHERE id = {event_id};
 
 -- Lors d'une désinscription
-UPDATE evenements 
-SET inscrits = inscrits - {nombre_personnes} 
+UPDATE evenements
+SET inscrits = inscrits - {nombre_personnes}
 WHERE id = {event_id};
 ```
 
 **Ou utiliser un trigger SQL :**
+
 ```sql
 -- Recalculer automatiquement après chaque changement
 CREATE TRIGGER update_inscrits_count AFTER INSERT OR UPDATE OR DELETE ON inscriptions_evenements
@@ -479,15 +503,16 @@ END;
 
 **Frontend envoie vers :**
 
-| Action | Endpoint | Méthode |
-|--------|----------|---------|
-| S'inscrire | `/api/evenements/{event_id}/inscription` | POST |
-| Voir son inscription | `/api/evenements/{event_id}/inscription?user_email={email}` | GET |
-| Modifier inscription | `/api/evenements/{event_id}/inscription` | PUT |
-| Se désinscrire | `/api/evenements/{event_id}/desinscription` | DELETE |
-| Liste inscrits (admin) | `/api/admin/evenements/{event_id}/inscrits` | GET |
+| Action                 | Endpoint                                                    | Méthode |
+| ---------------------- | ----------------------------------------------------------- | ------- |
+| S'inscrire             | `/api/evenements/{event_id}/inscription`                    | POST    |
+| Voir son inscription   | `/api/evenements/{event_id}/inscription?user_email={email}` | GET     |
+| Modifier inscription   | `/api/evenements/{event_id}/inscription`                    | PUT     |
+| Se désinscrire         | `/api/evenements/{event_id}/desinscription`                 | DELETE  |
+| Liste inscrits (admin) | `/api/admin/evenements/{event_id}/inscrits`                 | GET     |
 
 **Toutes les requêtes incluent :**
+
 - Header `Authorization: Bearer {auth_token}`
 - Header `ngrok-skip-browser-warning: true` (déjà géré par le frontend)
 - Header `Content-Type: application/json` (pour POST/PUT)
@@ -497,6 +522,7 @@ END;
 ## 🚀 EN RÉSUMÉ
 
 Le frontend envoie maintenant :
+
 - ✅ Les informations du demandeur (`user_email`)
 - ✅ Le nombre total de personnes
 - ✅ La liste des accompagnants avec prénom, nom et statut majeur/mineur
@@ -504,9 +530,9 @@ Le frontend envoie maintenant :
 - ✅ Interface 100% responsive (mobile, tablet, desktop)
 
 Le backend doit :
+
 - ✅ Stocker les inscriptions avec accompagnants
 - ✅ Valider les places disponibles
 - ✅ Mettre à jour le compteur `inscrits` en temps réel
 - ✅ Empêcher les doublons (1 inscription par user/event)
 - ✅ Retourner les données structurées comme spécifié
-

@@ -17,6 +17,7 @@ interface Event {
   photos_count: number;
   statut: string;
   lieu?: string;
+  user_inscription?: any; // Données d'inscription si l'utilisateur est inscrit
 }
 
 export default function EventsPreview() {
@@ -31,7 +32,7 @@ export default function EventsPreview() {
 
   useEffect(() => {
     fetchEvents();
-  }, []);
+  }, [user]); // Re-fetch quand l'utilisateur change
 
   const fetchEvents = async () => {
     try {
@@ -44,9 +45,37 @@ export default function EventsPreview() {
       });
 
       // Prendre seulement les 3 premiers événements ouverts
-      const openEvents = (response.evenements || [])
+      let openEvents = (response.evenements || [])
         .filter((e: Event) => e.statut === "ouvert")
         .slice(0, 3);
+
+      // Si utilisateur connecté, vérifier ses inscriptions
+      if (user) {
+        const token = localStorage.getItem("auth_token");
+        openEvents = await Promise.all(
+          openEvents.map(async (event: Event) => {
+            try {
+              const inscriptionUrl = API_ENDPOINTS.connexion.replace(
+                "/api/connexion",
+                `/api/evenements/${event.id}/inscription?user_email=${user.email}`
+              );
+              const inscriptionResponse = await apiRequest(inscriptionUrl, {
+                method: "GET",
+                headers: {
+                  Authorization: `Bearer ${token}`,
+                },
+              });
+              return {
+                ...event,
+                user_inscription: inscriptionResponse.inscription,
+              };
+            } catch (error) {
+              // Pas inscrit ou erreur
+              return event;
+            }
+          })
+        );
+      }
 
       setEvents(openEvents);
     } catch (error) {
@@ -129,12 +158,26 @@ export default function EventsPreview() {
                     </div>
                     <div className="flex flex-col sm:flex-row lg:flex-col gap-3">
                       {user ? (
-                        <button
-                          onClick={() => setInscriptionEvent(event)}
-                          className="btn-primary whitespace-nowrap text-center"
-                        >
-                          S&apos;inscrire
-                        </button>
+                        event.user_inscription ? (
+                          <button
+                            onClick={() =>
+                              setGererInscription({
+                                event,
+                                inscription: event.user_inscription,
+                              })
+                            }
+                            className="btn-primary whitespace-nowrap text-center bg-green-600 hover:bg-green-700"
+                          >
+                            ✓ Gérer mon inscription
+                          </button>
+                        ) : (
+                          <button
+                            onClick={() => setInscriptionEvent(event)}
+                            className="btn-primary whitespace-nowrap text-center"
+                          >
+                            S&apos;inscrire
+                          </button>
+                        )
                       ) : (
                         <Link
                           href="/inscription"
