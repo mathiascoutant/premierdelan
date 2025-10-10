@@ -96,7 +96,7 @@ export default function MesEvenementsPage() {
                 href="/"
                 className="text-sm text-gray-600 hover:text-black transition-colors mb-2 inline-flex items-center"
               >
-                ← Retour à l'accueil
+                ← Retour à l&apos;accueil
               </Link>
               <h1 className="text-2xl sm:text-3xl font-light text-black mt-2">
                 Mes Événements
