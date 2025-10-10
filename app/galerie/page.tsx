@@ -326,7 +326,7 @@ function GalerieContent() {
             </div>
 
             {user && (
-              <div>
+              <div className="flex items-center gap-3">
                 <label className="btn-primary cursor-pointer inline-flex items-center">
                   <FiUpload className="w-4 h-4 mr-2" />
                   Ajouter des médias
@@ -339,6 +339,15 @@ function GalerieContent() {
                     disabled={isUploading}
                   />
                 </label>
+                {!isSelectionMode && medias.filter(m => m.user_email === user.email).length > 0 && (
+                  <button
+                    onClick={() => setIsSelectionMode(true)}
+                    className="btn-secondary inline-flex items-center"
+                  >
+                    <FiTrash2 className="w-4 h-4 mr-2" />
+                    Sélectionner
+                  </button>
+                )}
               </div>
             )}
           </div>
@@ -383,6 +392,37 @@ function GalerieContent() {
                 {uploadQueue.find((f) => f.status === "uploading")?.name}
               </p>
             )}
+          </div>
+        )}
+
+        {/* Barre de sélection */}
+        {isSelectionMode && (
+          <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-blue-900">
+                Mode sélection
+              </p>
+              <p className="text-xs text-blue-700 mt-1">
+                {selectedForDeletion.size} média(s) sélectionné(s)
+              </p>
+            </div>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={cancelSelection}
+                className="px-4 py-2 text-sm text-gray-700 hover:bg-white rounded-lg transition-colors"
+              >
+                Annuler
+              </button>
+              {selectedForDeletion.size > 0 && (
+                <button
+                  onClick={handleDeleteSelected}
+                  className="px-4 py-2 bg-red-600 text-white text-sm font-medium rounded-lg hover:bg-red-700 transition-colors flex items-center"
+                >
+                  <FiTrash2 className="w-4 h-4 mr-2" />
+                  Supprimer ({selectedForDeletion.size})
+                </button>
+              )}
+            </div>
           </div>
         )}
 
@@ -449,11 +489,25 @@ function GalerieContent() {
           </div>
         ) : (
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-            {filteredMedias.map((media) => (
+            {filteredMedias.map((media) => {
+              const isMyMedia = user && media.user_email === user.email;
+              const isSelected = selectedForDeletion.has(media.id);
+              
+              return (
               <div
                 key={media.id}
-                className="group relative aspect-square bg-white rounded-lg overflow-hidden border border-gray-200 hover:border-black transition-all cursor-pointer"
-                onClick={() => setSelectedMedia(media)}
+                className={`group relative aspect-square bg-white rounded-lg overflow-hidden border-2 transition-all cursor-pointer ${
+                  isSelected 
+                    ? 'border-blue-600 ring-2 ring-blue-600' 
+                    : 'border-gray-200 hover:border-black'
+                }`}
+                onClick={() => {
+                  if (isSelectionMode && isMyMedia) {
+                    toggleSelection(media.id);
+                  } else if (!isSelectionMode) {
+                    setSelectedMedia(media);
+                  }
+                }}
               >
                 {media.type === "image" ? (
                   // eslint-disable-next-line @next/next/no-img-element
