@@ -8,6 +8,7 @@ import {
   FiLogOut,
   FiChevronDown,
   FiBell,
+  FiCalendar,
 } from "react-icons/fi";
 import { User } from "../hooks/useAuth";
 import { API_ENDPOINTS, apiRequest } from "../config/api";
@@ -194,7 +195,7 @@ export default function UserMenu({ user, onLogout }: UserMenuProps) {
               className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
               onClick={() => setIsOpen(false)}
             >
-              <FiSettings className="w-4 h-4 mr-3" />
+              <FiCalendar className="w-4 h-4 mr-3" />
               Mes événements
             </Link>
           </div>

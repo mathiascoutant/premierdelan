@@ -123,7 +123,7 @@ export default function EventsPreview() {
               const placesRestantes = event.capacite - event.inscrits;
               const now = new Date();
 
-              // Traiter les dates comme locales (ignorer le Z)
+              // Ignorer le Z pour traiter comme heure locale pure (sans conversion UTC)
               const dateOuverture = event.date_ouverture_inscription
                 ? new Date(event.date_ouverture_inscription.replace("Z", ""))
                 : null;

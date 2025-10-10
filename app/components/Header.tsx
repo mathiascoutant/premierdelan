@@ -195,6 +195,14 @@ export default function Header() {
                     Mon profil
                   </Link>
 
+                  <Link
+                    href="/mes-evenements"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className="block text-sm text-gray-700 hover:text-black transition-colors mb-2"
+                  >
+                    📅 Mes événements
+                  </Link>
+
                   {/* Notifications sur mobile */}
                   <div className="py-2 space-y-2">
                     <NotificationButton
