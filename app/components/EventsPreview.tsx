@@ -153,7 +153,9 @@ export default function EventsPreview() {
                                   : "text-green-600"
                               }
                             >
-                              {placesRestantes} place{placesRestantes > 1 ? "s" : ""} restante{placesRestantes > 1 ? "s" : ""}
+                              {placesRestantes} place
+                              {placesRestantes > 1 ? "s" : ""} restante
+                              {placesRestantes > 1 ? "s" : ""}
                             </span>
                           ) : (
                             <span className="text-red-600 font-medium">
@@ -162,7 +164,8 @@ export default function EventsPreview() {
                           )}
                         </span>
                         <span className="border-l border-gray-300 pl-6">
-                          {event.photos_count} photo{event.photos_count > 1 ? "s" : ""}
+                          {event.photos_count} photo
+                          {event.photos_count > 1 ? "s" : ""}
                         </span>
                       </div>
                     </div>
@@ -196,9 +199,12 @@ export default function EventsPreview() {
                           S&apos;inscrire
                         </Link>
                       )}
-                      <button className="btn-secondary whitespace-nowrap">
+                      <Link
+                        href={`/evenements/${event.id}/galerie`}
+                        className="btn-secondary whitespace-nowrap text-center"
+                      >
                         Voir la galerie
-                      </button>
+                      </Link>
                     </div>
                   </div>
                 </div>
