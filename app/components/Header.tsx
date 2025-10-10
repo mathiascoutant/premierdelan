@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { FiMenu, FiX, FiBell } from "react-icons/fi";
+import { FiMenu, FiX, FiBell, FiCalendar } from "react-icons/fi";
 import { useAuth } from "../hooks/useAuth";
 import UserMenu from "./UserMenu";
 import NotificationButton from "./NotificationButton";
@@ -158,76 +158,159 @@ export default function Header() {
           </button>
         </div>
 
-        {/* Mobile Menu */}
+        {/* Mobile Menu Overlay */}
         {isMobileMenuOpen && (
-          <div className="md:hidden pb-6 pt-2">
-            <div className="flex flex-col space-y-6">
-              {/* Profil utilisateur en haut du menu mobile */}
-              {user && (
-                <div className="pb-4 border-b border-gray-200">
-                  <div className="flex items-center space-x-3 mb-4">
-                    <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary-600 to-secondary-600 flex items-center justify-center text-white font-medium">
-                      {user.photo ? (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img
-                          src={user.photo}
-                          alt={user.firstname}
-                          className="w-full h-full rounded-full object-cover"
-                        />
-                      ) : (
-                        `${user.firstname?.charAt(0) || ""}${
-                          user.lastname?.charAt(0) || ""
-                        }`.toUpperCase()
-                      )}
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium text-gray-900">
-                        {user.firstname} {user.lastname}
-                      </p>
-                      <p className="text-xs text-gray-500">{user.email}</p>
+          <div className="fixed inset-0 z-50 md:hidden">
+            {/* Backdrop */}
+            <div
+              className="absolute inset-0 bg-black bg-opacity-50 backdrop-blur-sm"
+              onClick={() => setIsMobileMenuOpen(false)}
+            ></div>
+
+            {/* Menu Panel */}
+            <div className="absolute top-0 right-0 h-full w-80 max-w-[85vw] bg-white shadow-2xl overflow-y-auto">
+              {/* Header du menu */}
+              <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
+                <span className="font-medium text-gray-900">Menu</span>
+                <button
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                >
+                  <FiX className="w-5 h-5 text-gray-600" />
+                </button>
+              </div>
+
+              <div className="px-6 py-6 space-y-6">
+                {/* Profil utilisateur */}
+                {user && (
+                  <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl p-4 border border-gray-200">
+                    <div className="flex items-center space-x-3">
+                      <div className="w-14 h-14 rounded-full bg-gradient-to-br from-black to-gray-700 flex items-center justify-center text-white font-medium shadow-lg">
+                        {user.photo ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img
+                            src={user.photo}
+                            alt={user.firstname}
+                            className="w-full h-full rounded-full object-cover"
+                          />
+                        ) : (
+                          `${user.firstname?.charAt(0) || ""}${
+                            user.lastname?.charAt(0) || ""
+                          }`.toUpperCase()
+                        )}
+                      </div>
+                      <div>
+                        <p className="font-medium text-gray-900">
+                          {user.firstname} {user.lastname}
+                        </p>
+                        <p className="text-sm text-gray-500">{user.email}</p>
+                      </div>
                     </div>
                   </div>
-                  <Link
-                    href="/profil"
-                    onClick={() => setIsMobileMenuOpen(false)}
-                    className="block text-sm text-gray-700 hover:text-black transition-colors mb-2"
-                  >
-                    Mon profil
-                  </Link>
+                )}
 
-                  <Link
-                    href="/mes-evenements"
-                    onClick={() => setIsMobileMenuOpen(false)}
-                    className="block text-sm text-gray-700 hover:text-black transition-colors mb-2"
-                  >
-                    📅 Mes événements
-                  </Link>
+                {/* Navigation principale */}
+                {user && (
+                  <div className="space-y-2">
+                    <Link
+                      href="/profil"
+                      onClick={() => setIsMobileMenuOpen(false)}
+                      className="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-gray-100 transition-colors group"
+                    >
+                      <div className="w-10 h-10 bg-gray-100 group-hover:bg-white rounded-lg flex items-center justify-center transition-colors">
+                        <svg
+                          className="w-5 h-5 text-gray-600"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                          />
+                        </svg>
+                      </div>
+                      <span className="font-medium text-gray-900">
+                        Mon profil
+                      </span>
+                    </Link>
 
-                  {/* Notifications sur mobile */}
-                  <div className="py-2 space-y-2">
+                    <Link
+                      href="/mes-evenements"
+                      onClick={() => setIsMobileMenuOpen(false)}
+                      className="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-gray-100 transition-colors group"
+                    >
+                      <div className="w-10 h-10 bg-gray-100 group-hover:bg-white rounded-lg flex items-center justify-center transition-colors">
+                        <FiCalendar className="w-5 h-5 text-gray-600" />
+                      </div>
+                      <span className="font-medium text-gray-900">
+                        Mes événements
+                      </span>
+                    </Link>
+
+                    {/* Lien Admin si user est admin */}
+                    {isUserAdmin && (
+                      <Link
+                        href="/admin"
+                        onClick={() => setIsMobileMenuOpen(false)}
+                        className="flex items-center space-x-3 px-4 py-3 rounded-lg bg-black text-white hover:bg-gray-800 transition-colors group"
+                      >
+                        <div className="w-10 h-10 bg-white bg-opacity-20 rounded-lg flex items-center justify-center">
+                          <svg
+                            className="w-5 h-5 text-white"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
+                            />
+                          </svg>
+                        </div>
+                        <span className="font-medium">Espace Admin</span>
+                      </Link>
+                    )}
+                  </div>
+                )}
+
+                {/* Notifications */}
+                {user && (
+                  <div className="space-y-3 pb-6 border-b border-gray-200">
+                    <p className="text-xs font-medium text-gray-500 uppercase tracking-wider px-2">
+                      Notifications
+                    </p>
                     <NotificationButton
                       userEmail={user.email}
-                      className="mb-2"
+                      className="w-full"
                     />
 
                     <button
                       onClick={handleTestNotification}
                       disabled={isTestingNotification}
-                      className="flex items-center w-full text-sm text-gray-700 hover:text-black transition-colors disabled:opacity-50"
+                      className="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-gray-100 transition-colors disabled:opacity-50 w-full group"
                     >
-                      <FiBell
-                        className={`w-4 h-4 mr-2 ${
-                          isTestingNotification ? "animate-pulse" : ""
-                        }`}
-                      />
-                      {isTestingNotification
-                        ? "Envoi..."
-                        : "Tester notification"}
+                      <div className="w-10 h-10 bg-gray-100 group-hover:bg-white rounded-lg flex items-center justify-center transition-colors">
+                        <FiBell
+                          className={`w-5 h-5 text-gray-600 ${
+                            isTestingNotification ? "animate-pulse" : ""
+                          }`}
+                        />
+                      </div>
+                      <span className="font-medium text-gray-900">
+                        {isTestingNotification
+                          ? "Envoi..."
+                          : "Tester notification"}
+                      </span>
                     </button>
 
                     {notificationMessage && (
                       <div
-                        className={`px-3 py-2 rounded text-xs ${
+                        className={`mx-2 px-4 py-3 rounded-lg text-sm ${
                           notificationMessage.type === "success"
                             ? "bg-green-50 text-green-700 border border-green-200"
                             : "bg-red-50 text-red-700 border border-red-200"
@@ -237,74 +320,85 @@ export default function Header() {
                       </div>
                     )}
                   </div>
-
-                  <Link
-                    href="/mes-evenements"
-                    onClick={() => setIsMobileMenuOpen(false)}
-                    className="block text-sm text-gray-700 hover:text-black transition-colors"
-                  >
-                    Mes événements
-                  </Link>
-
-                  {/* Lien Admin si user est admin (mobile) */}
-                  {isUserAdmin && (
-                    <Link
-                      href="/admin"
-                      onClick={() => setIsMobileMenuOpen(false)}
-                      className="block text-sm font-medium text-black hover:text-gray-600 transition-colors pt-2 border-t border-gray-100 mt-2"
-                    >
-                      🔑 Espace Admin
-                    </Link>
-                  )}
-                </div>
-              )}
-
-              {menuItems
-                .filter((item) => !user || item.label !== "Connexion")
-                .map((item) =>
-                  item.isHash ? (
-                    <a
-                      key={item.href}
-                      href={item.href}
-                      onClick={() => setIsMobileMenuOpen(false)}
-                      className="text-sm tracking-wide text-gray-600 hover:text-black transition-colors uppercase"
-                    >
-                      {item.label}
-                    </a>
-                  ) : (
-                    <Link
-                      key={item.href}
-                      href={item.href}
-                      onClick={() => setIsMobileMenuOpen(false)}
-                      className="text-sm tracking-wide text-gray-600 hover:text-black transition-colors uppercase"
-                    >
-                      {item.label}
-                    </Link>
-                  )
                 )}
 
-              {!isLoading && (
-                <>
-                  {user ? (
-                    <button
-                      onClick={() => {
-                        setIsMobileMenuOpen(false);
-                        logout();
-                      }}
-                      className="btn-secondary w-full text-center text-red-600 border-red-600 hover:bg-red-600 hover:text-white"
-                    >
-                      Déconnexion
-                    </button>
-                  ) : (
-                    <Link
-                      href="/inscription"
-                      className="btn-primary w-full block text-center"
-                    >
-                      S&apos;inscrire
-                    </Link>
-                  )}
-                </>
-              )}
+                {/* Liens de navigation */}
+                <div className="space-y-1">
+                  <p className="text-xs font-medium text-gray-500 uppercase tracking-wider px-2 mb-3">
+                    Navigation
+                  </p>
+                  {menuItems
+                    .filter((item) => !user || item.label !== "Connexion")
+                    .map((item) =>
+                      item.isHash ? (
+                        <a
+                          key={item.href}
+                          href={item.href}
+                          onClick={() => setIsMobileMenuOpen(false)}
+                          className="block px-4 py-3 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors font-medium"
+                        >
+                          {item.label}
+                        </a>
+                      ) : (
+                        <Link
+                          key={item.href}
+                          href={item.href}
+                          onClick={() => setIsMobileMenuOpen(false)}
+                          className="block px-4 py-3 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors font-medium"
+                        >
+                          {item.label}
+                        </Link>
+                      )
+                    )}
+                </div>
+
+                {/* Bouton d'action */}
+                {!isLoading && (
+                  <div className="pt-4">
+                    {user ? (
+                      <button
+                        onClick={() => {
+                          setIsMobileMenuOpen(false);
+                          logout();
+                        }}
+                        className="flex items-center justify-center space-x-3 w-full px-4 py-3 bg-red-50 text-red-600 rounded-lg hover:bg-red-600 hover:text-white transition-colors font-medium"
+                      >
+                        <svg
+                          className="w-5 h-5"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
+                          />
+                        </svg>
+                        <span>Déconnexion</span>
+                      </button>
+                    ) : (
+                      <div className="space-y-3">
+                        <Link
+                          href="/inscription"
+                          onClick={() => setIsMobileMenuOpen(false)}
+                          className="block w-full px-4 py-3 bg-black text-white rounded-lg hover:bg-gray-800 transition-colors font-medium text-center"
+                        >
+                          S&apos;inscrire
+                        </Link>
+                        <Link
+                          href="/connexion"
+                          onClick={() => setIsMobileMenuOpen(false)}
+                          className="block w-full px-4 py-3 border-2 border-gray-200 text-gray-900 rounded-lg hover:bg-gray-50 transition-colors font-medium text-center"
+                        >
+                          Se connecter
+                        </Link>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         )}

@@ -5,7 +5,13 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "../hooks/useAuth";
 import { apiRequest, API_URL } from "../config/api";
-import { FiCalendar, FiMapPin, FiUsers, FiImage, FiClock } from "react-icons/fi";
+import {
+  FiCalendar,
+  FiMapPin,
+  FiUsers,
+  FiImage,
+  FiClock,
+} from "react-icons/fi";
 
 interface Event {
   id: string;
@@ -284,4 +290,3 @@ export default function MesEvenementsPage() {
     </div>
   );
 }
-
