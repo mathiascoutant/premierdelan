@@ -1,28 +1,28 @@
-'use client';
+"use client";
 
-import { useState, useEffect, Suspense } from 'react';
-import { useSearchParams } from 'next/navigation';
-import Link from 'next/link';
-import { 
-  FiArrowLeft, 
-  FiUpload, 
-  FiImage, 
-  FiVideo, 
-  FiDownload, 
+import { useState, useEffect, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
+import Link from "next/link";
+import {
+  FiArrowLeft,
+  FiUpload,
+  FiImage,
+  FiVideo,
+  FiDownload,
   FiTrash2,
   FiX,
-  FiPlay
-} from 'react-icons/fi';
-import { uploadToCloudinary, validateFile } from '../config/cloudinary';
-import { API_ENDPOINTS, apiRequest } from '../config/api';
-import { useAuth } from '../hooks/useAuth';
+  FiPlay,
+} from "react-icons/fi";
+import { uploadToCloudinary, validateFile } from "../config/cloudinary";
+import { API_ENDPOINTS, apiRequest } from "../config/api";
+import { useAuth } from "../hooks/useAuth";
 
 interface Media {
   id: string;
   event_id: string;
   user_email: string;
   user_name: string;
-  type: 'image' | 'video';
+  type: "image" | "video";
   url: string;
   storage_path: string;
   filename: string;
@@ -39,7 +39,7 @@ interface Event {
 
 function GalerieContent() {
   const searchParams = useSearchParams();
-  const eventId = searchParams.get('event');
+  const eventId = searchParams.get("event");
   const { user, isLoading: authLoading } = useAuth();
 
   const [event, setEvent] = useState<Event | null>(null);
@@ -47,8 +47,15 @@ function GalerieContent() {
   const [isLoading, setIsLoading] = useState(true);
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
+  const [uploadQueue, setUploadQueue] = useState<
+    {
+      name: string;
+      progress: number;
+      status: "pending" | "uploading" | "done" | "error";
+    }[]
+  >([]);
   const [selectedMedia, setSelectedMedia] = useState<Media | null>(null);
-  const [filter, setFilter] = useState<'all' | 'images' | 'videos'>('all');
+  const [filter, setFilter] = useState<"all" | "images" | "videos">("all");
 
   useEffect(() => {
     if (!authLoading && eventId) {
@@ -59,23 +66,29 @@ function GalerieContent() {
 
   const fetchEventAndMedias = async () => {
     if (!eventId) return;
-    
+
     try {
       // Récupérer l'événement
-      const eventUrl = API_ENDPOINTS.connexion.replace('/api/connexion', `/api/evenements/${eventId}`);
-      const eventResponse = await apiRequest(eventUrl, { method: 'GET' });
+      const eventUrl = API_ENDPOINTS.connexion.replace(
+        "/api/connexion",
+        `/api/evenements/${eventId}`
+      );
+      const eventResponse = await apiRequest(eventUrl, { method: "GET" });
       setEvent(eventResponse.evenement);
 
       // Récupérer les médias
-      const token = localStorage.getItem('auth_token');
-      const mediasUrl = API_ENDPOINTS.connexion.replace('/api/connexion', `/api/evenements/${eventId}/medias`);
+      const token = localStorage.getItem("auth_token");
+      const mediasUrl = API_ENDPOINTS.connexion.replace(
+        "/api/connexion",
+        `/api/evenements/${eventId}/medias`
+      );
       const mediasResponse = await apiRequest(mediasUrl, {
-        method: 'GET',
-        headers: token ? { 'Authorization': `Bearer ${token}` } : {},
+        method: "GET",
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
       });
       setMedias(mediasResponse.medias || []);
     } catch (error) {
-      console.error('Erreur chargement:', error);
+      console.error("Erreur chargement:", error);
     } finally {
       setIsLoading(false);
     }
@@ -106,13 +119,16 @@ function GalerieContent() {
       );
 
       // 2. Enregistrer les métadonnées dans le backend
-      const token = localStorage.getItem('auth_token');
-      const apiUrl = API_ENDPOINTS.connexion.replace('/api/connexion', `/api/evenements/${eventId}/medias`);
-      
+      const token = localStorage.getItem("auth_token");
+      const apiUrl = API_ENDPOINTS.connexion.replace(
+        "/api/connexion",
+        `/api/evenements/${eventId}/medias`
+      );
+
       await apiRequest(apiUrl, {
-        method: 'POST',
+        method: "POST",
         headers: {
-          'Authorization': `Bearer ${token}`,
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
           user_email: user.email,
@@ -129,8 +145,8 @@ function GalerieContent() {
       setIsUploading(false);
       setUploadProgress(0);
     } catch (error) {
-      console.error('Erreur upload:', error);
-      alert('Erreur lors de l\'upload');
+      console.error("Erreur upload:", error);
+      alert("Erreur lors de l'upload");
       setIsUploading(false);
       setUploadProgress(0);
     }
@@ -138,21 +154,24 @@ function GalerieContent() {
 
   const handleDelete = async (media: Media) => {
     if (!user || media.user_email !== user.email || !eventId) {
-      alert('Vous ne pouvez supprimer que vos propres médias');
+      alert("Vous ne pouvez supprimer que vos propres médias");
       return;
     }
 
-    if (!confirm('Êtes-vous sûr de vouloir supprimer ce média ?')) return;
+    if (!confirm("Êtes-vous sûr de vouloir supprimer ce média ?")) return;
 
     try {
       // Supprimer via le backend (qui supprime de Cloudinary ET de la BDD)
-      const token = localStorage.getItem('auth_token');
-      const apiUrl = API_ENDPOINTS.connexion.replace('/api/connexion', `/api/evenements/${eventId}/medias/${media.id}`);
-      
+      const token = localStorage.getItem("auth_token");
+      const apiUrl = API_ENDPOINTS.connexion.replace(
+        "/api/connexion",
+        `/api/evenements/${eventId}/medias/${media.id}`
+      );
+
       await apiRequest(apiUrl, {
-        method: 'DELETE',
+        method: "DELETE",
         headers: {
-          'Authorization': `Bearer ${token}`,
+          Authorization: `Bearer ${token}`,
         },
       });
 
@@ -160,8 +179,8 @@ function GalerieContent() {
       await fetchEventAndMedias();
       setSelectedMedia(null);
     } catch (error) {
-      console.error('Erreur suppression:', error);
-      alert('Erreur lors de la suppression');
+      console.error("Erreur suppression:", error);
+      alert("Erreur lors de la suppression");
     }
   };
 
@@ -170,7 +189,7 @@ function GalerieContent() {
       const response = await fetch(media.url);
       const blob = await response.blob();
       const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
+      const a = document.createElement("a");
       a.href = url;
       a.download = media.filename;
       document.body.appendChild(a);
@@ -178,14 +197,14 @@ function GalerieContent() {
       window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
     } catch (error) {
-      console.error('Erreur téléchargement:', error);
-      alert('Erreur lors du téléchargement');
+      console.error("Erreur téléchargement:", error);
+      alert("Erreur lors du téléchargement");
     }
   };
 
-  const filteredMedias = medias.filter(media => {
-    if (filter === 'images') return media.type === 'image';
-    if (filter === 'videos') return media.type === 'video';
+  const filteredMedias = medias.filter((media) => {
+    if (filter === "images") return media.type === "image";
+    if (filter === "videos") return media.type === "video";
     return true;
   });
 
@@ -228,7 +247,10 @@ function GalerieContent() {
       <div className="section-container">
         {/* Header */}
         <div className="mb-8">
-          <Link href="/" className="inline-flex items-center text-sm text-gray-600 hover:text-black mb-4">
+          <Link
+            href="/"
+            className="inline-flex items-center text-sm text-gray-600 hover:text-black mb-4"
+          >
             <FiArrowLeft className="w-4 h-4 mr-2" />
             Retour aux événements
           </Link>
@@ -238,10 +260,10 @@ function GalerieContent() {
                 Galerie - {event.titre}
               </h1>
               <p className="text-sm text-gray-500">
-                {new Date(event.date).toLocaleDateString('fr-FR', {
-                  day: 'numeric',
-                  month: 'long',
-                  year: 'numeric'
+                {new Date(event.date).toLocaleDateString("fr-FR", {
+                  day: "numeric",
+                  month: "long",
+                  year: "numeric",
                 })}
               </p>
             </div>
@@ -254,6 +276,7 @@ function GalerieContent() {
                   <input
                     type="file"
                     accept="image/*,video/*"
+                    multiple
                     onChange={handleFileUpload}
                     className="hidden"
                     disabled={isUploading}
@@ -269,10 +292,12 @@ function GalerieContent() {
           <div className="mb-6 p-4 bg-white border border-gray-200 rounded-lg">
             <div className="flex items-center justify-between mb-2">
               <span className="text-sm text-gray-700">Upload en cours...</span>
-              <span className="text-sm font-medium text-black">{uploadProgress}%</span>
+              <span className="text-sm font-medium text-black">
+                {uploadProgress}%
+              </span>
             </div>
             <div className="w-full bg-gray-200 rounded-full h-2">
-              <div 
+              <div
                 className="bg-black h-2 rounded-full transition-all duration-300"
                 style={{ width: `${uploadProgress}%` }}
               ></div>
@@ -283,36 +308,36 @@ function GalerieContent() {
         {/* Filtres */}
         <div className="flex items-center gap-3 mb-6 overflow-x-auto pb-2">
           <button
-            onClick={() => setFilter('all')}
+            onClick={() => setFilter("all")}
             className={`px-4 py-2 rounded-lg text-sm transition-colors whitespace-nowrap ${
-              filter === 'all' 
-                ? 'bg-black text-white' 
-                : 'bg-white text-gray-700 border border-gray-200 hover:bg-gray-50'
+              filter === "all"
+                ? "bg-black text-white"
+                : "bg-white text-gray-700 border border-gray-200 hover:bg-gray-50"
             }`}
           >
             Tout ({medias.length})
           </button>
           <button
-            onClick={() => setFilter('images')}
+            onClick={() => setFilter("images")}
             className={`px-4 py-2 rounded-lg text-sm transition-colors flex items-center whitespace-nowrap ${
-              filter === 'images' 
-                ? 'bg-black text-white' 
-                : 'bg-white text-gray-700 border border-gray-200 hover:bg-gray-50'
+              filter === "images"
+                ? "bg-black text-white"
+                : "bg-white text-gray-700 border border-gray-200 hover:bg-gray-50"
             }`}
           >
             <FiImage className="w-4 h-4 mr-2" />
-            Photos ({medias.filter(m => m.type === 'image').length})
+            Photos ({medias.filter((m) => m.type === "image").length})
           </button>
           <button
-            onClick={() => setFilter('videos')}
+            onClick={() => setFilter("videos")}
             className={`px-4 py-2 rounded-lg text-sm transition-colors flex items-center whitespace-nowrap ${
-              filter === 'videos' 
-                ? 'bg-black text-white' 
-                : 'bg-white text-gray-700 border border-gray-200 hover:bg-gray-50'
+              filter === "videos"
+                ? "bg-black text-white"
+                : "bg-white text-gray-700 border border-gray-200 hover:bg-gray-50"
             }`}
           >
             <FiVideo className="w-4 h-4 mr-2" />
-            Vidéos ({medias.filter(m => m.type === 'video').length})
+            Vidéos ({medias.filter((m) => m.type === "video").length})
           </button>
         </div>
 
@@ -321,19 +346,20 @@ function GalerieContent() {
           <div className="text-center py-16 bg-white rounded-lg border border-gray-200">
             <FiImage className="w-16 h-16 text-gray-300 mx-auto mb-4" />
             <p className="text-gray-600 mb-4">
-              {filter === 'all' 
-                ? 'Aucun média pour le moment' 
-                : filter === 'images'
-                ? 'Aucune photo'
-                : 'Aucune vidéo'}
+              {filter === "all"
+                ? "Aucun média pour le moment"
+                : filter === "images"
+                ? "Aucune photo"
+                : "Aucune vidéo"}
             </p>
             {user && (
               <label className="btn-primary cursor-pointer inline-flex items-center">
                 <FiUpload className="w-4 h-4 mr-2" />
-                Ajouter le premier média
+                Ajouter des médias
                 <input
                   type="file"
                   accept="image/*,video/*"
+                  multiple
                   onChange={handleFileUpload}
                   className="hidden"
                 />
@@ -348,7 +374,7 @@ function GalerieContent() {
                 className="group relative aspect-square bg-white rounded-lg overflow-hidden border border-gray-200 hover:border-black transition-all cursor-pointer"
                 onClick={() => setSelectedMedia(media)}
               >
-                {media.type === 'image' ? (
+                {media.type === "image" ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img
                     src={media.url}
@@ -367,7 +393,9 @@ function GalerieContent() {
                   </div>
                 )}
                 <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-3 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <p className="text-white text-xs truncate">{media.user_name}</p>
+                  <p className="text-white text-xs truncate">
+                    {media.user_name}
+                  </p>
                 </div>
               </div>
             ))}
@@ -377,7 +405,7 @@ function GalerieContent() {
 
       {/* Modal de visualisation */}
       {selectedMedia && (
-        <div 
+        <div
           className="fixed inset-0 bg-black/90 z-50 flex items-center justify-center p-4"
           onClick={() => setSelectedMedia(null)}
         >
@@ -388,11 +416,11 @@ function GalerieContent() {
             <FiX className="w-6 h-6" />
           </button>
 
-          <div 
+          <div
             className="max-w-5xl w-full"
             onClick={(e) => e.stopPropagation()}
           >
-            {selectedMedia.type === 'image' ? (
+            {selectedMedia.type === "image" ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img
                 src={selectedMedia.url}
@@ -411,15 +439,20 @@ function GalerieContent() {
             <div className="mt-4 bg-white rounded-lg p-4">
               <div className="flex items-center justify-between mb-3">
                 <div>
-                  <p className="text-sm font-medium text-black">{selectedMedia.user_name}</p>
+                  <p className="text-sm font-medium text-black">
+                    {selectedMedia.user_name}
+                  </p>
                   <p className="text-xs text-gray-500">
-                    {new Date(selectedMedia.uploaded_at).toLocaleDateString('fr-FR', {
-                      day: 'numeric',
-                      month: 'long',
-                      year: 'numeric',
-                      hour: '2-digit',
-                      minute: '2-digit'
-                    })}
+                    {new Date(selectedMedia.uploaded_at).toLocaleDateString(
+                      "fr-FR",
+                      {
+                        day: "numeric",
+                        month: "long",
+                        year: "numeric",
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      }
+                    )}
                   </p>
                 </div>
                 <div className="flex items-center gap-2">
@@ -452,13 +485,14 @@ function GalerieContent() {
 
 export default function GaleriePage() {
   return (
-    <Suspense fallback={
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="w-12 h-12 border-4 border-gray-200 border-t-black rounded-full animate-spin"></div>
-      </div>
-    }>
+    <Suspense
+      fallback={
+        <div className="min-h-screen flex items-center justify-center">
+          <div className="w-12 h-12 border-4 border-gray-200 border-t-black rounded-full animate-spin"></div>
+        </div>
+      }
+    >
       <GalerieContent />
     </Suspense>
   );
 }
-
