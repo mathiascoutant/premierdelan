@@ -3,6 +3,9 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { API_ENDPOINTS, apiRequest } from "../config/api";
+import { useAuth } from "../hooks/useAuth";
+import InscriptionEventModal from "./InscriptionEventModal";
+import GererInscriptionModal from "./GererInscriptionModal";
 
 interface Event {
   id: string;
@@ -17,8 +20,14 @@ interface Event {
 }
 
 export default function EventsPreview() {
+  const { user } = useAuth();
   const [events, setEvents] = useState<Event[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [inscriptionEvent, setInscriptionEvent] = useState<Event | null>(null);
+  const [gererInscription, setGererInscription] = useState<{
+    event: Event;
+    inscription: any;
+  } | null>(null);
 
   useEffect(() => {
     fetchEvents();
@@ -119,12 +128,21 @@ export default function EventsPreview() {
                       </div>
                     </div>
                     <div className="flex flex-col sm:flex-row lg:flex-col gap-3">
-                      <Link
-                        href="/inscription"
-                        className="btn-primary whitespace-nowrap text-center"
-                      >
-                        S&apos;inscrire
-                      </Link>
+                      {user ? (
+                        <button
+                          onClick={() => setInscriptionEvent(event)}
+                          className="btn-primary whitespace-nowrap text-center"
+                        >
+                          S&apos;inscrire
+                        </button>
+                      ) : (
+                        <Link
+                          href="/inscription"
+                          className="btn-primary whitespace-nowrap text-center"
+                        >
+                          S&apos;inscrire
+                        </Link>
+                      )}
                       <button className="btn-secondary whitespace-nowrap">
                         Voir la galerie
                       </button>
@@ -136,6 +154,32 @@ export default function EventsPreview() {
           </div>
         )}
       </div>
+
+      {/* Modales */}
+      {inscriptionEvent && user && (
+        <InscriptionEventModal
+          event={inscriptionEvent}
+          userEmail={user.email}
+          onClose={() => setInscriptionEvent(null)}
+          onSuccess={() => {
+            fetchEvents();
+            setInscriptionEvent(null);
+          }}
+        />
+      )}
+
+      {gererInscription && user && (
+        <GererInscriptionModal
+          event={gererInscription.event}
+          userEmail={user.email}
+          inscription={gererInscription.inscription}
+          onClose={() => setGererInscription(null)}
+          onUpdate={() => {
+            fetchEvents();
+            setGererInscription(null);
+          }}
+        />
+      )}
     </section>
   );
 }

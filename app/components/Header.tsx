@@ -237,6 +237,17 @@ export default function Header() {
                   >
                     Mes événements
                   </Link>
+
+                  {/* Lien Admin si user est admin (mobile) */}
+                  {isUserAdmin && (
+                    <Link
+                      href="/admin"
+                      onClick={() => setIsMobileMenuOpen(false)}
+                      className="block text-sm font-medium text-black hover:text-gray-600 transition-colors pt-2 border-t border-gray-100 mt-2"
+                    >
+                      🔑 Espace Admin
+                    </Link>
+                  )}
                 </div>
               )}
 
