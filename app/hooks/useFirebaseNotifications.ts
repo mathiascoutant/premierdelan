@@ -99,16 +99,12 @@ export function useFirebaseNotifications() {
       localStorage.setItem('fcm_enabled', 'true')
       localStorage.setItem('fcm_token', fcmToken)
 
-      // Écouter les messages au premier plan
+      // Écouter les messages au premier plan (juste pour logger)
+      // Note: Le Service Worker gère déjà l'affichage de la notification
       onMessage(messaging, (payload) => {
         console.log('📩 Notification reçue au premier plan:', payload)
-
-        if (Notification.permission === 'granted') {
-          new Notification(payload.notification?.title || 'Notification', {
-            body: payload.notification?.body || '',
-            icon: `${basePath}/icon-192x192.png`,
-          })
-        }
+        // Pas de new Notification() ici pour éviter les doublons
+        // Le Service Worker s'en charge automatiquement
       })
 
       return true
