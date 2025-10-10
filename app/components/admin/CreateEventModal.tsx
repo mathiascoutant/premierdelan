@@ -51,9 +51,17 @@ export default function CreateEventModal({
           Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
-          ...formData,
+          titre: formData.titre,
+          date: formData.date + ":00", // Format: "2025-10-10T12:47:00"
+          description: formData.description,
+          lieu: formData.lieu,
           capacite: parseInt(formData.capacite),
+          code_soiree: formData.code_soiree,
           statut: "ouvert",
+          date_ouverture_inscription:
+            formData.date_ouverture_inscription + ":00",
+          date_fermeture_inscription:
+            formData.date_fermeture_inscription + ":00",
         }),
       });
 
