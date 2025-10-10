@@ -1,6 +1,10 @@
 // Service Worker pour Firebase Cloud Messaging
-importScripts('https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js');
-importScripts('https://www.gstatic.com/firebasejs/10.7.1/firebase-messaging-compat.js');
+importScripts(
+  "https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"
+);
+importScripts(
+  "https://www.gstatic.com/firebasejs/10.7.1/firebase-messaging-compat.js"
+);
 
 // Configuration Firebase
 const firebaseConfig = {
@@ -9,7 +13,7 @@ const firebaseConfig = {
   projectId: "premier-de-lan",
   storageBucket: "premier-de-lan.firebasestorage.app",
   messagingSenderId: "220494656911",
-  appId: "1:220494656911:web:2ff99839c5f7271ddf07fa"
+  appId: "1:220494656911:web:2ff99839c5f7271ddf07fa",
 };
 
 // Initialiser Firebase
@@ -19,51 +23,48 @@ firebase.initializeApp(firebaseConfig);
 const messaging = firebase.messaging();
 
 // Gérer les notifications en arrière-plan
-// IMPORTANT: Firebase affiche automatiquement les notifications
-// On utilise juste onBackgroundMessage pour logger ou personnaliser
+// En appelant showNotification manuellement, on évite le "from ..."
 messaging.onBackgroundMessage((payload) => {
-  console.log('📩 Notification reçue en arrière-plan:', payload);
-  
-  // Firebase affiche automatiquement la notification
-  // Pas besoin d'appeler showNotification() manuellement
-  // sinon on a 2 notifications !
-  
-  // Si vous voulez personnaliser l'affichage, décommentez ci-dessous
-  // et Firebase n'affichera PAS automatiquement
-  
-  /*
-  const notificationTitle = payload.notification?.title || 'Nouvelle notification';
+  console.log("📩 Notification reçue en arrière-plan:", payload);
+
+  const notificationTitle =
+    payload.notification?.title || "Nouvelle notification";
   const notificationOptions = {
-    body: payload.notification?.body || '',
-    icon: '/premierdelan/icon-192x192.png',
-    badge: '/premierdelan/icon-192x192.png',
+    body: payload.notification?.body || "",
+    icon: "/premierdelan/icon-192x192.png",
+    badge: "/premierdelan/icon-192x192.png",
     data: payload.data || {},
-    vibrate: [200, 100, 200]
+    vibrate: [200, 100, 200],
+    requireInteraction: false,
+    tag: "premier-de-lan-notification",
   };
-  
-  return self.registration.showNotification(notificationTitle, notificationOptions);
-  */
+
+  // Afficher manuellement pour avoir le contrôle total (pas de "from ...")
+  return self.registration.showNotification(
+    notificationTitle,
+    notificationOptions
+  );
 });
 
 // Gérer le clic sur la notification
-self.addEventListener('notificationclick', function(event) {
-  console.log('👆 Notification cliquée');
+self.addEventListener("notificationclick", function (event) {
+  console.log("👆 Notification cliquée");
   event.notification.close();
-  
+
   event.waitUntil(
-    clients.matchAll({ type: 'window', includeUncontrolled: true })
-      .then(function(clientList) {
+    clients
+      .matchAll({ type: "window", includeUncontrolled: true })
+      .then(function (clientList) {
         for (let i = 0; i < clientList.length; i++) {
           const client = clientList[i];
-          if ('focus' in client) {
+          if ("focus" in client) {
             return client.focus();
           }
         }
         if (clients.openWindow) {
-          const basePath = '/premierdelan';
-          return clients.openWindow(basePath + '/');
+          const basePath = "/premierdelan";
+          return clients.openWindow(basePath + "/");
         }
       })
   );
 });
-

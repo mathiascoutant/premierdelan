@@ -49,10 +49,11 @@ export default function Header() {
         },
         body: JSON.stringify({
           user_id: user?.email,
-          title: "🔔 Test de notification",
-          message: "Votre système de notifications fonctionne parfaitement !",
+          title: "🎉 Premier de l'An",
+          message: `Bonjour ${user?.prenom} ! Test de notification réussi.`,
           data: {
             action: "test",
+            url: "/mes-evenements"
           },
         }),
       });
