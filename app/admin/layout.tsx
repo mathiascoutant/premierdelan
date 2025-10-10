@@ -69,23 +69,23 @@ export default function AdminLayout({
       </header>
 
       <div className="section-container py-4 md:py-8">
-        {/* Navigation mobile (horizontal) */}
+        {/* Navigation mobile (tabs pleine largeur) */}
         <nav className="md:hidden mb-6 bg-white border border-gray-200 rounded-lg overflow-hidden">
-          <div className="flex overflow-x-auto">
+          <div className="grid grid-cols-3">
             {menuItems.map((item) => {
               const isActive = pathname === item.href
               return (
                 <Link
                   key={item.href}
                   href={item.href}
-                  className={`flex items-center space-x-2 px-4 py-3 whitespace-nowrap transition-colors border-b-2 ${
+                  className={`flex flex-col items-center justify-center py-3 px-2 transition-colors border-b-2 ${
                     isActive
                       ? 'border-black text-black font-medium'
                       : 'border-transparent text-gray-600 hover:text-black'
                   }`}
                 >
-                  <item.icon className="w-4 h-4" />
-                  <span className="text-sm">{item.label}</span>
+                  <item.icon className="w-5 h-5 mb-1" />
+                  <span className="text-xs">{item.label}</span>
                 </Link>
               )
             })}

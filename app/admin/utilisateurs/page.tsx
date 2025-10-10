@@ -3,6 +3,8 @@
 import { useState, useEffect } from 'react'
 import { FiSearch, FiMail, FiPhone, FiShield, FiTrash2, FiEdit } from 'react-icons/fi'
 import { API_ENDPOINTS, apiRequest } from '../../config/api'
+import EditUserModal from '../../components/admin/EditUserModal'
+import DeleteUserModal from '../../components/admin/DeleteUserModal'
 
 interface Utilisateur {
   id: string
@@ -19,6 +21,8 @@ export default function UtilisateursPage() {
   const [utilisateurs, setUtilisateurs] = useState<Utilisateur[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
+  const [editingUser, setEditingUser] = useState<Utilisateur | null>(null)
+  const [deletingUser, setDeletingUser] = useState<Utilisateur | null>(null)
 
   useEffect(() => {
     fetchUtilisateurs()
@@ -165,10 +169,18 @@ export default function UtilisateursPage() {
                   {new Date(utilisateur.created_at).toLocaleDateString('fr-FR')}
                 </span>
                 <div className="flex items-center space-x-2">
-                  <button className="p-2 text-gray-600 hover:text-black transition-colors">
+                  <button 
+                    onClick={() => setEditingUser(utilisateur)}
+                    className="p-2 text-gray-600 hover:text-black transition-colors"
+                    title="Modifier"
+                  >
                     <FiEdit className="w-4 h-4" />
                   </button>
-                  <button className="p-2 text-red-600 hover:text-red-700 transition-colors">
+                  <button 
+                    onClick={() => setDeletingUser(utilisateur)}
+                    className="p-2 text-red-600 hover:text-red-700 transition-colors"
+                    title="Supprimer"
+                  >
                     <FiTrash2 className="w-4 h-4" />
                   </button>
                 </div>
@@ -190,23 +202,20 @@ export default function UtilisateursPage() {
             <p className="text-gray-600">Aucun utilisateur trouvé</p>
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full">
+          <div>
+            <table className="w-full table-fixed">
               <thead className="border-b border-gray-200 bg-gray-50">
                 <tr>
-                  <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="w-1/3 px-4 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Utilisateur
                   </th>
-                  <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="w-1/3 px-4 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Contact
                   </th>
-                  <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="w-[100px] px-4 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Rôle
                   </th>
-                  <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Inscription
-                  </th>
-                  <th className="px-6 py-4 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="w-[120px] px-4 py-4 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Actions
                   </th>
                 </tr>
@@ -214,51 +223,57 @@ export default function UtilisateursPage() {
               <tbody className="divide-y divide-gray-200">
                 {filteredUsers.map((utilisateur) => (
                   <tr key={utilisateur.id} className="hover:bg-gray-50 transition-colors">
-                    <td className="px-6 py-4">
+                    <td className="px-4 py-4">
                       <div className="flex items-center space-x-3">
-                        <div className="w-10 h-10 bg-gradient-to-br from-gray-700 to-gray-900 rounded-full flex items-center justify-center text-white text-sm font-medium">
+                        <div className="w-10 h-10 bg-gradient-to-br from-gray-700 to-gray-900 rounded-full flex items-center justify-center text-white text-sm font-medium flex-shrink-0">
                           {(utilisateur.firstname?.charAt(0) || '').toUpperCase()}{(utilisateur.lastname?.charAt(0) || '').toUpperCase()}
                         </div>
-                        <div>
-                          <p className="font-medium text-gray-900">
+                        <div className="min-w-0">
+                          <p className="font-medium text-gray-900 truncate">
                             {utilisateur.firstname} {utilisateur.lastname}
                           </p>
+                          {utilisateur.admin === 1 && (
+                            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-black text-white mt-1">
+                              <FiShield className="w-3 h-3 mr-1" />
+                              Admin
+                            </span>
+                          )}
                         </div>
                       </div>
                     </td>
-                    <td className="px-6 py-4">
-                      <div className="space-y-1">
+                    <td className="px-4 py-4">
+                      <div className="space-y-1 min-w-0">
                         <div className="flex items-center text-sm text-gray-600">
-                          <FiMail className="w-4 h-4 mr-2" />
-                          {utilisateur.email || 'Non renseigné'}
+                          <FiMail className="w-4 h-4 mr-2 flex-shrink-0" />
+                          <span className="truncate">{utilisateur.email || 'Non renseigné'}</span>
                         </div>
                         <div className="flex items-center text-sm text-gray-600">
-                          <FiPhone className="w-4 h-4 mr-2" />
-                          {utilisateur.phone || 'Non renseigné'}
+                          <FiPhone className="w-4 h-4 mr-2 flex-shrink-0" />
+                          <span>{utilisateur.phone || 'Non renseigné'}</span>
                         </div>
                       </div>
                     </td>
-                    <td className="px-6 py-4">
-                      {utilisateur.admin === 1 ? (
-                        <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-black text-white">
-                          <FiShield className="w-3 h-3 mr-1" />
-                          Admin
-                        </span>
-                      ) : (
-                        <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-700">
-                          Utilisateur
+                    <td className="px-4 py-4">
+                      {utilisateur.admin !== 1 && (
+                        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-700 whitespace-nowrap">
+                          User
                         </span>
                       )}
                     </td>
-                    <td className="px-6 py-4 text-sm text-gray-600">
-                      {new Date(utilisateur.created_at).toLocaleDateString('fr-FR')}
-                    </td>
-                    <td className="px-6 py-4 text-right">
-                      <div className="flex items-center justify-end space-x-2">
-                        <button className="p-2 text-gray-600 hover:text-black transition-colors">
+                    <td className="px-4 py-4 text-right">
+                      <div className="flex items-center justify-end space-x-1">
+                        <button 
+                          onClick={() => setEditingUser(utilisateur)}
+                          className="p-2 text-gray-600 hover:text-black transition-colors" 
+                          title="Modifier"
+                        >
                           <FiEdit className="w-4 h-4" />
                         </button>
-                        <button className="p-2 text-red-600 hover:text-red-700 transition-colors">
+                        <button 
+                          onClick={() => setDeletingUser(utilisateur)}
+                          className="p-2 text-red-600 hover:text-red-700 transition-colors" 
+                          title="Supprimer"
+                        >
                           <FiTrash2 className="w-4 h-4" />
                         </button>
                       </div>
@@ -271,6 +286,29 @@ export default function UtilisateursPage() {
         )}
       </div>
       {/* Fin version desktop */}
+
+      {/* Modales */}
+      {editingUser && (
+        <EditUserModal
+          user={editingUser}
+          onClose={() => setEditingUser(null)}
+          onSave={() => {
+            fetchUtilisateurs()
+            setEditingUser(null)
+          }}
+        />
+      )}
+
+      {deletingUser && (
+        <DeleteUserModal
+          user={deletingUser}
+          onClose={() => setDeletingUser(null)}
+          onDelete={() => {
+            fetchUtilisateurs()
+            setDeletingUser(null)
+          }}
+        />
+      )}
     </div>
   )
 }
