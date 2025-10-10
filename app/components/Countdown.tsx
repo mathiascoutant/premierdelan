@@ -1,10 +1,10 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect } from "react";
 
 interface CountdownProps {
   targetDate: string;
-  type: 'opening' | 'closing';
+  type: "opening" | "closing";
 }
 
 export default function Countdown({ targetDate, type }: CountdownProps) {
@@ -18,18 +18,19 @@ export default function Countdown({ targetDate, type }: CountdownProps) {
   useEffect(() => {
     const calculateTimeLeft = () => {
       // Ignorer le Z pour traiter comme heure locale
-      const targetDateLocal = targetDate.replace('Z', '');
-      const difference = new Date(targetDateLocal).getTime() - new Date().getTime();
-      
+      const targetDateLocal = targetDate.replace("Z", "");
+      const difference =
+        new Date(targetDateLocal).getTime() - new Date().getTime();
+
       if (difference > 0) {
         return {
           days: Math.floor(difference / (1000 * 60 * 60 * 24)),
           hours: Math.floor((difference / (1000 * 60 * 60)) % 24),
           minutes: Math.floor((difference / 1000 / 60) % 60),
-          seconds: Math.floor((difference / 1000) % 60)
+          seconds: Math.floor((difference / 1000) % 60),
         };
       }
-      
+
       return null;
     };
 
@@ -50,16 +51,12 @@ export default function Countdown({ targetDate, type }: CountdownProps) {
 
   return (
     <div className="inline-flex items-center gap-2 text-sm">
-      {type === 'opening' ? (
-        <span className="text-orange-600 font-medium">
-          Ouvre dans :
-        </span>
+      {type === "opening" ? (
+        <span className="text-orange-600 font-medium">Ouvre dans :</span>
       ) : (
-        <span className="text-green-600 font-medium">
-          Ferme dans :
-        </span>
+        <span className="text-green-600 font-medium">Ferme dans :</span>
       )}
-      
+
       <div className="flex items-center gap-1">
         {days > 0 && (
           <>
@@ -89,4 +86,3 @@ export default function Countdown({ targetDate, type }: CountdownProps) {
     </div>
   );
 }
-
