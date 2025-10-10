@@ -41,6 +41,8 @@ export default function EditEventModal({ event, onClose, onSave }: EditEventModa
     lieu: event.lieu || '',
     code_soiree: event.code_soiree || '',
     statut: event.statut,
+    date_ouverture_inscription: event.date_ouverture_inscription ? formatDateForInput(event.date_ouverture_inscription) : '',
+    date_fermeture_inscription: event.date_fermeture_inscription ? formatDateForInput(event.date_fermeture_inscription) : ''
   })
   const [isSaving, setIsSaving] = useState(false)
   const [error, setError] = useState('')
@@ -118,21 +120,53 @@ export default function EditEventModal({ event, onClose, onSave }: EditEventModa
             />
           </div>
 
+          <div>
+            <label className="block text-xs tracking-wider uppercase text-gray-500 mb-2">
+              Date et heure de l&apos;événement *
+            </label>
+            <input
+              type="datetime-local"
+              name="date"
+              value={formData.date}
+              onChange={handleChange}
+              className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:border-black transition-colors"
+              required
+            />
+          </div>
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="block text-xs tracking-wider uppercase text-gray-500 mb-2">
-                Date et heure *
+                Ouverture inscriptions *
               </label>
               <input
                 type="datetime-local"
-                name="date"
-                value={formData.date}
+                name="date_ouverture_inscription"
+                value={formData.date_ouverture_inscription}
                 onChange={handleChange}
                 className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:border-black transition-colors"
                 required
               />
+              <p className="text-xs text-gray-500 mt-1">Début des inscriptions</p>
             </div>
 
+            <div>
+              <label className="block text-xs tracking-wider uppercase text-gray-500 mb-2">
+                Fermeture inscriptions *
+              </label>
+              <input
+                type="datetime-local"
+                name="date_fermeture_inscription"
+                value={formData.date_fermeture_inscription}
+                onChange={handleChange}
+                className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:border-black transition-colors"
+                required
+              />
+              <p className="text-xs text-gray-500 mt-1">Fin des inscriptions</p>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="block text-xs tracking-wider uppercase text-gray-500 mb-2">
                 Capacité *
