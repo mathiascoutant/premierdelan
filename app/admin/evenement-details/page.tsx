@@ -459,129 +459,95 @@ function EventDetailsContent() {
       </div>
 
       {/* Version Desktop */}
-      <div className="hidden md:block bg-white border border-gray-200 rounded-lg overflow-hidden">
+      <div className="hidden md:block space-y-4">
         {filteredInscriptions.length === 0 ? (
-          <div className="text-center py-12">
+          <div className="text-center py-12 bg-white rounded-lg border border-gray-200">
             <FiUsers className="w-12 h-12 text-gray-300 mx-auto mb-3" />
             <p className="text-gray-600">Aucune inscription</p>
           </div>
         ) : (
-          <table className="w-full">
-            <thead className="bg-gray-50 border-b border-gray-200">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Participant
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Contact
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Statut
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Date
-                </th>
-                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Actions
-                </th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-200">
-              {filteredInscriptions.map((inscription) => (
-                <>
-                  {/* Ligne principale */}
-                  <tr
-                    key={inscription.id}
-                    className="hover:bg-gray-50 transition-colors"
-                  >
-                    <td className="px-6 py-4">
-                      <div className="flex items-center space-x-3">
-                        <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-blue-800 rounded-full flex items-center justify-center text-white text-sm font-medium">
-                          {inscription.user_name
-                            .split(" ")
-                            .map((n) => n.charAt(0))
-                            .join("")
-                            .toUpperCase()}
+          filteredInscriptions.map((inscription) => (
+            <div
+              key={inscription.id}
+              className="bg-white border border-gray-200 rounded-lg overflow-hidden"
+            >
+              {/* Ligne principale - Organisateur */}
+              <div className="p-6 bg-gradient-to-r from-blue-50 to-white border-b border-gray-200">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-4">
+                    <div className="w-14 h-14 bg-gradient-to-br from-blue-600 to-blue-800 rounded-full flex items-center justify-center text-white font-medium">
+                      {inscription.user_name
+                        .split(" ")
+                        .map((n) => n.charAt(0))
+                        .join("")
+                        .toUpperCase()}
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-2 mb-1">
+                        <p className="text-lg font-medium text-black">
+                          {inscription.user_name}
+                        </p>
+                        <span className="px-2 py-1 bg-blue-600 text-white rounded text-xs font-medium">
+                          Organisateur
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-4 text-sm text-gray-600">
+                        <span className="flex items-center">
+                          <FiMail className="w-4 h-4 mr-1.5" />
+                          {inscription.user_email}
+                        </span>
+                        {inscription.user_phone && (
+                          <span className="flex items-center">
+                            <FiPhone className="w-4 h-4 mr-1.5" />
+                            {inscription.user_phone}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <div className="text-right mr-4">
+                      <p className="text-sm text-gray-500">Total</p>
+                      <p className="text-2xl font-light text-black">
+                        {inscription.nombre_personnes}
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => handleDeleteInscription(inscription)}
+                      className="px-4 py-2 bg-red-600 text-white text-sm font-medium rounded-lg hover:bg-red-700 transition-colors inline-flex items-center"
+                    >
+                      <FiTrash2 className="w-4 h-4 mr-2" />
+                      Supprimer tout
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              {/* Accompagnants */}
+              {inscription.accompagnants.length > 0 && (
+                <div className="p-6 space-y-3">
+                  <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-3">
+                    Accompagnants ({inscription.accompagnants.length})
+                  </p>
+                  {inscription.accompagnants.map((acc, idx) => (
+                    <div
+                      key={idx}
+                      className="flex items-center justify-between p-4 bg-gray-50 rounded-lg border border-gray-200"
+                    >
+                      <div className="flex items-center space-x-4">
+                        <div className="w-10 h-10 bg-gray-400 rounded-full flex items-center justify-center text-white text-sm font-medium">
+                          {idx + 2}
                         </div>
                         <div>
                           <p className="font-medium text-black">
-                            {inscription.user_name}
+                            {acc.firstname} {acc.lastname}
                           </p>
-                          <p className="text-xs text-gray-500">
-                            Organisateur - {inscription.nombre_personnes}{" "}
-                            personne
-                            {inscription.nombre_personnes > 1 ? "s" : ""}
-                          </p>
+                          <p className="text-xs text-gray-500">Accompagnant</p>
                         </div>
                       </div>
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="space-y-1">
-                        <div className="flex items-center text-sm text-gray-600">
-                          <FiMail className="w-4 h-4 mr-2" />
-                          <span>{inscription.user_email}</span>
-                        </div>
-                        {inscription.user_phone && (
-                          <div className="flex items-center text-sm text-gray-600">
-                            <FiPhone className="w-4 h-4 mr-2" />
-                            <span>{inscription.user_phone}</span>
-                          </div>
-                        )}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4">
-                      <span className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-medium">
-                        Majeur
-                      </span>
-                    </td>
-                    <td className="px-6 py-4">
-                      <span className="text-sm text-gray-600">
-                        {new Date(inscription.created_at).toLocaleDateString("fr-FR", {
-                          day: '2-digit',
-                          month: '2-digit',
-                          year: 'numeric'
-                        })}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 text-right">
-                      <button
-                        onClick={() => handleDeleteInscription(inscription)}
-                        className="px-3 py-1.5 bg-red-600 text-white text-xs font-medium rounded hover:bg-red-700 transition-colors inline-flex items-center"
-                        title="Supprimer toute l'inscription"
-                      >
-                        <FiTrash2 className="w-3 h-3 mr-1" />
-                        Supprimer tout
-                      </button>
-                    </td>
-                  </tr>
-
-                  {/* Sous-lignes pour les accompagnants */}
-                  {inscription.accompagnants.map((acc, idx) => (
-                    <tr
-                      key={`${inscription.id}-acc-${idx}`}
-                      className="bg-gray-50/50 hover:bg-gray-100/50 transition-colors"
-                    >
-                      <td className="px-6 py-3 pl-16">
-                        <div className="flex items-center space-x-3">
-                          <div className="w-8 h-8 bg-gray-400 rounded-full flex items-center justify-center text-white text-xs font-medium">
-                            {idx + 2}
-                          </div>
-                          <div>
-                            <p className="text-sm text-gray-900">
-                              {acc.firstname} {acc.lastname}
-                            </p>
-                            <p className="text-xs text-gray-500">
-                              Accompagnant
-                            </p>
-                          </div>
-                        </div>
-                      </td>
-                      <td className="px-6 py-3">
-                        <span className="text-xs text-gray-500">-</span>
-                      </td>
-                      <td className="px-6 py-3">
+                      <div className="flex items-center gap-3">
                         <span
-                          className={`px-2 py-1 rounded-full text-xs font-medium ${
+                          className={`px-3 py-1 rounded-full text-xs font-medium ${
                             acc.is_adult
                               ? "bg-green-100 text-green-700"
                               : "bg-orange-100 text-orange-700"
@@ -589,26 +555,34 @@ function EventDetailsContent() {
                         >
                           {acc.is_adult ? "Majeur" : "Mineur"}
                         </span>
-                      </td>
-                      <td className="px-6 py-3">
-                        <span className="text-xs text-gray-500">-</span>
-                      </td>
-                      <td className="px-6 py-3 text-right">
                         <button
-                          onClick={() => handleDeleteAccompagnant(inscription, idx)}
-                          className="px-3 py-1 bg-red-100 text-red-700 text-xs font-medium rounded hover:bg-red-200 transition-colors inline-flex items-center"
-                          title="Retirer cet accompagnant"
+                          onClick={() =>
+                            handleDeleteAccompagnant(inscription, idx)
+                          }
+                          className="px-3 py-1.5 bg-red-100 text-red-700 text-sm font-medium rounded hover:bg-red-200 transition-colors inline-flex items-center"
                         >
-                          <FiTrash2 className="w-3 h-3 mr-1" />
+                          <FiTrash2 className="w-4 h-4 mr-1.5" />
                           Retirer
                         </button>
-                      </td>
-                    </tr>
+                      </div>
+                    </div>
                   ))}
-                </>
-              ))}
-            </tbody>
-          </table>
+                </div>
+              )}
+
+              {/* Footer */}
+              <div className="px-6 py-3 bg-gray-50 border-t border-gray-200 text-xs text-gray-500">
+                Inscrit le{" "}
+                {new Date(inscription.created_at).toLocaleDateString("fr-FR", {
+                  day: "numeric",
+                  month: "long",
+                  year: "numeric",
+                  hour: "2-digit",
+                  minute: "2-digit",
+                })}
+              </div>
+            </div>
+          ))
         )}
       </div>
     </div>
