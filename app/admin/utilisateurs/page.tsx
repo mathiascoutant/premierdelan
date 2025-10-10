@@ -232,12 +232,6 @@ export default function UtilisateursPage() {
                           <p className="font-medium text-gray-900 truncate">
                             {utilisateur.firstname} {utilisateur.lastname}
                           </p>
-                          {utilisateur.admin === 1 && (
-                            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-black text-white mt-1">
-                              <FiShield className="w-3 h-3 mr-1" />
-                              Admin
-                            </span>
-                          )}
                         </div>
                       </div>
                     </td>
@@ -254,9 +248,14 @@ export default function UtilisateursPage() {
                       </div>
                     </td>
                     <td className="px-4 py-4">
-                      {utilisateur.admin !== 1 && (
-                        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-700 whitespace-nowrap">
-                          User
+                      {utilisateur.admin === 1 ? (
+                        <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-black text-white whitespace-nowrap">
+                          <FiShield className="w-3 h-3 mr-1" />
+                          Admin
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-700 whitespace-nowrap">
+                          Utilisateur
                         </span>
                       )}
                     </td>
