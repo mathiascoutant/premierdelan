@@ -16,6 +16,7 @@ import {
 import { API_ENDPOINTS, apiRequest } from "../../config/api";
 import { useAuth } from "../../hooks/useAuth";
 import { useRouter } from "next/navigation";
+import InscriptionDetailsModal from "../../components/admin/InscriptionDetailsModal";
 
 interface Accompagnant {
   firstname: string;
@@ -64,6 +65,8 @@ function EventDetailsContent() {
   const [stats, setStats] = useState<EventStats | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
+  const [selectedInscription, setSelectedInscription] =
+    useState<Inscription | null>(null);
 
   useEffect(() => {
     if (eventId) {
@@ -351,10 +354,10 @@ function EventDetailsContent() {
                   </div>
                 </div>
                 <button
-                  onClick={() => handleDeleteInscription(inscription)}
-                  className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                  onClick={() => setSelectedInscription(inscription)}
+                  className="text-xs px-3 py-1 text-blue-600 hover:bg-blue-50 rounded transition-colors"
                 >
-                  <FiTrash2 className="w-5 h-5" />
+                  Voir détails
                 </button>
               </div>
 
@@ -502,11 +505,10 @@ function EventDetailsContent() {
                   </td>
                   <td className="px-6 py-4 text-right">
                     <button
-                      onClick={() => handleDeleteInscription(inscription)}
-                      className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                      title="Supprimer"
+                      onClick={() => setSelectedInscription(inscription)}
+                      className="text-sm px-4 py-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
                     >
-                      <FiTrash2 className="w-4 h-4" />
+                      Détails
                     </button>
                   </td>
                 </tr>
@@ -515,6 +517,19 @@ function EventDetailsContent() {
           </table>
         )}
       </div>
+
+      {/* Modal détails inscription */}
+      {selectedInscription && event && (
+        <InscriptionDetailsModal
+          inscription={selectedInscription}
+          eventTitre={event.titre}
+          onClose={() => setSelectedInscription(null)}
+          onDelete={() => {
+            handleDeleteInscription(selectedInscription);
+            setSelectedInscription(null);
+          }}
+        />
+      )}
     </div>
   );
 }
