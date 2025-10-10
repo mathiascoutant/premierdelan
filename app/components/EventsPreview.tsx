@@ -257,12 +257,21 @@ export default function EventsPreview() {
                           S&apos;inscrire
                         </Link>
                       )}
-                      <Link
-                        href={`/galerie?event=${event.id}`}
-                        className="btn-secondary whitespace-nowrap text-center"
-                      >
-                        Voir la galerie
-                      </Link>
+                      {isBeforeOpening ? (
+                        <button
+                          disabled
+                          className="btn-secondary whitespace-nowrap text-center opacity-50 cursor-not-allowed"
+                        >
+                          Galerie prochainement
+                        </button>
+                      ) : (
+                        <Link
+                          href={`/galerie?event=${event.id}`}
+                          className="btn-secondary whitespace-nowrap text-center"
+                        >
+                          Voir la galerie
+                        </Link>
+                      )}
                     </div>
                   </div>
                 </div>
