@@ -117,12 +117,6 @@ export default function EventsPreview() {
           <div className="space-y-px bg-black">
             {events.map((event) => {
               const placesRestantes = event.capacite - event.inscrits;
-              const statusText =
-                placesRestantes > 10
-                  ? "Places disponibles"
-                  : placesRestantes > 0
-                  ? "Dernières places"
-                  : "Complet";
 
               return (
                 <div
@@ -147,12 +141,28 @@ export default function EventsPreview() {
                         {event.description}
                       </p>
                       <div className="flex flex-wrap gap-6 text-sm text-gray-500 pt-2">
-                        <span>{event.capacite} personnes</span>
-                        <span className="border-l border-gray-300 pl-6">
-                          {statusText}
+                        <span>
+                          {event.inscrits} / {event.capacite} inscrits
                         </span>
                         <span className="border-l border-gray-300 pl-6">
-                          {event.photos_count} photos
+                          {placesRestantes > 0 ? (
+                            <span
+                              className={
+                                placesRestantes <= 10
+                                  ? "text-orange-600 font-medium"
+                                  : "text-green-600"
+                              }
+                            >
+                              {placesRestantes} place{placesRestantes > 1 ? "s" : ""} restante{placesRestantes > 1 ? "s" : ""}
+                            </span>
+                          ) : (
+                            <span className="text-red-600 font-medium">
+                              Complet
+                            </span>
+                          )}
+                        </span>
+                        <span className="border-l border-gray-300 pl-6">
+                          {event.photos_count} photo{event.photos_count > 1 ? "s" : ""}
                         </span>
                       </div>
                     </div>
