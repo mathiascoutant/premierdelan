@@ -163,11 +163,11 @@ export default function UtilisateursPage() {
                       <div className="space-y-1">
                         <div className="flex items-center text-sm text-gray-600">
                           <FiMail className="w-4 h-4 mr-2" />
-                          {utilisateur.email}
+                          {utilisateur.email || 'Non renseigné'}
                         </div>
                         <div className="flex items-center text-sm text-gray-600">
                           <FiPhone className="w-4 h-4 mr-2" />
-                          {utilisateur.telephone}
+                          {utilisateur.telephone || 'Non renseigné'}
                         </div>
                       </div>
                     </td>
