@@ -99,7 +99,7 @@ export default function MesEvenementsPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
       {/* Header */}
-      <div className="bg-white border-b border-gray-200 sticky top-0 z-10 shadow-sm">
+      <div className="bg-parchment-light border-b border-gray-200 sticky top-0 z-10 shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex items-center justify-between">
             <div>
@@ -128,7 +128,7 @@ export default function MesEvenementsPage() {
             className={`px-4 py-2 rounded-lg font-medium transition-colors ${
               filter === "tous"
                 ? "bg-black text-white"
-                : "bg-white text-gray-700 hover:bg-gray-100"
+                : "bg-parchment-light text-gray-700 hover:bg-stone-light bg-100"
             }`}
           >
             Tous ({events.length})
@@ -138,7 +138,7 @@ export default function MesEvenementsPage() {
             className={`px-4 py-2 rounded-lg font-medium transition-colors ${
               filter === "a_venir"
                 ? "bg-black text-white"
-                : "bg-white text-gray-700 hover:bg-gray-100"
+                : "bg-parchment-light text-gray-700 hover:bg-stone-light bg-100"
             }`}
           >
             À venir ({events.filter((e) => !isEventPassed(e.date)).length})
@@ -148,7 +148,7 @@ export default function MesEvenementsPage() {
             className={`px-4 py-2 rounded-lg font-medium transition-colors ${
               filter === "passes"
                 ? "bg-black text-white"
-                : "bg-white text-gray-700 hover:bg-gray-100"
+                : "bg-parchment-light text-gray-700 hover:bg-stone-light bg-100"
             }`}
           >
             Passés ({events.filter((e) => isEventPassed(e.date)).length})
@@ -159,7 +159,7 @@ export default function MesEvenementsPage() {
       {/* Liste des événements */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-12">
         {filteredEvents.length === 0 ? (
-          <div className="bg-white rounded-lg border border-gray-200 p-12 text-center">
+          <div className="bg-parchment-light rounded-lg border border-gray-200 p-12 text-center">
             <FiCalendar className="w-16 h-16 text-gray-300 mx-auto mb-4" />
             <h3 className="text-xl font-medium text-gray-900 mb-2">
               Aucun événement
@@ -184,7 +184,7 @@ export default function MesEvenementsPage() {
               return (
                 <div
                   key={event.id}
-                  className="bg-white rounded-lg border border-gray-200 overflow-hidden hover:shadow-lg transition-all duration-300 flex flex-col"
+                  className="bg-parchment-light rounded-lg border border-gray-200 overflow-hidden hover:shadow-lg transition-all duration-300 flex flex-col"
                 >
                   {/* Header de la carte */}
                   <div className="relative h-40 bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 flex items-center justify-center">
@@ -261,7 +261,7 @@ export default function MesEvenementsPage() {
                     {/* Album photo */}
                     <div className="pt-4 border-t border-gray-200">
                       {!isPassed && event.photos_count === 0 ? (
-                        <div className="text-center py-4 bg-gray-50 rounded-lg">
+                        <div className="text-center py-4 bg-stone-light bg-50 rounded-lg">
                           <FiImage className="w-8 h-8 text-gray-300 mx-auto mb-2" />
                           <p className="text-sm text-gray-500">
                             Aucune photo disponible
@@ -273,7 +273,7 @@ export default function MesEvenementsPage() {
                       ) : (
                         <Link
                           href={`/galerie?event=${event.id}`}
-                          className="block w-full text-center px-4 py-3 bg-black text-white rounded-lg hover:bg-gray-800 transition-colors font-medium"
+                          className="block w-full text-center px-4 py-3 bg-black text-white rounded-lg hover:bg-stone-light bg-800 transition-colors font-medium"
                         >
                           <FiImage className="w-5 h-5 inline-block mr-2" />
                           Voir l&apos;album photo

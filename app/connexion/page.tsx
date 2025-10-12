@@ -42,9 +42,9 @@ export default function ConnexionPage() {
 
     // Validation email
     if (!formData.email.trim()) {
-      newErrors.email = "L&apos;email est requis";
+      newErrors.email = "L'email est requis";
     } else if (!validateEmail(formData.email)) {
-      newErrors.email = "Format d&apos;email invalide";
+      newErrors.email = "Format d'email invalide";
     }
 
     // Validation mot de passe
@@ -69,7 +69,7 @@ export default function ConnexionPage() {
         }),
       });
 
-      setSuccessMessage("Connexion réussie ! Redirection...");
+      setSuccessMessage("Connexion réussie !");
 
       // Sauvegarder le token et les données utilisateur
       if (response.token) {
@@ -81,12 +81,12 @@ export default function ConnexionPage() {
         localStorage.setItem("user_data", JSON.stringify(response.user));
       }
 
-      // Rediriger vers le dashboard ou la page d'accueil
+      // Rediriger vers la page d'accueil
       setTimeout(() => {
         const basePath =
           process.env.NODE_ENV === "production" ? "/premierdelan" : "";
         window.location.href = `${basePath}/`;
-      }, 1500);
+      }, 1000);
     } catch (error: any) {
       setApiError(error.message || "Email ou mot de passe incorrect");
     } finally {
@@ -95,35 +95,64 @@ export default function ConnexionPage() {
   };
 
   return (
-    <main className="min-h-screen bg-white">
-      {/* Header Simple */}
-      <header className="border-b border-gray-200">
-        <nav className="section-container py-6">
+    <div className="min-h-screen bg-ink flex">
+      {/* Partie gauche - Image/Branding */}
+      <div className="hidden lg:flex lg:w-1/2 relative bg-gradient-to-br from-brown via-ink-light to-ink">
+        {/* Ornements */}
+        <div className="absolute inset-0 flex items-center justify-center">
+          <div className="text-center space-y-8 px-12">
+            <div className="text-gold text-8xl">⚜</div>
+            <h1 className="font-cinzel text-5xl text-parchment tracking-[0.3em] leading-tight">
+              PREMIER
+              <br />
+              DE L&apos;AN
+            </h1>
+            <p className="font-crimson text-parchment/70 text-lg max-w-md mx-auto">
+              Rejoignez une célébration médiévale exceptionnelle
+            </p>
+            <div className="flex items-center justify-center space-x-2 text-gold/50">
+              <div className="w-8 h-px bg-gold/50"></div>
+              <span className="text-xs">✦</span>
+              <div className="w-8 h-px bg-gold/50"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Partie droite - Formulaire */}
+      <div className="w-full lg:w-1/2 flex items-center justify-center p-8 bg-parchment">
+        <div className="w-full max-w-md">
+          {/* Logo mobile */}
+          <div className="lg:hidden text-center mb-12">
+            <div className="text-gold text-5xl mb-4">⚜</div>
+            <h1 className="font-cinzel text-2xl text-ink tracking-[0.3em]">
+              PREMIER DE L&apos;AN
+            </h1>
+          </div>
+
+          {/* Bouton retour */}
           <Link
             href="/"
-            className="inline-flex items-center space-x-2 text-sm text-gray-600 hover:text-black transition-colors"
+            className="inline-flex items-center space-x-2 text-stone hover:text-ink transition-colors mb-8 group"
           >
-            <FiArrowLeft className="w-4 h-4" />
-            <span>Retour à l&apos;accueil</span>
+            <FiArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
+            <span className="text-sm font-crimson">
+              Retour à l&apos;accueil
+            </span>
           </Link>
-        </nav>
-      </header>
 
-      {/* Formulaire */}
-      <section className="flex items-center justify-center py-16 md:py-24">
-        <div className="max-w-md w-full mx-auto px-6">
-          {/* Header */}
-          <div className="mb-12 text-center">
-            <h1 className="text-4xl md:text-5xl font-light tracking-tight text-black mb-4">
-              Connexion
-            </h1>
-            <p className="text-gray-600 font-light">Accédez à votre compte</p>
+          {/* Titre */}
+          <div className="mb-10">
+            <h2 className="font-cinzel text-3xl text-ink mb-2">Connexion</h2>
+            <p className="font-crimson text-stone">
+              Bienvenue ! Connectez-vous pour continuer.
+            </p>
           </div>
 
           {/* Messages */}
           {successMessage && (
-            <div className="mb-8 p-4 bg-green-50 border border-green-200 rounded-lg">
-              <p className="text-green-800 text-sm flex items-center">
+            <div className="mb-6 p-4 bg-green-50 border-l-4 border-green-500">
+              <p className="text-green-700 text-sm flex items-center font-crimson">
                 <FiCheck className="w-5 h-5 mr-2" />
                 {successMessage}
               </p>
@@ -131,23 +160,23 @@ export default function ConnexionPage() {
           )}
 
           {apiError && (
-            <div className="mb-8 p-4 bg-red-50 border border-red-200 rounded-lg">
-              <p className="text-red-800 text-sm flex items-center">
+            <div className="mb-6 p-4 bg-red-50 border-l-4 border-red-500">
+              <p className="text-red-700 text-sm flex items-center font-crimson">
                 <FiX className="w-5 h-5 mr-2" />
                 {apiError}
               </p>
             </div>
           )}
 
-          {/* Form */}
-          <form onSubmit={handleSubmit} className="space-y-8">
+          {/* Formulaire */}
+          <form onSubmit={handleSubmit} className="space-y-6">
             {/* Email */}
             <div>
               <label
                 htmlFor="email"
-                className="block text-xs tracking-wider uppercase text-gray-500 mb-3"
+                className="block text-sm font-medium text-ink mb-2 font-crimson"
               >
-                Email
+                Adresse email
               </label>
               <input
                 type="email"
@@ -155,14 +184,15 @@ export default function ConnexionPage() {
                 name="email"
                 value={formData.email}
                 onChange={handleChange}
-                placeholder="exemple@email.com"
-                className={`w-full px-0 py-3 bg-transparent border-b ${
-                  errors.email ? "border-red-500" : "border-gray-300"
-                } focus:border-black focus:outline-none transition-colors text-black placeholder:text-gray-400`}
+                placeholder="votre@email.com"
+                className={`w-full px-4 py-3 bg-white border ${
+                  errors.email
+                    ? "border-red-500"
+                    : "border-stone/30 focus:border-gold"
+                } focus:outline-none focus:ring-2 focus:ring-gold/20 transition-all text-ink placeholder:text-stone/50 font-crimson`}
               />
               {errors.email && (
-                <p className="mt-2 text-sm text-red-600 flex items-center">
-                  <FiX className="w-4 h-4 mr-1" />
+                <p className="mt-2 text-sm text-red-600 font-crimson">
                   {errors.email}
                 </p>
               )}
@@ -170,72 +200,76 @@ export default function ConnexionPage() {
 
             {/* Mot de passe */}
             <div>
-              <label
-                htmlFor="password"
-                className="block text-xs tracking-wider uppercase text-gray-500 mb-3"
-              >
-                Mot de passe
-              </label>
+              <div className="flex items-center justify-between mb-2">
+                <label
+                  htmlFor="password"
+                  className="block text-sm font-medium text-ink font-crimson"
+                >
+                  Mot de passe
+                </label>
+                <a
+                  href="#"
+                  className="text-sm text-stone hover:text-gold transition-colors font-crimson"
+                >
+                  Oublié ?
+                </a>
+              </div>
               <input
                 type="password"
                 id="password"
                 name="password"
                 value={formData.password}
                 onChange={handleChange}
-                placeholder="Votre mot de passe"
-                className={`w-full px-0 py-3 bg-transparent border-b ${
-                  errors.password ? "border-red-500" : "border-gray-300"
-                } focus:border-black focus:outline-none transition-colors text-black placeholder:text-gray-400`}
+                placeholder="••••••••"
+                className={`w-full px-4 py-3 bg-white border ${
+                  errors.password
+                    ? "border-red-500"
+                    : "border-stone/30 focus:border-gold"
+                } focus:outline-none focus:ring-2 focus:ring-gold/20 transition-all text-ink placeholder:text-stone/50 font-crimson`}
               />
               {errors.password && (
-                <p className="mt-2 text-sm text-red-600 flex items-center">
-                  <FiX className="w-4 h-4 mr-1" />
+                <p className="mt-2 text-sm text-red-600 font-crimson">
                   {errors.password}
                 </p>
               )}
             </div>
 
-            {/* Mot de passe oublié */}
-            <div className="text-right">
-              <a
-                href="#"
-                className="text-sm text-gray-600 hover:text-black transition-colors"
-              >
-                Mot de passe oublié ?
-              </a>
-            </div>
-
-            {/* Submit Button */}
-            <div className="pt-2">
-              <button
-                type="submit"
-                disabled={isSubmitting}
-                className="btn-primary w-full disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {isSubmitting ? "Connexion en cours..." : "Se connecter"}
-              </button>
-            </div>
-
-            {/* Link to Signup */}
-            <p className="text-sm text-gray-500 text-center pt-4">
-              Pas encore de compte ?{" "}
-              <Link
-                href="/inscription"
-                className="text-black hover:underline font-medium"
-              >
-                S&apos;inscrire
-              </Link>
-            </p>
+            {/* Bouton de connexion */}
+            <button
+              type="submit"
+              disabled={isSubmitting}
+              className="w-full px-6 py-4 bg-gold hover:bg-gold-dark text-ink font-cinzel tracking-wider uppercase transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl"
+            >
+              {isSubmitting ? "Connexion..." : "Se connecter"}
+            </button>
           </form>
 
-          {/* Info supplémentaire */}
-          <div className="mt-12 pt-8 border-t border-gray-200 text-center">
-            <p className="text-xs text-gray-500">
-              Besoin d&apos;aide ? Contactez l&apos;administrateur
-            </p>
+          {/* Séparateur */}
+          <div className="relative my-8">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-stone/20"></div>
+            </div>
+            <div className="relative flex justify-center text-sm">
+              <span className="px-4 bg-parchment text-stone font-crimson">
+                Nouveau ici ?
+              </span>
+            </div>
           </div>
+
+          {/* Lien inscription */}
+          <Link
+            href="/inscription"
+            className="block w-full px-6 py-4 border-2 border-gold/30 hover:border-gold hover:bg-gold/5 text-center text-ink font-cinzel tracking-wider uppercase transition-all duration-300"
+          >
+            Créer un compte
+          </Link>
+
+          {/* Footer */}
+          <p className="mt-8 text-center text-xs text-stone/70 font-crimson">
+            En vous connectant, vous acceptez nos conditions d&apos;utilisation
+          </p>
         </div>
-      </section>
-    </main>
+      </div>
+    </div>
   );
 }

@@ -2,26 +2,216 @@
 @tailwind components;
 @tailwind utilities;
 
+:root {
+  /* Palette Médiévale Professionnelle */
+  --gold-light: #f4e5c2;
+  --gold: #d4af37;
+  --gold-dark: #b8941d;
+  --burgundy: #6b1a3d;
+  --burgundy-dark: #4a1129;
+  --burgundy-light: #8b2350;
+  --brown: #5c4033;
+  --brown-dark: #3e2a23;
+  --parchment-light: #faf6ed;
+  --parchment: #f5efe0;
+  --parchment-dark: #e8dcc3;
+  --ink: #1a1410;
+  --ink-light: #2d2419;
+  --stone: #8b7d6b;
+  --stone-light: #c4b8a8;
+}
+
 @layer base {
-  html {
-    scroll-behavior: smooth;
+  * {
+    @apply border-stone/10;
   }
 
   body {
-    @apply bg-white text-gray-900 antialiased;
+    @apply bg-parchment text-ink antialiased;
+    font-family: var(--font-crimson);
+    overflow-x: hidden;
+  }
+
+  /* Scrollbar invisible */
+  html {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    scroll-behavior: smooth;
+    scroll-padding-top: 80px; /* Offset pour le header fixe */
+  }
+
+  html::-webkit-scrollbar {
+    display: none;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    font-family: var(--font-cinzel);
+    @apply tracking-wide text-ink;
   }
 }
 
 @layer components {
-  .btn-primary {
-    @apply px-8 py-3.5 bg-black text-white font-medium text-sm tracking-wide uppercase hover:bg-gray-800 transition-colors duration-300;
-  }
-
-  .btn-secondary {
-    @apply px-8 py-3.5 bg-white text-black font-medium text-sm tracking-wide uppercase border border-black hover:bg-black hover:text-white transition-all duration-300;
-  }
-
+  /* Conteneur principal */
   .section-container {
-    @apply max-w-6xl mx-auto px-6 sm:px-8 lg:px-12;
+    @apply max-w-7xl mx-auto px-6 md:px-8 lg:px-12;
+  }
+
+  /* Bouton Principal Médiéval */
+  .btn-medieval-primary {
+    @apply relative px-8 py-3 bg-gold text-ink font-cinzel font-semibold tracking-wider
+           transition-all duration-300 overflow-hidden
+           border-2 border-brown/40
+           shadow-[0_4px_0_0_#5C4033] hover:shadow-[0_2px_0_0_#5C4033]
+           hover:translate-y-[2px] active:translate-y-[4px] active:shadow-none;
+  }
+
+  .btn-medieval-primary::before {
+    content: "";
+    @apply absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent;
+    transform: translateX(-100%);
+    transition: transform 0.6s;
+  }
+
+  .btn-medieval-primary:hover::before {
+    transform: translateX(100%);
+  }
+
+  /* Bouton Secondaire */
+  .btn-medieval-secondary {
+    @apply relative px-8 py-3 bg-transparent text-gold font-cinzel font-semibold tracking-wider
+           border-2 border-gold/60 hover:border-gold
+           transition-all duration-300 overflow-hidden;
+  }
+
+  .btn-medieval-secondary::before {
+    content: "";
+    @apply absolute inset-0 bg-gold;
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 0.4s ease;
+    z-index: -1;
+  }
+
+  .btn-medieval-secondary:hover::before {
+    transform: scaleX(1);
+  }
+
+  .btn-medieval-secondary:hover {
+    @apply text-ink;
+  }
+
+  /* Carte Médiévale */
+  .card-medieval {
+    @apply relative bg-parchment-light border-2 border-stone/20
+           hover:border-gold/40 transition-all duration-500
+           shadow-lg hover:shadow-2xl hover:-translate-y-1;
+  }
+
+  .card-medieval::before {
+    content: "";
+    @apply absolute -top-1 -left-1 w-8 h-8 border-t-2 border-l-2 border-gold/0 transition-all duration-300;
+  }
+
+  .card-medieval::after {
+    content: "";
+    @apply absolute -bottom-1 -right-1 w-8 h-8 border-b-2 border-r-2 border-gold/0 transition-all duration-300;
+  }
+
+  .card-medieval:hover::before,
+  .card-medieval:hover::after {
+    @apply border-gold/60;
+  }
+
+  /* Divider Orné */
+  .divider-ornate {
+    @apply flex items-center justify-center my-16;
+  }
+
+  .divider-ornate::before,
+  .divider-ornate::after {
+    content: "";
+    @apply flex-1 max-w-md h-px bg-gradient-to-r from-transparent via-gold/40 to-transparent;
+  }
+
+  /* Input Médiéval */
+  .input-medieval {
+    @apply w-full px-4 py-3 bg-parchment-light border-2 border-stone/20
+           focus:border-gold focus:outline-none focus:ring-2 focus:ring-gold/20
+           transition-all duration-300 text-ink placeholder:text-stone
+           font-crimson;
+  }
+
+  .input-medieval:focus {
+    @apply shadow-[0_0_0_4px_rgba(212,175,55,0.1)];
+  }
+}
+
+@layer utilities {
+  /* Ombre de texte médiévale */
+  .text-shadow-medieval {
+    text-shadow: 2px 2px 8px rgba(26, 20, 16, 0.4);
+  }
+
+  /* Fond texturé médiéval */
+  .bg-medieval-dark {
+    background-color: var(--ink);
+    background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23D4AF37' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+  }
+
+  /* Gradient Or */
+  .bg-gold-gradient {
+    background: linear-gradient(135deg, #d4af37 0%, #f4e5c2 100%);
+  }
+
+  /* Effet parchemin */
+  .bg-parchment-texture {
+    background-color: var(--parchment);
+    background-image: radial-gradient(
+        circle at 20% 30%,
+        rgba(139, 125, 107, 0.03) 0%,
+        transparent 50%
+      ),
+      radial-gradient(
+        circle at 80% 70%,
+        rgba(92, 64, 51, 0.02) 0%,
+        transparent 50%
+      );
+  }
+
+  /* Animation slide-in pour menu mobile */
+  @keyframes slide-in-right {
+    from {
+      transform: translateX(100%);
+      opacity: 0;
+    }
+    to {
+      transform: translateX(0);
+      opacity: 1;
+    }
+  }
+
+  .animate-slide-in-right {
+    animation: slide-in-right 0.3s ease-out;
+  }
+
+  /* Animation fade-in */
+  @keyframes fade-in {
+    from {
+      opacity: 0;
+      transform: translateY(-10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .animate-fade-in {
+    animation: fade-in 0.2s ease-out;
   }
 }

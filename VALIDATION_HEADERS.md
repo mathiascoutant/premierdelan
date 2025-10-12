@@ -90,7 +90,7 @@ Ouvrez https://mathiascoutant.github.io/premierdelan/ et dans la console :
 
 ```javascript
 // Tester la connexion
-fetch('https://nia-preinstructive-nola.ngrok-free.dev/api/connexion', {
+fetch('https://believable-spontaneity-production.up.railway.app/api/connexion', {
   method: 'POST',
   headers: {
     'Content-Type': 'application/json',

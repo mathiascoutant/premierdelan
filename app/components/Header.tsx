@@ -2,224 +2,135 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { FiMenu, FiX, FiBell, FiCalendar } from "react-icons/fi";
+import {
+  FiMenu,
+  FiX,
+  FiUser,
+  FiLogOut,
+  FiCalendar,
+  FiShield,
+  FiBell,
+} from "react-icons/fi";
 import { useAuth } from "../hooks/useAuth";
-import UserMenu from "./UserMenu";
-import NotificationButton from "./NotificationButton";
-import { API_ENDPOINTS, apiRequest } from "../config/api";
+import { useFirebaseNotifications } from "../hooks/useFirebaseNotifications";
 
 export default function Header() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [isTestingNotification, setIsTestingNotification] = useState(false);
-  const [notificationMessage, setNotificationMessage] = useState<{
-    type: "success" | "error";
-    text: string;
-  } | null>(null);
+  const [showUserMenu, setShowUserMenu] = useState(false);
   const { user, isLoading, logout } = useAuth();
+  const {
+    activerNotifications,
+    isActivating,
+    checkPermission,
+    checkIfEnabled,
+  } = useFirebaseNotifications();
 
   useEffect(() => {
     const handleScroll = () => {
       setIsScrolled(window.scrollY > 20);
     };
-
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  const menuItems = [
-    { label: "Accueil", href: "#accueil", isHash: true },
-    { label: "Événements", href: "#evenements", isHash: true },
-    { label: "Comment ça marche", href: "#services", isHash: true },
-    { label: "Connexion", href: "/connexion", isHash: false },
-  ];
-
   const isUserAdmin = user?.admin === 1;
 
-  // Fonction pour tester les notifications (mobile)
-  const handleTestNotification = async () => {
-    setIsTestingNotification(true);
-    setNotificationMessage(null);
-
-    try {
-      const token = localStorage.getItem("auth_token");
-
-      await apiRequest(API_ENDPOINTS.fcmSend, {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          user_id: user?.email,
-          title: "🎉 Premier de l'An",
-          message: `Bonjour ${user?.firstname} ! Test de notification réussi.`,
-          data: {
-            action: "test",
-            url: "/mes-evenements",
-          },
-        }),
-      });
-
-      setNotificationMessage({
-        type: "success",
-        text: "Notification envoyée !",
-      });
-
-      setTimeout(() => {
-        setNotificationMessage(null);
-      }, 3000);
-    } catch (error: any) {
-      setNotificationMessage({
-        type: "error",
-        text: error.message || "Erreur lors de l'envoi",
-      });
-
-      setTimeout(() => {
-        setNotificationMessage(null);
-      }, 3000);
-    } finally {
-      setIsTestingNotification(false);
-    }
-  };
-
   return (
-    <header
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-        isScrolled ? "bg-white border-b border-gray-200" : "bg-white"
-      }`}
-    >
-      <nav className="section-container">
-        <div className="flex items-center justify-between h-20">
-          {/* Logo */}
-          <Link href="/" className="group">
-            <span className="text-xl font-medium tracking-tight text-black">
-              PREMIER DE L&apos;AN
-            </span>
-          </Link>
-
-          {/* Desktop Menu */}
-          <div className="hidden md:flex items-center space-x-12">
-            {menuItems
-              .filter((item) => !user || item.label !== "Connexion")
-              .map((item) =>
-                item.isHash ? (
-                  <a
-                    key={item.href}
-                    href={item.href}
-                    className="text-sm tracking-wide text-gray-600 hover:text-black transition-colors duration-200 uppercase"
-                  >
-                    {item.label}
-                  </a>
-                ) : (
-                  <Link
-                    key={item.href}
-                    href={item.href}
-                    className="text-sm tracking-wide text-gray-600 hover:text-black transition-colors duration-200 uppercase"
-                  >
-                    {item.label}
-                  </Link>
-                )
-              )}
-
-            {/* Lien Admin si user est admin */}
-            {isUserAdmin && (
-              <Link
-                href="/admin"
-                className="text-sm tracking-wide text-black font-medium hover:text-gray-600 transition-colors duration-200 uppercase border-b-2 border-black"
-              >
-                Admin
-              </Link>
-            )}
-
-            {!isLoading && (
-              <>
-                {user ? (
-                  <UserMenu user={user} onLogout={logout} />
-                ) : (
-                  <Link href="/inscription" className="btn-primary">
-                    S&apos;inscrire
-                  </Link>
-                )}
-              </>
-            )}
-          </div>
-
-          {/* Mobile Menu Button */}
-          <button
-            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-            className="md:hidden p-2 text-black"
-            aria-label="Toggle menu"
-          >
-            {isMobileMenuOpen ? (
-              <FiX className="w-6 h-6" />
-            ) : (
-              <FiMenu className="w-6 h-6" />
-            )}
-          </button>
-        </div>
-
-        {/* Mobile Menu Overlay */}
-        {isMobileMenuOpen && (
-          <div className="fixed inset-0 z-50 md:hidden">
-            {/* Backdrop */}
-            <div
-              className="absolute inset-0 bg-black bg-opacity-50 backdrop-blur-sm"
-              onClick={() => setIsMobileMenuOpen(false)}
-            ></div>
-
-            {/* Menu Panel */}
-            <div className="absolute top-0 right-0 h-full w-80 max-w-[85vw] bg-white shadow-2xl overflow-y-auto">
-              {/* Header du menu */}
-              <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
-                <span className="font-medium text-gray-900">Menu</span>
-                <button
-                  onClick={() => setIsMobileMenuOpen(false)}
-                  className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-                >
-                  <FiX className="w-5 h-5 text-gray-600" />
-                </button>
+    <>
+      <header
+        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${
+          isScrolled
+            ? "bg-ink/95 backdrop-blur-lg border-b border-gold/20 shadow-lg"
+            : "bg-gradient-to-b from-ink/80 via-ink/60 to-transparent backdrop-blur-md"
+        }`}
+      >
+        <div className="max-w-[1600px] mx-auto px-6 md:px-12">
+          <div className="flex items-center justify-between h-20">
+            {/* Logo avec ornement */}
+            <Link
+              href="/"
+              className="group relative flex items-center space-x-3"
+            >
+              <div className="relative">
+                <div className="absolute inset-0 bg-gold/20 blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                <span className="relative text-gold text-2xl">⚜</span>
               </div>
+              <div className="flex flex-col">
+                <span className="font-cinzel text-base md:text-lg tracking-[0.35em] text-gold group-hover:text-gold-light transition-all duration-300 leading-none">
+                  PREMIER DE L&apos;AN
+                </span>
+                <span className="font-crimson text-[10px] tracking-widest text-stone-light opacity-70 mt-0.5">
+                  Édition 2026
+                </span>
+              </div>
+            </Link>
 
-              <div className="px-6 py-6 space-y-6">
-                {/* Profil utilisateur */}
-                {user && (
-                  <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl p-4 border border-gray-200">
-                    <div className="flex items-center space-x-3">
-                      <div className="w-14 h-14 rounded-full bg-gradient-to-br from-black to-gray-700 flex items-center justify-center text-white font-medium shadow-lg">
-                        {user.photo ? (
-                          // eslint-disable-next-line @next/next/no-img-element
-                          <img
-                            src={user.photo}
-                            alt={user.firstname}
-                            className="w-full h-full rounded-full object-cover"
-                          />
-                        ) : (
-                          `${user.firstname?.charAt(0) || ""}${
-                            user.lastname?.charAt(0) || ""
-                          }`.toUpperCase()
-                        )}
-                      </div>
-                      <div>
-                        <p className="font-medium text-gray-900">
-                          {user.firstname} {user.lastname}
-                        </p>
-                        <p className="text-sm text-gray-500">{user.email}</p>
-                      </div>
-                    </div>
-                  </div>
-                )}
+            {/* Navigation Desktop */}
+            <nav className="hidden lg:flex items-center space-x-10">
+              <a href="#accueil" className="relative group py-2">
+                <span className="text-sm font-crimson text-parchment/70 group-hover:text-gold transition-colors duration-300">
+                  Accueil
+                </span>
+                <span className="absolute bottom-0 left-0 w-0 h-px bg-gold group-hover:w-full transition-all duration-300"></span>
+              </a>
+              <a href="#evenements" className="relative group py-2">
+                <span className="text-sm font-crimson text-parchment/70 group-hover:text-gold transition-colors duration-300">
+                  Événements
+                </span>
+                <span className="absolute bottom-0 left-0 w-0 h-px bg-gold group-hover:w-full transition-all duration-300"></span>
+              </a>
+              <a href="#services" className="relative group py-2">
+                <span className="text-sm font-crimson text-parchment/70 group-hover:text-gold transition-colors duration-300">
+                  Services
+                </span>
+                <span className="absolute bottom-0 left-0 w-0 h-px bg-gold group-hover:w-full transition-all duration-300"></span>
+              </a>
+              {user && (
+                <Link href="/mes-evenements" className="relative group py-2">
+                  <span className="text-sm font-crimson text-parchment/70 group-hover:text-gold transition-colors duration-300">
+                    Mes événements
+                  </span>
+                  <span className="absolute bottom-0 left-0 w-0 h-px bg-gold group-hover:w-full transition-all duration-300"></span>
+                </Link>
+              )}
+            </nav>
 
-                {/* Navigation principale */}
-                {user && (
-                  <div className="space-y-2">
-                    <Link
-                      href="/profil"
-                      onClick={() => setIsMobileMenuOpen(false)}
-                      className="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-gray-100 transition-colors group"
-                    >
-                      <div className="w-10 h-10 bg-gray-100 group-hover:bg-white rounded-lg flex items-center justify-center transition-colors">
+            {/* Actions Desktop */}
+            <div className="hidden lg:flex items-center space-x-6">
+              {!isLoading &&
+                (user ? (
+                  <div className="flex items-center space-x-4">
+                    {/* Admin Badge */}
+                    {isUserAdmin && (
+                      <Link
+                        href="/admin"
+                        className="flex items-center space-x-2 px-4 py-2 bg-burgundy/20 border border-burgundy-light/30 hover:bg-burgundy/30 transition-all duration-300 group"
+                      >
+                        <FiShield className="w-4 h-4 text-burgundy-light group-hover:text-gold transition-colors" />
+                        <span className="text-xs font-cinzel tracking-wider text-burgundy-light group-hover:text-gold transition-colors">
+                          ADMIN
+                        </span>
+                      </Link>
+                    )}
+
+                    {/* User Menu */}
+                    <div className="relative">
+                      <button
+                        onClick={() => setShowUserMenu(!showUserMenu)}
+                        className="flex items-center space-x-3 px-4 py-2 border border-gold/30 hover:border-gold/60 hover:bg-gold/5 transition-all duration-300 group"
+                      >
+                        <div className="w-8 h-8 bg-gradient-to-br from-gold via-gold-dark to-brown flex items-center justify-center text-ink text-xs font-bold shadow-md group-hover:shadow-lg transition-all">
+                          {user.firstname?.charAt(0)}
+                          {user.lastname?.charAt(0)}
+                        </div>
+                        <span className="text-sm font-medium text-parchment group-hover:text-gold transition-colors">
+                          {user.firstname}
+                        </span>
                         <svg
-                          className="w-5 h-5 text-gray-600"
+                          className={`w-4 h-4 text-gold transition-transform duration-300 ${
+                            showUserMenu ? "rotate-180" : ""
+                          }`}
                           fill="none"
                           viewBox="0 0 24 24"
                           stroke="currentColor"
@@ -228,181 +139,256 @@ export default function Header() {
                             strokeLinecap="round"
                             strokeLinejoin="round"
                             strokeWidth={2}
-                            d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                            d="M19 9l-7 7-7-7"
                           />
                         </svg>
-                      </div>
-                      <span className="font-medium text-gray-900">
-                        Mon profil
-                      </span>
-                    </Link>
+                      </button>
 
+                      {/* Dropdown Menu */}
+                      {showUserMenu && (
+                        <div className="absolute right-0 mt-2 w-56 bg-ink/98 backdrop-blur-xl border border-gold/20 shadow-2xl overflow-hidden animate-fade-in">
+                          <div className="p-4 border-b border-gold/10">
+                            <p className="text-sm font-medium text-parchment">
+                              {user.firstname} {user.lastname}
+                            </p>
+                            <p className="text-xs text-stone-light mt-1">
+                              {user.email}
+                            </p>
+                          </div>
+                          <div className="py-2">
+                            <Link
+                              href="/mes-evenements"
+                              onClick={() => setShowUserMenu(false)}
+                              className="flex items-center space-x-3 px-4 py-3 text-sm text-parchment/70 hover:text-gold hover:bg-gold/5 transition-all"
+                            >
+                              <FiCalendar className="w-4 h-4" />
+                              <span>Mes événements</span>
+                            </Link>
+                            <button
+                              onClick={() => {
+                                setShowUserMenu(false);
+                                logout();
+                              }}
+                              className="flex items-center space-x-3 px-4 py-3 text-sm text-burgundy-light hover:text-gold hover:bg-gold/5 transition-all w-full text-left"
+                            >
+                              <FiLogOut className="w-4 h-4" />
+                              <span>Déconnexion</span>
+                            </button>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ) : (
+                  <div className="flex items-center space-x-4">
+                    <Link
+                      href="/connexion"
+                      className="text-sm font-crimson text-parchment/70 hover:text-gold transition-colors duration-300"
+                    >
+                      Connexion
+                    </Link>
+                    <Link
+                      href="/inscription"
+                      className="relative px-6 py-2.5 bg-gold text-ink text-sm font-cinzel tracking-wider hover:bg-gold-dark transition-all duration-300 shadow-lg hover:shadow-xl overflow-hidden group"
+                    >
+                      <span className="relative z-10">S&apos;INSCRIRE</span>
+                      <div className="absolute inset-0 bg-gradient-to-r from-gold-dark to-brown opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                    </Link>
+                  </div>
+                ))}
+            </div>
+
+            {/* Mobile Button */}
+            <button
+              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+              className="lg:hidden text-gold hover:text-gold-light transition-colors p-2"
+            >
+              {isMobileMenuOpen ? (
+                <FiX className="w-6 h-6" />
+              ) : (
+                <FiMenu className="w-6 h-6" />
+              )}
+            </button>
+          </div>
+        </div>
+      </header>
+
+      {/* Menu Mobile */}
+      {isMobileMenuOpen && (
+        <div className="fixed inset-0 z-[60] lg:hidden">
+          {/* Overlay */}
+          <div
+            className="absolute inset-0 bg-ink/95 backdrop-blur-2xl"
+            onClick={() => setIsMobileMenuOpen(false)}
+          ></div>
+
+          {/* Menu Content */}
+          <div className="relative h-full flex flex-col bg-gradient-to-b from-ink via-ink-light/20 to-ink">
+            {/* Header */}
+            <div className="border-b border-gold/20 px-6 py-6 flex items-center justify-between">
+              <div className="flex items-center space-x-3">
+                <span className="text-gold text-xl">⚜</span>
+                <span className="font-cinzel text-base tracking-[0.3em] text-gold">
+                  MENU
+                </span>
+              </div>
+              <button
+                onClick={() => setIsMobileMenuOpen(false)}
+                className="text-gold hover:text-gold-light transition-colors p-2"
+              >
+                <FiX className="w-6 h-6" />
+              </button>
+            </div>
+
+            {/* User Card */}
+            {user && (
+              <div className="px-6 py-8 border-b border-gold/10">
+                <div className="flex items-center space-x-4">
+                  <div className="w-14 h-14 bg-gradient-to-br from-gold via-gold-dark to-brown flex items-center justify-center text-ink font-bold text-lg shadow-lg">
+                    {user.firstname?.charAt(0)}
+                    {user.lastname?.charAt(0)}
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-lg font-cinzel text-parchment">
+                      {user.firstname} {user.lastname}
+                    </p>
+                    <p className="text-sm text-stone-light mt-1">
+                      {user.email}
+                    </p>
+                    {isUserAdmin && (
+                      <span className="inline-flex items-center space-x-1 mt-2 px-2 py-1 bg-burgundy/20 border border-burgundy-light/30 text-xs text-burgundy-light">
+                        <FiShield className="w-3 h-3" />
+                        <span>Administrateur</span>
+                      </span>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Navigation */}
+            <div className="flex-1 overflow-y-auto px-6 py-8">
+              <nav className="space-y-2">
+                <a
+                  href="#accueil"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className="block px-4 py-4 text-lg font-crimson text-parchment/70 hover:text-gold hover:bg-gold/5 transition-all border-l-2 border-transparent hover:border-gold"
+                >
+                  Accueil
+                </a>
+                <a
+                  href="#evenements"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className="block px-4 py-4 text-lg font-crimson text-parchment/70 hover:text-gold hover:bg-gold/5 transition-all border-l-2 border-transparent hover:border-gold"
+                >
+                  Événements
+                </a>
+                <a
+                  href="#services"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className="block px-4 py-4 text-lg font-crimson text-parchment/70 hover:text-gold hover:bg-gold/5 transition-all border-l-2 border-transparent hover:border-gold"
+                >
+                  Services
+                </a>
+                {user && (
+                  <>
                     <Link
                       href="/mes-evenements"
                       onClick={() => setIsMobileMenuOpen(false)}
-                      className="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-gray-100 transition-colors group"
+                      className="flex items-center space-x-3 px-4 py-4 text-lg font-crimson text-parchment/70 hover:text-gold hover:bg-gold/5 transition-all border-l-2 border-transparent hover:border-gold"
                     >
-                      <div className="w-10 h-10 bg-gray-100 group-hover:bg-white rounded-lg flex items-center justify-center transition-colors">
-                        <FiCalendar className="w-5 h-5 text-gray-600" />
-                      </div>
-                      <span className="font-medium text-gray-900">
-                        Mes événements
-                      </span>
+                      <FiCalendar className="w-5 h-5" />
+                      <span>Mes événements</span>
                     </Link>
-
-                    {/* Lien Admin si user est admin */}
                     {isUserAdmin && (
                       <Link
                         href="/admin"
                         onClick={() => setIsMobileMenuOpen(false)}
-                        className="flex items-center space-x-3 px-4 py-3 rounded-lg bg-black text-white hover:bg-gray-800 transition-colors group"
+                        className="flex items-center space-x-3 px-4 py-4 text-lg font-crimson text-burgundy-light hover:text-gold hover:bg-gold/5 transition-all border-l-2 border-transparent hover:border-gold"
                       >
-                        <div className="w-10 h-10 bg-white bg-opacity-20 rounded-lg flex items-center justify-center">
-                          <svg
-                            className="w-5 h-5 text-white"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            stroke="currentColor"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
-                            />
-                          </svg>
-                        </div>
-                        <span className="font-medium">Espace Admin</span>
+                        <FiShield className="w-5 h-5" />
+                        <span>Administration</span>
                       </Link>
                     )}
-                  </div>
+                  </>
                 )}
+              </nav>
 
-                {/* Notifications */}
-                {user && (
-                  <div className="space-y-3 pb-6 border-b border-gray-200">
-                    <p className="text-xs font-medium text-gray-500 uppercase tracking-wider px-2">
-                      Notifications
-                    </p>
-                    <NotificationButton
-                      userEmail={user.email}
-                      className="w-full"
+              {/* Notifications (si utilisateur connecté) */}
+              {user && (
+                <div className="mt-6 pt-6 border-t border-gold/10">
+                  <button
+                    onClick={() => {
+                      if (user.email) {
+                        activerNotifications(user.email);
+                      }
+                    }}
+                    disabled={
+                      isActivating ||
+                      (checkPermission() === "granted" && checkIfEnabled())
+                    }
+                    className="flex items-center space-x-3 px-4 py-4 text-lg font-crimson text-parchment/70 hover:text-gold hover:bg-gold/5 transition-all border-l-2 border-transparent hover:border-gold w-full disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <FiBell
+                      className={`w-5 h-5 ${
+                        isActivating ? "animate-pulse" : ""
+                      } ${
+                        checkPermission() === "granted" && checkIfEnabled()
+                          ? "text-green-500"
+                          : ""
+                      }`}
                     />
-
-                    <button
-                      onClick={handleTestNotification}
-                      disabled={isTestingNotification}
-                      className="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-gray-100 transition-colors disabled:opacity-50 w-full group"
-                    >
-                      <div className="w-10 h-10 bg-gray-100 group-hover:bg-white rounded-lg flex items-center justify-center transition-colors">
-                        <FiBell
-                          className={`w-5 h-5 text-gray-600 ${
-                            isTestingNotification ? "animate-pulse" : ""
-                          }`}
-                        />
-                      </div>
-                      <span className="font-medium text-gray-900">
-                        {isTestingNotification
-                          ? "Envoi..."
-                          : "Tester notification"}
-                      </span>
-                    </button>
-
-                    {notificationMessage && (
-                      <div
-                        className={`mx-2 px-4 py-3 rounded-lg text-sm ${
-                          notificationMessage.type === "success"
-                            ? "bg-green-50 text-green-700 border border-green-200"
-                            : "bg-red-50 text-red-700 border border-red-200"
-                        }`}
-                      >
-                        {notificationMessage.text}
-                      </div>
-                    )}
-                  </div>
-                )}
-
-                {/* Liens de navigation */}
-                <div className="space-y-1">
-                  <p className="text-xs font-medium text-gray-500 uppercase tracking-wider px-2 mb-3">
-                    Navigation
-                  </p>
-                  {menuItems
-                    .filter((item) => !user || item.label !== "Connexion")
-                    .map((item) =>
-                      item.isHash ? (
-                        <a
-                          key={item.href}
-                          href={item.href}
-                          onClick={() => setIsMobileMenuOpen(false)}
-                          className="block px-4 py-3 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors font-medium"
-                        >
-                          {item.label}
-                        </a>
-                      ) : (
-                        <Link
-                          key={item.href}
-                          href={item.href}
-                          onClick={() => setIsMobileMenuOpen(false)}
-                          className="block px-4 py-3 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors font-medium"
-                        >
-                          {item.label}
-                        </Link>
-                      )
-                    )}
+                    <span>
+                      {checkPermission() === "granted" && checkIfEnabled()
+                        ? "Notifications activées"
+                        : isActivating
+                        ? "Activation..."
+                        : "Activer les notifications"}
+                    </span>
+                  </button>
                 </div>
+              )}
+            </div>
 
-                {/* Bouton d'action */}
-                {!isLoading && (
-                  <div className="pt-4">
-                    {user ? (
-                      <button
-                        onClick={() => {
-                          setIsMobileMenuOpen(false);
-                          logout();
-                        }}
-                        className="flex items-center justify-center space-x-3 w-full px-4 py-3 bg-red-50 text-red-600 rounded-lg hover:bg-red-600 hover:text-white transition-colors font-medium"
-                      >
-                        <svg
-                          className="w-5 h-5"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          stroke="currentColor"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
-                          />
-                        </svg>
-                        <span>Déconnexion</span>
-                      </button>
-                    ) : (
-                      <div className="space-y-3">
-                        <Link
-                          href="/inscription"
-                          onClick={() => setIsMobileMenuOpen(false)}
-                          className="block w-full px-4 py-3 bg-black text-white rounded-lg hover:bg-gray-800 transition-colors font-medium text-center"
-                        >
-                          S&apos;inscrire
-                        </Link>
-                        <Link
-                          href="/connexion"
-                          onClick={() => setIsMobileMenuOpen(false)}
-                          className="block w-full px-4 py-3 border-2 border-gray-200 text-gray-900 rounded-lg hover:bg-gray-50 transition-colors font-medium text-center"
-                        >
-                          Se connecter
-                        </Link>
-                      </div>
-                    )}
-                  </div>
+            {/* Actions Footer */}
+            {!isLoading && (
+              <div className="border-t border-gold/20 px-6 py-6 space-y-3">
+                {user ? (
+                  <button
+                    onClick={() => {
+                      setIsMobileMenuOpen(false);
+                      logout();
+                    }}
+                    className="flex items-center justify-center space-x-3 w-full px-6 py-4 border-2 border-burgundy-light/30 text-burgundy-light hover:bg-burgundy/20 transition-all"
+                  >
+                    <FiLogOut className="w-5 h-5" />
+                    <span className="font-cinzel tracking-wider">
+                      DÉCONNEXION
+                    </span>
+                  </button>
+                ) : (
+                  <>
+                    <Link
+                      href="/inscription"
+                      onClick={() => setIsMobileMenuOpen(false)}
+                      className="block w-full px-6 py-4 bg-gold text-ink hover:bg-gold-dark transition-all text-center font-cinzel tracking-wider shadow-lg"
+                    >
+                      S&apos;INSCRIRE
+                    </Link>
+                    <Link
+                      href="/connexion"
+                      onClick={() => setIsMobileMenuOpen(false)}
+                      className="block w-full px-6 py-4 border-2 border-gold text-gold hover:bg-gold hover:text-ink transition-all text-center font-crimson"
+                    >
+                      Connexion
+                    </Link>
+                  </>
                 )}
               </div>
-            </div>
+            )}
           </div>
-        )}
-      </nav>
-    </header>
+        </div>
+      )}
+    </>
   );
 }

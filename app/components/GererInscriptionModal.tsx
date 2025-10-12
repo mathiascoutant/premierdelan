@@ -146,9 +146,9 @@ export default function GererInscriptionModal({
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+      <div className="bg-parchment-light rounded-lg w-full max-w-2xl max-h-[90vh] overflow-y-auto">
         {/* Header */}
-        <div className="flex items-center justify-between p-4 md:p-6 border-b border-gray-200 sticky top-0 bg-white z-10">
+        <div className="flex items-center justify-between p-4 md:p-6 border-b border-gray-200 sticky top-0 bg-parchment-light z-10">
           <div>
             <h2 className="text-lg md:text-xl font-medium text-black">
               {mode === "delete"
@@ -200,7 +200,7 @@ export default function GererInscriptionModal({
                         <span className="text-sm text-gray-900">
                           {i + 2}. {acc.firstname} {acc.lastname}
                         </span>
-                        <span className="text-xs px-2 py-1 bg-white rounded-full text-gray-600">
+                        <span className="text-xs px-2 py-1 bg-parchment-light rounded-full text-gray-600">
                           {acc.is_adult ? "Majeur" : "Mineur"}
                         </span>
                       </div>
@@ -312,7 +312,7 @@ export default function GererInscriptionModal({
                       }`}
                     >
                       <span
-                        className={`inline-block w-4 h-4 transform rounded-full bg-white transition-transform ${
+                        className={`inline-block w-4 h-4 transform rounded-full bg-parchment-light transition-transform ${
                           acc.is_adult ? "translate-x-6" : "translate-x-1"
                         }`}
                       />

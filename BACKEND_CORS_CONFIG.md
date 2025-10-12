@@ -1,7 +1,8 @@
-# Configuration Backend pour CORS + ngrok
+# Configuration Backend pour CORS + Railway
 
-## 🔴 Problème
-Les requêtes OPTIONS (preflight) réussissent mais les POST échouent à cause de ngrok gratuit.
+## ✅ Backend déployé sur Railway
+
+URL permanente : `https://believable-spontaneity-production.up.railway.app`
 
 ## ✅ Solution Backend
 
@@ -14,15 +15,15 @@ from flask_cors import CORS
 app = Flask(__name__)
 
 # Configuration CORS COMPLÈTE
-CORS(app, 
+CORS(app,
      origins=[
          "https://mathiascoutant.github.io",
          "http://localhost:3000"
      ],
      methods=["GET", "POST", "OPTIONS"],
      allow_headers=[
-         "Content-Type", 
-         "Authorization", 
+         "Content-Type",
+         "Authorization",
          "ngrok-skip-browser-warning"  # ⭐ CRUCIAL
      ],
      expose_headers=["Content-Type"],
@@ -38,15 +39,15 @@ def connexion():
         response.headers.add('Access-Control-Allow-Headers', 'Content-Type, Authorization, ngrok-skip-browser-warning')
         response.headers.add('Access-Control-Allow-Methods', 'POST, OPTIONS')
         return response, 204
-    
+
     # Traiter la requête POST
     data = request.json
     email = data.get('email')
     password = data.get('password')
-    
+
     # Votre logique d'authentification
     # ...
-    
+
     return jsonify({
         'token': 'votre_token_jwt',
         'user': {
@@ -63,53 +64,52 @@ if __name__ == '__main__':
 ### Si vous utilisez Express (Node.js)
 
 ```javascript
-const express = require('express');
-const cors = require('cors');
+const express = require("express");
+const cors = require("cors");
 
 const app = express();
 
 // Configuration CORS COMPLÈTE
-app.use(cors({
-  origin: [
-    'https://mathiascoutant.github.io',
-    'http://localhost:3000'
-  ],
-  methods: ['GET', 'POST', 'OPTIONS'],
-  allowedHeaders: [
-    'Content-Type', 
-    'Authorization', 
-    'ngrok-skip-browser-warning'  // ⭐ CRUCIAL
-  ],
-  credentials: false
-}));
+app.use(
+  cors({
+    origin: ["https://mathiascoutant.github.io", "http://localhost:3000"],
+    methods: ["GET", "POST", "OPTIONS"],
+    allowedHeaders: [
+      "Content-Type",
+      "Authorization",
+      "ngrok-skip-browser-warning", // ⭐ CRUCIAL
+    ],
+    credentials: false,
+  })
+);
 
 app.use(express.json());
 
 // Middleware pour logger les requêtes
 app.use((req, res, next) => {
   console.log(`${req.method} ${req.path}`);
-  console.log('Headers:', req.headers);
+  console.log("Headers:", req.headers);
   next();
 });
 
-app.post('/api/connexion', (req, res) => {
+app.post("/api/connexion", (req, res) => {
   const { email, password } = req.body;
-  
+
   // Votre logique d'authentification
   // ...
-  
+
   res.json({
-    token: 'votre_token_jwt',
+    token: "votre_token_jwt",
     user: {
-      prenom: 'Jean',
-      nom: 'Dupont',
-      email: email
-    }
+      prenom: "Jean",
+      nom: "Dupont",
+      email: email,
+    },
   });
 });
 
 app.listen(8090, () => {
-  console.log('✅ Serveur démarré sur le port 8090');
+  console.log("✅ Serveur démarré sur le port 8090");
 });
 ```
 
@@ -118,20 +118,23 @@ app.listen(8090, () => {
 Ouvrez https://mathiascoutant.github.io/premierdelan/ et testez dans la console :
 
 ```javascript
-fetch('https://nia-preinstructive-nola.ngrok-free.dev/api/connexion', {
-  method: 'POST',
-  headers: {
-    'Content-Type': 'application/json',
-    'ngrok-skip-browser-warning': 'true'  // ⭐ CRUCIAL
-  },
-  body: JSON.stringify({
-    email: 'test@email.com',
-    password: 'password123'
-  })
-})
-.then(r => r.json())
-.then(data => console.log('✅ Succès:', data))
-.catch(err => console.error('❌ Erreur:', err))
+fetch(
+  "https://believable-spontaneity-production.up.railway.app/api/connexion",
+  {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "ngrok-skip-browser-warning": "true", // ⭐ CRUCIAL
+    },
+    body: JSON.stringify({
+      email: "test@email.com",
+      password: "password123",
+    }),
+  }
+)
+  .then((r) => r.json())
+  .then((data) => console.log("✅ Succès:", data))
+  .catch((err) => console.error("❌ Erreur:", err));
 ```
 
 ## 📋 Checklist Backend
@@ -144,21 +147,20 @@ fetch('https://nia-preinstructive-nola.ngrok-free.dev/api/connexion', {
 - [ ] Credentials: false (simplifie CORS)
 - [ ] Logs activés pour debug
 
-## 🚀 Lancer ngrok
+## 🚀 Déploiement sur Railway
 
-```bash
-ngrok http 8090
+Le backend est déjà déployé et accessible 24/7 sur Railway :
+
+```
+https://believable-spontaneity-production.up.railway.app
 ```
 
-Puis mettez à jour l'URL dans `app/config/api.ts`.
+**Avantages de Railway** :
 
-## ⚠️ Alternative à ngrok gratuit
-
-Si les problèmes persistent, utilisez :
-- **Railway** : https://railway.app (gratuit)
-- **Render** : https://render.com (gratuit)
-- **Fly.io** : https://fly.io (gratuit)
-- **Vercel** : pour Next.js API routes
-
-Ces services n'ont pas de page d'avertissement comme ngrok gratuit.
-
+- ✅ URL permanente (pas besoin de redémarrer comme ngrok)
+- ✅ Gratuit (500h/mois)
+- ✅ HTTPS automatique
+- ✅ Pas de page d'avertissement
+- ✅ MongoDB intégré
+- ✅ Logs en temps réel
+- ✅ Redéploiement automatique sur Git push

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { API_ENDPOINTS, apiRequest } from "../config/api";
 import { useAuth } from "../hooks/useAuth";
@@ -32,11 +32,32 @@ export default function EventsPreview() {
     event: Event;
     inscription: any;
   } | null>(null);
+  const [isVisible, setIsVisible] = useState(false);
+  const sectionRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     fetchEvents();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]); // Re-fetch quand l'utilisateur change
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            setIsVisible(true);
+          }
+        });
+      },
+      { threshold: 0.1 }
+    );
+
+    if (sectionRef.current) {
+      observer.observe(sectionRef.current);
+    }
+
+    return () => observer.disconnect();
+  }, []);
 
   const fetchEvents = async () => {
     try {
@@ -91,34 +112,52 @@ export default function EventsPreview() {
   };
 
   return (
-    <section id="evenements" className="py-32 bg-gray-50">
+    <section
+      ref={sectionRef}
+      id="evenements"
+      className="py-20 md:py-32 bg-parchment relative"
+    >
       <div className="section-container">
         {/* Section Header */}
-        <div className="max-w-3xl mb-24">
-          <p className="text-sm tracking-widest uppercase text-gray-500 mb-4">
-            Événements à venir
+        <div
+          className={`max-w-3xl mx-auto text-center mb-16 md:mb-20 transition-all duration-1000 ${
+            isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"
+          }`}
+        >
+          <div className="flex items-center justify-center space-x-3 mb-6">
+            <div className="w-12 h-px bg-gold"></div>
+            <span className="text-xl text-gold">✦</span>
+            <div className="w-12 h-px bg-gold"></div>
+          </div>
+
+          <p className="text-sm font-cinzel tracking-[0.3em] uppercase text-stone mb-6">
+            Nos Célébrations
           </p>
-          <h2 className="text-4xl md:text-5xl lg:text-6xl font-light tracking-tight text-black">
-            Rejoignez-nous
+
+          <h2 className="text-3xl md:text-5xl lg:text-6xl font-cinzel font-bold text-ink">
+            Les Événements
             <br />
-            <span className="font-normal">et partagez</span>
+            <span className="text-gold">à Venir</span>
           </h2>
         </div>
 
         {/* Events List */}
         {isLoading ? (
-          <div className="p-12 text-center bg-white rounded-lg">
-            <div className="w-12 h-12 border-4 border-gray-200 border-t-black rounded-full animate-spin mx-auto mb-4"></div>
-            <p className="text-gray-600">Chargement des événements...</p>
+          <div className="p-16 text-center card-medieval">
+            <div className="w-16 h-16 border-4 border-gold/20 border-t-gold rounded-full animate-spin mx-auto mb-6"></div>
+            <p className="text-stone font-crimson">
+              Chargement des célébrations...
+            </p>
           </div>
         ) : events.length === 0 ? (
-          <div className="p-12 text-center bg-white rounded-lg border border-gray-200">
-            <p className="text-gray-600">
-              Aucun événement à venir pour le moment
+          <div className="p-16 text-center card-medieval">
+            <span className="text-5xl text-gold/30 block mb-4">⚜</span>
+            <p className="text-stone font-crimson text-lg">
+              Aucune célébration à venir pour le moment
             </p>
           </div>
         ) : (
-          <div className="space-y-px bg-black">
+          <div className="space-y-6">
             {events.map((event) => {
               const placesRestantes = event.capacite - event.inscrits;
               const now = new Date();
@@ -141,15 +180,16 @@ export default function EventsPreview() {
               return (
                 <div
                   key={event.id}
-                  className="group bg-white hover:bg-gray-50 transition-colors duration-300"
+                  className="card-medieval group bg-parchment-light hover:bg-parchment transition-all duration-500"
                 >
-                  <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between py-12 px-8 md:px-12 space-y-6 lg:space-y-0">
+                  <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between p-6 md:p-8 space-y-6 lg:space-y-0">
                     <div className="flex-1 space-y-4">
-                      <div className="space-y-1">
-                        <h3 className="text-3xl md:text-4xl font-normal text-black">
+                      <div className="space-y-2">
+                        <h3 className="text-2xl md:text-3xl font-cinzel font-bold text-ink group-hover:text-gold transition-colors duration-300">
                           {event.titre}
                         </h3>
-                        <p className="text-sm text-gray-500 uppercase tracking-wide">
+                        <p className="text-sm text-stone font-crimson tracking-wide">
+                          📅{" "}
                           {new Date(event.date).toLocaleDateString("fr-FR", {
                             day: "numeric",
                             month: "long",
@@ -157,20 +197,24 @@ export default function EventsPreview() {
                           })}
                         </p>
                       </div>
-                      <p className="text-gray-600 font-light max-w-md">
+                      <p className="text-stone font-crimson max-w-md leading-relaxed">
                         {event.description}
                       </p>
-                      <div className="flex flex-wrap gap-6 text-sm text-gray-500 pt-2">
-                        <span>
-                          {event.inscrits} / {event.capacite} inscrits
+                      <div className="flex flex-wrap gap-4 text-sm font-crimson pt-3">
+                        <span className="text-ink">
+                          <span className="font-semibold">
+                            {event.inscrits}
+                          </span>{" "}
+                          / {event.capacite} inscrits
                         </span>
-                        <span className="border-l border-gray-300 pl-6">
+                        <span className="text-stone">•</span>
+                        <span>
                           {isBeforeOpening ? (
                             <span className="text-orange-600 font-medium">
                               Prochainement
                             </span>
                           ) : isAfterClosing ? (
-                            <span className="text-gray-600 font-medium">
+                            <span className="text-stone font-medium">
                               Inscriptions fermées
                             </span>
                           ) : placesRestantes > 0 ? (
@@ -178,7 +222,7 @@ export default function EventsPreview() {
                               className={
                                 placesRestantes <= 10
                                   ? "text-orange-600 font-medium"
-                                  : "text-green-600"
+                                  : "text-burgundy-light font-medium"
                               }
                             >
                               {placesRestantes} place
@@ -186,12 +230,13 @@ export default function EventsPreview() {
                               {placesRestantes > 1 ? "s" : ""}
                             </span>
                           ) : (
-                            <span className="text-red-600 font-medium">
+                            <span className="text-burgundy font-medium">
                               Complet
                             </span>
                           )}
                         </span>
-                        <span className="border-l border-gray-300 pl-6">
+                        <span className="text-stone">•</span>
+                        <span className="text-ink">
                           {event.photos_count} photo
                           {event.photos_count > 1 ? "s" : ""}
                         </span>
@@ -203,6 +248,7 @@ export default function EventsPreview() {
                           <Countdown
                             targetDate={event.date_ouverture_inscription!}
                             type="opening"
+                            variant="compact"
                           />
                         </div>
                       )}
@@ -211,6 +257,7 @@ export default function EventsPreview() {
                           <Countdown
                             targetDate={event.date_fermeture_inscription!}
                             type="closing"
+                            variant="compact"
                           />
                         </div>
                       )}
@@ -219,14 +266,14 @@ export default function EventsPreview() {
                       {isBeforeOpening ? (
                         <button
                           disabled
-                          className="btn-primary whitespace-nowrap text-center opacity-50 cursor-not-allowed"
+                          className="btn-medieval-primary whitespace-nowrap text-center opacity-50 cursor-not-allowed"
                         >
                           Prochainement
                         </button>
                       ) : isAfterClosing ? (
                         <button
                           disabled
-                          className="btn-primary whitespace-nowrap text-center opacity-50 cursor-not-allowed"
+                          className="btn-medieval-primary whitespace-nowrap text-center opacity-50 cursor-not-allowed"
                         >
                           Inscriptions fermées
                         </button>
@@ -239,14 +286,14 @@ export default function EventsPreview() {
                                 inscription: event.user_inscription,
                               })
                             }
-                            className="btn-primary whitespace-nowrap text-center bg-green-600 hover:bg-green-700"
+                            className="btn-medieval-primary whitespace-nowrap text-center bg-green-600 hover:bg-green-700"
                           >
                             ✓ Gérer mon inscription
                           </button>
                         ) : (
                           <button
                             onClick={() => setInscriptionEvent(event)}
-                            className="btn-primary whitespace-nowrap text-center"
+                            className="btn-medieval-primary whitespace-nowrap text-center"
                           >
                             S&apos;inscrire
                           </button>
@@ -254,22 +301,16 @@ export default function EventsPreview() {
                       ) : (
                         <Link
                           href="/inscription"
-                          className="btn-primary whitespace-nowrap text-center"
+                          className="btn-medieval-primary whitespace-nowrap text-center"
                         >
                           S&apos;inscrire
                         </Link>
                       )}
-                      {isBeforeOpening ? (
-                        <button
-                          disabled
-                          className="btn-secondary whitespace-nowrap text-center opacity-50 cursor-not-allowed"
-                        >
-                          Galerie prochainement
-                        </button>
-                      ) : (
+                      {/* Bouton galerie seulement si inscrit */}
+                      {user && event.user_inscription && !isBeforeOpening && (
                         <Link
                           href={`/galerie?event=${event.id}`}
-                          className="btn-secondary whitespace-nowrap text-center"
+                          className="btn-medieval-secondary whitespace-nowrap text-center"
                         >
                           Voir la galerie
                         </Link>
@@ -284,7 +325,7 @@ export default function EventsPreview() {
       </div>
 
       {/* Modales */}
-      {inscriptionEvent && user && (
+      {inscriptionEvent && user?.email && (
         <InscriptionEventModal
           event={inscriptionEvent}
           userEmail={user.email}
@@ -296,7 +337,7 @@ export default function EventsPreview() {
         />
       )}
 
-      {gererInscription && user && (
+      {gererInscription && user?.email && (
         <GererInscriptionModal
           event={gererInscription.event}
           userEmail={user.email}

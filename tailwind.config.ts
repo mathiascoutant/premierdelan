@@ -9,38 +9,47 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        primary: {
-          50: '#f8f9fa',
-          100: '#f1f3f5',
-          200: '#e9ecef',
-          300: '#dee2e6',
-          400: '#ced4da',
-          500: '#adb5bd',
-          600: '#868e96',
-          700: '#495057',
-          800: '#343a40',
-          900: '#212529',
-        },
-        accent: {
-          50: '#fafaf9',
-          100: '#f5f5f4',
-          200: '#e7e5e4',
-          300: '#d6d3d1',
-          400: '#a8a29e',
-          500: '#78716c',
-          600: '#57534e',
-          700: '#44403c',
-          800: '#292524',
-          900: '#1c1917',
-        },
+        'gold-light': '#F4E5C2',
+        'gold': '#D4AF37',
+        'gold-dark': '#B8941D',
+        'burgundy': '#6B1A3D',
+        'burgundy-dark': '#4A1129',
+        'burgundy-light': '#8B2350',
+        'brown': '#5C4033',
+        'brown-dark': '#3E2A23',
+        'parchment-light': '#FAF6ED',
+        'parchment': '#F5EFE0',
+        'parchment-dark': '#E8DCC3',
+        'ink': '#1A1410',
+        'ink-light': '#2D2419',
+        'stone': '#8B7D6B',
+        'stone-light': '#C4B8A8',
       },
       fontFamily: {
-        sans: ['var(--font-inter)', 'system-ui', 'sans-serif'],
-        display: ['var(--font-inter)', 'system-ui', 'sans-serif'],
+        cinzel: ['var(--font-cinzel)', 'serif'],
+        crimson: ['var(--font-crimson)', 'serif'],
+      },
+      animation: {
+        'fade-in': 'fadeIn 0.6s ease-in-out',
+        'slide-up': 'slideUp 0.8s ease-out',
+        'slide-down': 'slideDown 0.6s ease-out',
+      },
+      keyframes: {
+        fadeIn: {
+          '0%': { opacity: '0' },
+          '100%': { opacity: '1' },
+        },
+        slideUp: {
+          '0%': { transform: 'translateY(30px)', opacity: '0' },
+          '100%': { transform: 'translateY(0)', opacity: '1' },
+        },
+        slideDown: {
+          '0%': { transform: 'translateY(-30px)', opacity: '0' },
+          '100%': { transform: 'translateY(0)', opacity: '1' },
+        },
       },
     },
   },
   plugins: [],
 }
 export default config
-
