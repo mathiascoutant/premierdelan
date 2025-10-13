@@ -64,7 +64,25 @@ export default function PWASplashScreen() {
       ).matches;
       const isIOSStandalone = (window.navigator as any).standalone === true;
 
-      // Afficher SEULEMENT si vraiment en mode PWA installée
+      // Vérifications supplémentaires pour éviter les faux positifs
+      const isInBrowser = !isStandalone && !isFullscreen && !isIOSStandalone;
+      const isChromeOnMac = /Macintosh.*Chrome/.test(navigator.userAgent);
+      const isDesktop =
+        !/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+          navigator.userAgent
+        );
+
+      // Ne JAMAIS afficher si on est dans un navigateur web classique
+      if (isInBrowser) {
+        return false;
+      }
+
+      // Ne JAMAIS afficher sur desktop (même en PWA)
+      if (isDesktop) {
+        return false;
+      }
+
+      // Afficher SEULEMENT si vraiment en mode PWA installée sur mobile
       return isStandalone || isFullscreen || isIOSStandalone;
     };
 
@@ -75,6 +93,15 @@ export default function PWASplashScreen() {
       isStandalone: window.matchMedia("(display-mode: standalone)").matches,
       isFullscreen: window.matchMedia("(display-mode: fullscreen)").matches,
       isIOSStandalone: (window.navigator as any).standalone,
+      isInBrowser:
+        !window.matchMedia("(display-mode: standalone)").matches &&
+        !window.matchMedia("(display-mode: fullscreen)").matches &&
+        !(window.navigator as any).standalone,
+      isDesktop:
+        !/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+          navigator.userAgent
+        ),
+      isChromeOnMac: /Macintosh.*Chrome/.test(navigator.userAgent),
       hostname: window.location.hostname,
       hasShown: hasShownSplash(),
       userAgent: navigator.userAgent,
