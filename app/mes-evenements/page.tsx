@@ -25,8 +25,9 @@ interface Event {
   statut: string;
   user_inscription: {
     id: string;
-    nombre_personnes: number;
-    created_at: string;
+    nombre_personnes?: number;
+    nb_personnes?: number;
+    created_at?: string;
   };
 }
 
@@ -230,8 +231,12 @@ export default function MesEvenementsPage() {
                       <div className="flex items-center gap-2 text-sm text-gray-700">
                         <FiUsers className="w-4 h-4 text-gray-400" />
                         <span>
-                          {event.user_inscription.nombre_personnes}{" "}
-                          {event.user_inscription.nombre_personnes > 1
+                          {event.user_inscription?.nombre_personnes ||
+                            event.user_inscription?.nb_personnes ||
+                            1}{" "}
+                          {(event.user_inscription?.nombre_personnes ||
+                            event.user_inscription?.nb_personnes ||
+                            1) > 1
                             ? "personnes inscrites"
                             : "personne inscrite"}
                         </span>
@@ -247,13 +252,15 @@ export default function MesEvenementsPage() {
                         <FiClock className="w-4 h-4 text-gray-400" />
                         <span>
                           Inscrit le{" "}
-                          {new Date(
-                            event.user_inscription.created_at
-                          ).toLocaleDateString("fr-FR", {
-                            day: "numeric",
-                            month: "short",
-                            year: "numeric",
-                          })}
+                          {event.user_inscription?.created_at
+                            ? new Date(
+                                event.user_inscription.created_at
+                              ).toLocaleDateString("fr-FR", {
+                                day: "numeric",
+                                month: "short",
+                                year: "numeric",
+                              })
+                            : "Date inconnue"}
                         </span>
                       </div>
                     </div>

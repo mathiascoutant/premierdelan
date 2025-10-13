@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Cinzel, Crimson_Text } from "next/font/google";
 import "./globals.css";
+import PWASplashScreen from "./components/PWASplashScreen";
 
 const cinzel = Cinzel({
   subsets: ["latin"],
@@ -30,7 +31,10 @@ export default function RootLayout({
 }) {
   return (
     <html lang="fr" className={`${cinzel.variable} ${crimsonText.variable}`}>
-      <body className={crimsonText.className}>{children}</body>
+      <body className={crimsonText.className}>
+        <PWASplashScreen />
+        {children}
+      </body>
     </html>
   );
 }
