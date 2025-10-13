@@ -21,7 +21,7 @@ export const metadata: Metadata = {
   title: "Premier de l'An - Événements Privés",
   description: "Organisation d'événements privés d'excellence",
   keywords: ["événements privés", "soirées", "organisation", "luxe"],
-  manifest: "/manifest.json",
+  manifest: "/premierdelan/manifest.json",
 };
 
 export default function RootLayout({
