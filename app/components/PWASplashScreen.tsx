@@ -7,6 +7,7 @@ export default function PWASplashScreen() {
   const [isVisible, setIsVisible] = useState(false);
   const [progress, setProgress] = useState(0);
   const [shouldShowSplash, setShouldShowSplash] = useState(true);
+  const [isInitialized, setIsInitialized] = useState(false);
   const isPWA = useIsPWA();
 
   // Vérifier si le splash screen a déjà été affiché dans cette session de navigation
@@ -42,11 +43,8 @@ export default function PWASplashScreen() {
     resetSplashFlag();
 
     // Afficher le splash screen SEULEMENT si on est en PWA installée
-    // Vérifications plus strictes pour éviter l'affichage sur navigateur
     const checkIfPWAMode = () => {
-      // Vérifications très strictes pour éviter l'affichage sur navigateur
-
-      // 1. Vérifier si on est vraiment en mode PWA installée
+      // Vérifications pour détecter PWA installée
       const isStandalone = window.matchMedia(
         "(display-mode: standalone)"
       ).matches;
@@ -55,56 +53,68 @@ export default function PWASplashScreen() {
       ).matches;
       const isIOSStandalone = (window.navigator as any).standalone === true;
 
-      // 2. Vérifier si on est dans un navigateur web (même sur mobile)
-      const isInBrowser = !isStandalone && !isFullscreen && !isIOSStandalone;
-
-      // 3. Vérifications supplémentaires pour Chrome sur Mac
-      const isChromeOnMac = /Macintosh.*Chrome/.test(navigator.userAgent);
+      // Ne JAMAIS afficher sur localhost (développement)
       const isLocalhost =
         window.location.hostname === "localhost" ||
         window.location.hostname === "127.0.0.1";
-
-      // 4. Ne JAMAIS afficher si on est sur localhost (développement)
       if (isLocalhost) {
         return false;
       }
 
-      // 5. Ne JAMAIS afficher si on est dans un navigateur web classique
-      if (isInBrowser) {
-        return false;
-      }
-
-      // 6. Afficher SEULEMENT si vraiment en mode PWA installée
+      // Afficher si vraiment en mode PWA installée
       return isStandalone || isFullscreen || isIOSStandalone;
     };
 
+    // Démarrer l'animation immédiatement si on est en PWA
     if (checkIfPWAMode() && !hasShownSplash()) {
-      // Afficher le splash screen seulement si c'est la première fois
+      console.log("🚀 PWA détectée - Lancement du splash screen");
       setIsVisible(true);
-      markSplashAsShown(); // Marquer comme affiché
+      markSplashAsShown();
 
       // Animation de la barre de progression
-      const interval = setInterval(() => {
-        setProgress((prev) => {
-          if (prev >= 100) {
-            clearInterval(interval);
-            // Masquer le splash screen après 2 secondes
-            setTimeout(() => {
-              setIsVisible(false);
-              setShouldShowSplash(false);
-            }, 500);
-            return 100;
-          }
-          return prev + Math.random() * 15 + 5; // Progression aléatoire mais fluide
-        });
-      }, 150);
+      const startAnimation = () => {
+        const interval = setInterval(() => {
+          setProgress((prev) => {
+            const newProgress = prev + Math.random() * 20 + 10; // Plus rapide
+            if (newProgress >= 100) {
+              clearInterval(interval);
+              // Masquer le splash screen après 1 seconde
+              setTimeout(() => {
+                setIsVisible(false);
+                setShouldShowSplash(false);
+              }, 1000);
+              return 100;
+            }
+            return newProgress;
+          });
+        }, 100); // Plus rapide
+        return interval;
+      };
 
-      return () => clearInterval(interval);
+      // Démarrer l'animation immédiatement
+      const interval = startAnimation();
+
+      // Fallback : forcer l'animation après 500ms si elle ne démarre pas
+      const fallbackTimeout = setTimeout(() => {
+        if (progress === 0) {
+          console.log("⚠️ Animation bloquée - Forçage du démarrage");
+          clearInterval(interval);
+          const newInterval = startAnimation();
+          return () => clearInterval(newInterval);
+        }
+      }, 500);
+
+      return () => {
+        clearInterval(interval);
+        clearTimeout(fallbackTimeout);
+      };
     } else {
-      // Si pas en PWA ou déjà affiché, ne pas afficher le splash
+      console.log("🌐 Pas en PWA ou déjà affiché - Pas de splash screen");
       setShouldShowSplash(false);
     }
-  }, [isPWA]);
+
+    setIsInitialized(true);
+  }, []);
 
   // Écouter la fermeture de la PWA pour enregistrer le timestamp
   useEffect(() => {
@@ -131,6 +141,11 @@ export default function PWASplashScreen() {
       document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
   }, []);
+
+  // Ne pas afficher tant que l'initialisation n'est pas terminée
+  if (!isInitialized) {
+    return <div className="fixed inset-0 z-[9998] bg-ink"></div>;
+  }
 
   if (!isVisible) return null;
 
