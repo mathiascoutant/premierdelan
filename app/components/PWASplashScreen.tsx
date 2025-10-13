@@ -42,8 +42,22 @@ export default function PWASplashScreen() {
     // Réinitialiser le flag au début pour détecter les nouveaux lancements
     resetSplashFlag();
 
-    // Afficher le splash screen SEULEMENT si on est en PWA installée
+    // TEST : Afficher le splash screen sur mobile (même si pas PWA)
     const checkIfPWAMode = () => {
+      // Ne JAMAIS afficher sur localhost (développement)
+      const isLocalhost =
+        window.location.hostname === "localhost" ||
+        window.location.hostname === "127.0.0.1";
+      if (isLocalhost) {
+        return false;
+      }
+
+      // TEST : Détecter si on est sur mobile
+      const isMobile =
+        /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+          navigator.userAgent
+        );
+
       // Vérifications pour détecter PWA installée
       const isStandalone = window.matchMedia(
         "(display-mode: standalone)"
@@ -53,63 +67,51 @@ export default function PWASplashScreen() {
       ).matches;
       const isIOSStandalone = (window.navigator as any).standalone === true;
 
-      // Ne JAMAIS afficher sur localhost (développement)
-      const isLocalhost =
-        window.location.hostname === "localhost" ||
-        window.location.hostname === "127.0.0.1";
-      if (isLocalhost) {
-        return false;
-      }
-
-      // Afficher si vraiment en mode PWA installée
-      return isStandalone || isFullscreen || isIOSStandalone;
+      // TEST : Afficher sur mobile OU si vraiment en mode PWA installée
+      return isMobile || isStandalone || isFullscreen || isIOSStandalone;
     };
 
-    // Démarrer l'animation immédiatement si on est en PWA
+    console.log("🔍 Vérification PWA:", {
+      isMobile:
+        /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+          navigator.userAgent
+        ),
+      isStandalone: window.matchMedia("(display-mode: standalone)").matches,
+      isFullscreen: window.matchMedia("(display-mode: fullscreen)").matches,
+      isIOSStandalone: (window.navigator as any).standalone,
+      hostname: window.location.hostname,
+      hasShown: hasShownSplash(),
+      userAgent: navigator.userAgent,
+    });
+
+    // Démarrer l'animation immédiatement si on est en PWA ou mobile
     if (checkIfPWAMode() && !hasShownSplash()) {
-      console.log("🚀 PWA détectée - Lancement du splash screen");
+      console.log("🚀 Mobile/PWA détectée - Lancement du splash screen");
       setIsVisible(true);
       markSplashAsShown();
 
       // Animation de la barre de progression
-      const startAnimation = () => {
-        const interval = setInterval(() => {
-          setProgress((prev) => {
-            const newProgress = prev + Math.random() * 20 + 10; // Plus rapide
-            if (newProgress >= 100) {
-              clearInterval(interval);
-              // Masquer le splash screen après 1 seconde
-              setTimeout(() => {
-                setIsVisible(false);
-                setShouldShowSplash(false);
-              }, 1000);
-              return 100;
-            }
-            return newProgress;
-          });
-        }, 100); // Plus rapide
-        return interval;
-      };
+      const interval = setInterval(() => {
+        setProgress((prev) => {
+          const newProgress = prev + Math.random() * 15 + 5;
+          if (newProgress >= 100) {
+            clearInterval(interval);
+            // Masquer le splash screen après 1 seconde
+            setTimeout(() => {
+              setIsVisible(false);
+              setShouldShowSplash(false);
+            }, 1000);
+            return 100;
+          }
+          return newProgress;
+        });
+      }, 150);
 
-      // Démarrer l'animation immédiatement
-      const interval = startAnimation();
-
-      // Fallback : forcer l'animation après 500ms si elle ne démarre pas
-      const fallbackTimeout = setTimeout(() => {
-        if (progress === 0) {
-          console.log("⚠️ Animation bloquée - Forçage du démarrage");
-          clearInterval(interval);
-          const newInterval = startAnimation();
-          return () => clearInterval(newInterval);
-        }
-      }, 500);
-
-      return () => {
-        clearInterval(interval);
-        clearTimeout(fallbackTimeout);
-      };
+      return () => clearInterval(interval);
     } else {
-      console.log("🌐 Pas en PWA ou déjà affiché - Pas de splash screen");
+      console.log(
+        "🌐 Pas en mobile/PWA ou déjà affiché - Pas de splash screen"
+      );
       setShouldShowSplash(false);
     }
 
@@ -157,7 +159,7 @@ export default function PWASplashScreen() {
       )}
 
       {/* Splash screen */}
-      <div className="fixed inset-0 z-[9999] bg-ink flex items-center justify-center">
+      <div className="pwa-splash-screen flex items-center justify-center">
         {/* Ornements de fond */}
         <div className="absolute inset-0 pointer-events-none opacity-10">
           <div className="absolute top-1/4 left-10 text-9xl text-gold/30">
