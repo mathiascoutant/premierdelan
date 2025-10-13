@@ -55,12 +55,6 @@ export default function PWASplashScreen() {
         return false;
       }
 
-      // TEST : Détecter si on est sur mobile
-      const isMobile =
-        /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
-          navigator.userAgent
-        );
-
       // Vérifications pour détecter PWA installée
       const isStandalone = window.matchMedia(
         "(display-mode: standalone)"
@@ -70,40 +64,25 @@ export default function PWASplashScreen() {
       ).matches;
       const isIOSStandalone = (window.navigator as any).standalone === true;
 
-      // TEST : Afficher sur mobile OU si vraiment en mode PWA installée OU si paramètre URL
-      const urlParams = new URLSearchParams(window.location.search);
-      const forceSplash = urlParams.get("splash") === "true";
-
-      return (
-        isMobile ||
-        isStandalone ||
-        isFullscreen ||
-        isIOSStandalone ||
-        forceSplash
-      );
+      // Afficher SEULEMENT si vraiment en mode PWA installée
+      return isStandalone || isFullscreen || isIOSStandalone;
     };
 
     const urlParams = new URLSearchParams(window.location.search);
     const forceSplash = urlParams.get("splash") === "true";
 
     console.log("🔍 Vérification PWA:", {
-      isMobile:
-        /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
-          navigator.userAgent
-        ),
       isStandalone: window.matchMedia("(display-mode: standalone)").matches,
       isFullscreen: window.matchMedia("(display-mode: fullscreen)").matches,
       isIOSStandalone: (window.navigator as any).standalone,
       hostname: window.location.hostname,
       hasShown: hasShownSplash(),
       userAgent: navigator.userAgent,
-      forceSplash: forceSplash,
-      urlParams: window.location.search,
     });
 
     // Démarrer l'animation immédiatement si on est en PWA ou mobile
     if (checkIfPWAMode() && !hasShownSplash()) {
-      console.log("🚀 Mobile/PWA détectée - Lancement du splash screen");
+      console.log("🚀 PWA détectée - Lancement du splash screen");
       console.log("📱 État avant affichage:", {
         isVisible,
         shouldShowSplash,
@@ -130,9 +109,7 @@ export default function PWASplashScreen() {
 
       return () => clearInterval(interval);
     } else {
-      console.log(
-        "🌐 Pas en mobile/PWA ou déjà affiché - Pas de splash screen"
-      );
+      console.log("🌐 Pas en PWA ou déjà affiché - Pas de splash screen");
       setShouldShowSplash(false);
     }
   }, []);
