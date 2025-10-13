@@ -39,6 +39,9 @@ export default function PWASplashScreen() {
   };
 
   useEffect(() => {
+    // Marquer comme initialisé d'abord
+    setIsInitialized(true);
+
     // Réinitialiser le flag au début pour détecter les nouveaux lancements
     resetSplashFlag();
 
@@ -67,9 +70,21 @@ export default function PWASplashScreen() {
       ).matches;
       const isIOSStandalone = (window.navigator as any).standalone === true;
 
-      // TEST : Afficher sur mobile OU si vraiment en mode PWA installée
-      return isMobile || isStandalone || isFullscreen || isIOSStandalone;
+      // TEST : Afficher sur mobile OU si vraiment en mode PWA installée OU si paramètre URL
+      const urlParams = new URLSearchParams(window.location.search);
+      const forceSplash = urlParams.get("splash") === "true";
+
+      return (
+        isMobile ||
+        isStandalone ||
+        isFullscreen ||
+        isIOSStandalone ||
+        forceSplash
+      );
     };
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const forceSplash = urlParams.get("splash") === "true";
 
     console.log("🔍 Vérification PWA:", {
       isMobile:
@@ -82,30 +97,36 @@ export default function PWASplashScreen() {
       hostname: window.location.hostname,
       hasShown: hasShownSplash(),
       userAgent: navigator.userAgent,
+      forceSplash: forceSplash,
+      urlParams: window.location.search,
     });
 
     // Démarrer l'animation immédiatement si on est en PWA ou mobile
     if (checkIfPWAMode() && !hasShownSplash()) {
       console.log("🚀 Mobile/PWA détectée - Lancement du splash screen");
+      console.log("📱 État avant affichage:", {
+        isVisible,
+        shouldShowSplash,
+        isInitialized,
+      });
       setIsVisible(true);
       markSplashAsShown();
 
       // Animation de la barre de progression
+      let currentProgress = 0;
       const interval = setInterval(() => {
-        setProgress((prev) => {
-          const newProgress = prev + Math.random() * 15 + 5;
-          if (newProgress >= 100) {
-            clearInterval(interval);
-            // Masquer le splash screen après 1 seconde
-            setTimeout(() => {
-              setIsVisible(false);
-              setShouldShowSplash(false);
-            }, 1000);
-            return 100;
-          }
-          return newProgress;
-        });
-      }, 150);
+        currentProgress += Math.random() * 20 + 10;
+        if (currentProgress >= 100) {
+          currentProgress = 100;
+          clearInterval(interval);
+          // Masquer le splash screen après 1 seconde
+          setTimeout(() => {
+            setIsVisible(false);
+          }, 1000);
+        }
+        console.log("📊 Progression:", Math.round(currentProgress) + "%");
+        setProgress(currentProgress);
+      }, 100);
 
       return () => clearInterval(interval);
     } else {
@@ -114,8 +135,6 @@ export default function PWASplashScreen() {
       );
       setShouldShowSplash(false);
     }
-
-    setIsInitialized(true);
   }, []);
 
   // Écouter la fermeture de la PWA pour enregistrer le timestamp
@@ -146,7 +165,11 @@ export default function PWASplashScreen() {
 
   // Ne pas afficher tant que l'initialisation n'est pas terminée
   if (!isInitialized) {
-    return <div className="fixed inset-0 z-[9998] bg-ink"></div>;
+    return (
+      <div className="fixed inset-0 z-[9998] bg-ink flex items-center justify-center">
+        <div className="text-gold text-xl">Chargement...</div>
+      </div>
+    );
   }
 
   if (!isVisible) return null;
@@ -154,9 +177,7 @@ export default function PWASplashScreen() {
   return (
     <>
       {/* Masquer le contenu de la page pendant le splash */}
-      {shouldShowSplash && (
-        <div className="fixed inset-0 z-[9998] bg-ink"></div>
-      )}
+      <div className="fixed inset-0 z-[9998] bg-ink"></div>
 
       {/* Splash screen */}
       <div className="pwa-splash-screen flex items-center justify-center">
