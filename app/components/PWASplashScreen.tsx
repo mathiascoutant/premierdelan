@@ -25,34 +25,25 @@ export default function PWASplashScreen() {
     }
   };
 
-  // Vérifier le statut du déploiement GitHub Actions
-  const checkDeploymentStatus = async () => {
+  // Vérifier s'il y a une action GitHub en cours
+  const checkGitHubAction = async () => {
     try {
-      // Vérifier si on peut accéder à la page d'accueil avec un timestamp
-      const timestamp = Date.now();
-      const response = await fetch(`${window.location.origin}?t=${timestamp}`, {
+      // Vérifier si on peut accéder à la page d'accueil
+      const response = await fetch(window.location.origin, {
         method: "HEAD",
         cache: "no-cache",
-        headers: {
-          "Cache-Control": "no-cache, no-store, must-revalidate",
-          Pragma: "no-cache",
-          Expires: "0",
-        },
       });
 
       if (response.ok) {
-        console.log("✅ Déploiement terminé - Page accessible");
-        setIsDeploymentInProgress(false);
-        return true;
+        console.log("✅ Pas d'action GitHub en cours - Page accessible");
+        return false; // Pas de déploiement en cours
       } else {
-        console.log("⏳ Déploiement en cours - Page non accessible");
-        setIsDeploymentInProgress(true);
-        return false;
+        console.log("⏳ Action GitHub en cours - Page non accessible");
+        return true; // Déploiement en cours
       }
     } catch (error) {
-      console.log("✅ Déploiement terminé - Page accessible (erreur normale)");
-      setIsDeploymentInProgress(false);
-      return true; // Si erreur, considérer que le déploiement est terminé
+      console.log("✅ Pas d'action GitHub en cours - Page accessible");
+      return false; // Si erreur, considérer qu'il n'y a pas de déploiement
     }
   };
 
@@ -71,20 +62,22 @@ export default function PWASplashScreen() {
         if (newProgress >= 100) {
           clearInterval(interval);
           setTimeout(async () => {
-            // Toujours vérifier le déploiement à la fin de l'animation
-            console.log("🔍 Vérification déploiement à la fin de l'animation");
-            const isDeploymentFinished = await checkDeploymentStatus();
+            // Vérifier s'il y a une action GitHub en cours
+            console.log(
+              "🔍 Vérification action GitHub à la fin de l'animation"
+            );
+            const isGitHubActionInProgress = await checkGitHubAction();
 
-            if (!isDeploymentFinished) {
-              // Déploiement en cours, afficher la page de mise à jour
+            if (isGitHubActionInProgress) {
+              // Action GitHub en cours, afficher la page de mise à jour
               console.log(
-                "⏳ Déploiement en cours - Affichage page mise à jour"
+                "⏳ Action GitHub en cours - Affichage page mise à jour"
               );
               setIsDeploymentInProgress(true);
               startDeploymentMonitoring();
             } else {
-              // Déploiement terminé, masquer le splash screen
-              console.log("✅ Déploiement terminé - Masquage splash screen");
+              // Pas d'action GitHub, masquer le splash screen
+              console.log("✅ Pas d'action GitHub - Masquage splash screen");
               setIsVisible(false);
             }
           }, 2000);
@@ -95,15 +88,15 @@ export default function PWASplashScreen() {
     return () => clearInterval(interval);
   };
 
-  // Surveiller le déploiement et masquer le splash screen quand terminé
+  // Surveiller l'action GitHub et masquer le splash screen quand terminé
   const startDeploymentMonitoring = () => {
     const monitoringInterval = setInterval(async () => {
-      const isDeploymentFinished = await checkDeploymentStatus();
+      const isGitHubActionInProgress = await checkGitHubAction();
       setDeploymentCheckCount((prev) => prev + 1);
 
-      if (isDeploymentFinished) {
+      if (!isGitHubActionInProgress) {
         clearInterval(monitoringInterval);
-        console.log("🎉 Déploiement terminé - Masquage splash screen");
+        console.log("🎉 Action GitHub terminée - Masquage splash screen");
         setIsDeploymentInProgress(false);
         setTimeout(() => {
           setIsVisible(false);
