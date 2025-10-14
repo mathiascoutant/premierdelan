@@ -1,7 +1,8 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Cinzel, Crimson_Text } from "next/font/google";
 import "./globals.css";
 import PWASplashScreen from "./components/PWASplashScreen";
+import { ThemeProvider } from "./hooks/useTheme";
 
 const cinzel = Cinzel({
   subsets: ["latin"],
@@ -25,12 +26,13 @@ export const metadata: Metadata = {
     process.env.NODE_ENV === "production"
       ? "/premierdelan/manifest.json"
       : "/manifest.json",
-  viewport: {
-    width: "device-width",
-    initialScale: 1,
-    maximumScale: 1,
-    userScalable: false,
-  },
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
 };
 
 export default function RootLayout({
@@ -41,8 +43,10 @@ export default function RootLayout({
   return (
     <html lang="fr" className={`${cinzel.variable} ${crimsonText.variable}`}>
       <body className={crimsonText.className}>
-        <PWASplashScreen />
-        {children}
+        <ThemeProvider>
+          <PWASplashScreen />
+          {children}
+        </ThemeProvider>
       </body>
     </html>
   );

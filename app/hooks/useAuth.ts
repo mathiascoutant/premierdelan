@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 
 export interface User {
+  id: string;
   firstname: string;
   lastname: string;
   email: string;
@@ -17,15 +18,19 @@ export function useAuth() {
 
   useEffect(() => {
     // Vérifier si l'utilisateur est connecté
-    const token = localStorage.getItem("auth_token");
-    const userData = localStorage.getItem("user_data");
+    const token =
+      localStorage.getItem("token") || localStorage.getItem("auth_token");
+    const userData =
+      localStorage.getItem("user") || localStorage.getItem("user_data");
 
     if (token && userData) {
       try {
         setUser(JSON.parse(userData));
       } catch (error) {
         console.error("Erreur parsing user data:", error);
+        localStorage.removeItem("user");
         localStorage.removeItem("user_data");
+        localStorage.removeItem("token");
         localStorage.removeItem("auth_token");
       }
     }
@@ -36,6 +41,8 @@ export function useAuth() {
   const logout = () => {
     localStorage.removeItem("auth_token");
     localStorage.removeItem("user_data");
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
     setUser(null);
     const basePath =
       process.env.NODE_ENV === "production" ? "/premierdelan" : "";

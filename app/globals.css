@@ -21,6 +21,120 @@
   --stone-light: #c4b8a8;
 }
 
+/* Thème Classique */
+.theme-classic {
+  /* Palette Noir et Blanc Épurée */
+  --gold-light: #f8f9fa;
+  --gold: #000000;
+  --gold-dark: #1a1a1a;
+  --burgundy: #333333;
+  --burgundy-dark: #1a1a1a;
+  --burgundy-light: #666666;
+  --brown: #2c2c2c;
+  --brown-dark: #1a1a1a;
+  --parchment-light: #ffffff;
+  --parchment: #ffffff;
+  --parchment-dark: #f8f9fa;
+  --ink: #000000;
+  --ink-light: #333333;
+  --stone: #666666;
+  --stone-light: #999999;
+
+  /* Variables spécifiques au thème classique */
+  --primary: #000000;
+  --primary-light: #333333;
+  --primary-dark: #1a1a1a;
+  --secondary: #666666;
+  --accent: #000000;
+  --background: #ffffff;
+  --surface: #ffffff;
+  --text-primary: #000000;
+  --text-secondary: #666666;
+  --border: #e5e5e5;
+  --shadow: rgba(0, 0, 0, 0.05);
+}
+
+/* Styles spécifiques au thème classique */
+.theme-classic body {
+  background: var(--background) !important;
+  color: var(--text-primary) !important;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen",
+    "Ubuntu", "Cantarell", sans-serif !important;
+}
+
+.theme-classic .font-cinzel {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen",
+    "Ubuntu", "Cantarell", sans-serif !important;
+  font-weight: 600 !important;
+  letter-spacing: normal !important;
+}
+
+.theme-classic .font-crimson {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen",
+    "Ubuntu", "Cantarell", sans-serif !important;
+}
+
+/* Override des couleurs pour le thème classique */
+.theme-classic .text-gold {
+  color: var(--primary) !important;
+}
+
+.theme-classic .text-gold-light {
+  color: var(--primary-light) !important;
+}
+
+.theme-classic .text-burgundy {
+  color: var(--secondary) !important;
+}
+
+.theme-classic .text-burgundy-light {
+  color: var(--secondary) !important;
+}
+
+.theme-classic .text-parchment {
+  color: var(--text-primary) !important;
+}
+
+.theme-classic .text-ink {
+  color: var(--text-primary) !important;
+}
+
+.theme-classic .text-stone {
+  color: var(--text-secondary) !important;
+}
+
+.theme-classic .text-stone-light {
+  color: var(--text-secondary) !important;
+}
+
+.theme-classic .bg-gold {
+  background-color: var(--primary) !important;
+}
+
+.theme-classic .bg-gold-light {
+  background-color: var(--primary-light) !important;
+}
+
+.theme-classic .bg-burgundy {
+  background-color: var(--secondary) !important;
+}
+
+.theme-classic .bg-parchment {
+  background-color: var(--background) !important;
+}
+
+.theme-classic .bg-ink {
+  background-color: var(--surface) !important;
+}
+
+.theme-classic .border-gold {
+  border-color: var(--primary) !important;
+}
+
+.theme-classic .border-burgundy {
+  border-color: var(--secondary) !important;
+}
+
 @layer base {
   * {
     @apply border-stone/10;

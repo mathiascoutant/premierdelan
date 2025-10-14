@@ -4,8 +4,16 @@ import { useState } from "react";
 import Link from "next/link";
 import { FiArrowLeft, FiX, FiCheck } from "react-icons/fi";
 import { API_ENDPOINTS, apiRequest } from "../config/api";
+import { useTheme } from "../hooks/useTheme";
+import ClassicLoginPage from "../components/ClassicLoginPage";
 
 export default function ConnexionPage() {
+  const { isClassic } = useTheme();
+  
+  if (isClassic) {
+    return <ClassicLoginPage />;
+  }
+
   const [formData, setFormData] = useState({
     email: "",
     password: "",

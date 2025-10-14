@@ -3,7 +3,7 @@
 import { useEffect } from 'react'
 import { useAuth } from '../hooks/useAuth'
 import Link from 'next/link'
-import { FiUsers, FiCalendar, FiSettings, FiArrowLeft } from 'react-icons/fi'
+import { FiUsers, FiCalendar, FiSettings, FiArrowLeft, FiDroplet } from 'react-icons/fi'
 import { usePathname } from 'next/navigation'
 
 export default function AdminLayout({
@@ -40,6 +40,7 @@ export default function AdminLayout({
   const menuItems = [
     { label: 'Utilisateurs', href: '/admin/utilisateurs', icon: FiUsers },
     { label: 'Événements', href: '/admin/evenements', icon: FiCalendar },
+    { label: 'Thème', href: '/admin/theme', icon: FiDroplet },
     { label: 'Paramètres', href: '/admin/parametres', icon: FiSettings },
   ]
 

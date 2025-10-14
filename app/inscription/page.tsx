@@ -4,8 +4,16 @@ import { useState } from "react";
 import Link from "next/link";
 import { FiArrowLeft, FiCheck, FiX } from "react-icons/fi";
 import { API_ENDPOINTS, apiRequest } from "../config/api";
+import { useTheme } from "../hooks/useTheme";
+import ClassicRegisterPage from "../components/ClassicRegisterPage";
 
 export default function InscriptionPage() {
+  const { isClassic } = useTheme();
+  
+  if (isClassic) {
+    return <ClassicRegisterPage />;
+  }
+
   const [formData, setFormData] = useState({
     codesoiree: "",
     prenom: "",

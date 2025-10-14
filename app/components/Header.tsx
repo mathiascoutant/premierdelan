@@ -10,9 +10,11 @@ import {
   FiCalendar,
   FiShield,
   FiBell,
+  FiMessageCircle,
 } from "react-icons/fi";
 import { useAuth } from "../hooks/useAuth";
 import { useFirebaseNotifications } from "../hooks/useFirebaseNotifications";
+import { useTheme } from "../hooks/useTheme";
 
 export default function Header() {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -25,6 +27,7 @@ export default function Header() {
     checkPermission,
     checkIfEnabled,
   } = useFirebaseNotifications();
+  const { isMedieval, isClassic } = useTheme();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -40,9 +43,13 @@ export default function Header() {
     <>
       <header
         className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${
-          isScrolled
-            ? "bg-ink/95 backdrop-blur-lg border-b border-gold/20 shadow-lg"
-            : "bg-gradient-to-b from-ink/80 via-ink/60 to-transparent backdrop-blur-md"
+          isMedieval
+            ? isScrolled
+              ? "bg-ink/95 backdrop-blur-lg border-b border-gold/20 shadow-lg"
+              : "bg-gradient-to-b from-ink/80 via-ink/60 to-transparent backdrop-blur-md"
+            : isScrolled
+            ? "bg-white/95 backdrop-blur-lg border-b border-gray-200 shadow-lg"
+            : "bg-white/90 backdrop-blur-md"
         }`}
       >
         <div className="max-w-[1600px] mx-auto px-6 md:px-12">
@@ -53,15 +60,37 @@ export default function Header() {
               className="group relative flex items-center space-x-3"
             >
               <div className="relative">
-                <div className="absolute inset-0 bg-gold/20 blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-                <span className="relative text-gold text-2xl">⚜</span>
+                <div
+                  className={`absolute inset-0 blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 ${
+                    isMedieval ? "bg-gold/20" : "bg-blue-500/20"
+                  }`}
+                ></div>
+                <span
+                  className={`relative text-2xl ${
+                    isMedieval ? "text-gold" : "text-blue-600"
+                  }`}
+                >
+                  {isMedieval ? "⚜" : "🎯"}
+                </span>
               </div>
               <div className="flex flex-col">
-                <span className="font-cinzel text-base md:text-lg tracking-[0.35em] text-gold group-hover:text-gold-light transition-all duration-300 leading-none">
-                  PREMIER DE L&apos;AN
+                <span
+                  className={`font-cinzel text-base md:text-lg transition-all duration-300 leading-none ${
+                    isMedieval
+                      ? "text-gold group-hover:text-gold-light tracking-[0.35em]"
+                      : "text-blue-600 group-hover:text-blue-500 tracking-normal font-semibold"
+                  }`}
+                >
+                  {isMedieval ? "PREMIER DE L'AN" : "PREMIER DE L'AN"}
                 </span>
-                <span className="font-crimson text-[10px] tracking-widest text-stone-light opacity-70 mt-0.5">
-                  Édition 2026
+                <span
+                  className={`font-crimson text-[10px] opacity-70 mt-0.5 ${
+                    isMedieval
+                      ? "text-stone-light tracking-widest"
+                      : "text-gray-500 tracking-normal"
+                  }`}
+                >
+                  {isMedieval ? "Édition 2026" : "Édition 2026"}
                 </span>
               </div>
             </Link>
@@ -69,29 +98,69 @@ export default function Header() {
             {/* Navigation Desktop */}
             <nav className="hidden lg:flex items-center space-x-10">
               <a href="#accueil" className="relative group py-2">
-                <span className="text-sm font-crimson text-parchment/70 group-hover:text-gold transition-colors duration-300">
+                <span
+                  className={`text-sm font-crimson transition-colors duration-300 ${
+                    isMedieval
+                      ? "text-parchment/70 group-hover:text-gold"
+                      : "text-gray-300 group-hover:text-blue-400"
+                  }`}
+                >
                   Accueil
                 </span>
-                <span className="absolute bottom-0 left-0 w-0 h-px bg-gold group-hover:w-full transition-all duration-300"></span>
+                <span
+                  className={`absolute bottom-0 left-0 w-0 h-px group-hover:w-full transition-all duration-300 ${
+                    isMedieval ? "bg-gold" : "bg-blue-400"
+                  }`}
+                ></span>
               </a>
               <a href="#evenements" className="relative group py-2">
-                <span className="text-sm font-crimson text-parchment/70 group-hover:text-gold transition-colors duration-300">
+                <span
+                  className={`text-sm font-crimson transition-colors duration-300 ${
+                    isMedieval
+                      ? "text-parchment/70 group-hover:text-gold"
+                      : "text-gray-300 group-hover:text-blue-400"
+                  }`}
+                >
                   Événements
                 </span>
-                <span className="absolute bottom-0 left-0 w-0 h-px bg-gold group-hover:w-full transition-all duration-300"></span>
+                <span
+                  className={`absolute bottom-0 left-0 w-0 h-px group-hover:w-full transition-all duration-300 ${
+                    isMedieval ? "bg-gold" : "bg-blue-400"
+                  }`}
+                ></span>
               </a>
               <a href="#services" className="relative group py-2">
-                <span className="text-sm font-crimson text-parchment/70 group-hover:text-gold transition-colors duration-300">
+                <span
+                  className={`text-sm font-crimson transition-colors duration-300 ${
+                    isMedieval
+                      ? "text-parchment/70 group-hover:text-gold"
+                      : "text-gray-300 group-hover:text-blue-400"
+                  }`}
+                >
                   Services
                 </span>
-                <span className="absolute bottom-0 left-0 w-0 h-px bg-gold group-hover:w-full transition-all duration-300"></span>
+                <span
+                  className={`absolute bottom-0 left-0 w-0 h-px group-hover:w-full transition-all duration-300 ${
+                    isMedieval ? "bg-gold" : "bg-blue-400"
+                  }`}
+                ></span>
               </a>
               {user && (
                 <Link href="/mes-evenements" className="relative group py-2">
-                  <span className="text-sm font-crimson text-parchment/70 group-hover:text-gold transition-colors duration-300">
+                  <span
+                    className={`text-sm font-crimson transition-colors duration-300 ${
+                      isMedieval
+                        ? "text-parchment/70 group-hover:text-gold"
+                        : "text-gray-300 group-hover:text-blue-400"
+                    }`}
+                  >
                     Mes événements
                   </span>
-                  <span className="absolute bottom-0 left-0 w-0 h-px bg-gold group-hover:w-full transition-all duration-300"></span>
+                  <span
+                    className={`absolute bottom-0 left-0 w-0 h-px group-hover:w-full transition-all duration-300 ${
+                      isMedieval ? "bg-gold" : "bg-blue-400"
+                    }`}
+                  ></span>
                 </Link>
               )}
             </nav>
@@ -110,6 +179,19 @@ export default function Header() {
                         <FiShield className="w-4 h-4 text-burgundy-light group-hover:text-gold transition-colors" />
                         <span className="text-xs font-cinzel tracking-wider text-burgundy-light group-hover:text-gold transition-colors">
                           ADMIN
+                        </span>
+                      </Link>
+                    )}
+
+                    {/* Chat Button */}
+                    {isUserAdmin && (
+                      <Link
+                        href="/chat"
+                        className="flex items-center space-x-2 px-4 py-2 bg-gold/20 border border-gold/30 hover:bg-gold/30 transition-all duration-300 group"
+                      >
+                        <FiMessageCircle className="w-4 h-4 text-gold group-hover:text-gold-light transition-colors" />
+                        <span className="text-xs font-cinzel tracking-wider text-gold group-hover:text-gold-light transition-colors">
+                          CHAT
                         </span>
                       </Link>
                     )}
@@ -189,10 +271,18 @@ export default function Header() {
                     </Link>
                     <Link
                       href="/inscription"
-                      className="relative px-6 py-2.5 bg-gold text-ink text-sm font-cinzel tracking-wider hover:bg-gold-dark transition-all duration-300 shadow-lg hover:shadow-xl overflow-hidden group"
+                      className={`relative px-6 py-2.5 text-sm font-medium transition-all duration-300 shadow-lg hover:shadow-xl overflow-hidden group ${
+                        isMedieval
+                          ? "bg-gold text-ink font-cinzel tracking-wider hover:bg-gold-dark"
+                          : "bg-blue-600 text-white font-semibold hover:bg-blue-700 rounded-lg"
+                      }`}
                     >
-                      <span className="relative z-10">S&apos;INSCRIRE</span>
-                      <div className="absolute inset-0 bg-gradient-to-r from-gold-dark to-brown opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                      <span className="relative z-10">
+                        {isMedieval ? "S'INSCRIRE" : "S'inscrire"}
+                      </span>
+                      {isMedieval && (
+                        <div className="absolute inset-0 bg-gradient-to-r from-gold-dark to-brown opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                      )}
                     </Link>
                   </div>
                 ))}
@@ -201,7 +291,11 @@ export default function Header() {
             {/* Mobile Button */}
             <button
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              className="lg:hidden text-gold hover:text-gold-light transition-colors p-2"
+              className={`lg:hidden transition-colors p-2 ${
+                isMedieval
+                  ? "text-gold hover:text-gold-light"
+                  : "text-blue-600 hover:text-blue-500"
+              }`}
             >
               {isMobileMenuOpen ? (
                 <FiX className="w-6 h-6" />
@@ -223,18 +317,44 @@ export default function Header() {
           ></div>
 
           {/* Menu Content */}
-          <div className="relative h-full flex flex-col bg-gradient-to-b from-ink via-ink-light/20 to-ink">
+          <div
+            className={`relative h-full flex flex-col ${
+              isMedieval
+                ? "bg-gradient-to-b from-ink via-ink-light/20 to-ink"
+                : "bg-white"
+            }`}
+          >
             {/* Header */}
-            <div className="border-b border-gold/20 px-6 py-6 flex items-center justify-between">
+            <div
+              className={`border-b px-6 py-6 flex items-center justify-between ${
+                isMedieval ? "border-gold/20" : "border-gray-200"
+              }`}
+            >
               <div className="flex items-center space-x-3">
-                <span className="text-gold text-xl">⚜</span>
-                <span className="font-cinzel text-base tracking-[0.3em] text-gold">
+                <span
+                  className={`text-xl ${
+                    isMedieval ? "text-gold" : "text-blue-600"
+                  }`}
+                >
+                  {isMedieval ? "⚜" : "🎯"}
+                </span>
+                <span
+                  className={`font-cinzel text-base ${
+                    isMedieval
+                      ? "tracking-[0.3em] text-gold"
+                      : "tracking-normal text-blue-600 font-semibold"
+                  }`}
+                >
                   MENU
                 </span>
               </div>
               <button
                 onClick={() => setIsMobileMenuOpen(false)}
-                className="text-gold hover:text-gold-light transition-colors p-2"
+                className={`transition-colors p-2 ${
+                  isMedieval
+                    ? "text-gold hover:text-gold-light"
+                    : "text-blue-600 hover:text-blue-500"
+                }`}
               >
                 <FiX className="w-6 h-6" />
               </button>
@@ -308,6 +428,16 @@ export default function Header() {
                       >
                         <FiShield className="w-5 h-5" />
                         <span>Administration</span>
+                      </Link>
+                    )}
+                    {isUserAdmin && (
+                      <Link
+                        href="/chat"
+                        onClick={() => setIsMobileMenuOpen(false)}
+                        className="flex items-center space-x-3 px-4 py-4 text-lg font-crimson text-gold hover:text-gold-light hover:bg-gold/5 transition-all border-l-2 border-transparent hover:border-gold"
+                      >
+                        <FiMessageCircle className="w-5 h-5" />
+                        <span>Chat</span>
                       </Link>
                     )}
                   </>

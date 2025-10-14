@@ -10,6 +10,9 @@ export const API_ENDPOINTS = {
   // Firebase Cloud Messaging endpoints
   fcmSubscribe: `${API_URL}/api/fcm/subscribe`,
   fcmSend: `${API_URL}/api/fcm/send`,
+  // Theme endpoints (global)
+  GET_GLOBAL_THEME: `${API_URL}/api/theme`,
+  SAVE_GLOBAL_THEME: `${API_URL}/api/theme`,
   // Ajoutez d'autres endpoints selon votre API
 };
 
@@ -74,14 +77,25 @@ function redirectToMaintenance(
 // Helper pour les requêtes API
 export async function apiRequest(endpoint: string, options: RequestInit = {}) {
   try {
+    // Récupérer le token pour l'authentification
+    const token =
+      localStorage.getItem("token") || localStorage.getItem("auth_token");
+
+    const headers: Record<string, string> = {
+      "Content-Type": "application/json",
+      // Header ngrok pour éviter la page d'avertissement
+      "ngrok-skip-browser-warning": "true",
+      ...(options.headers as Record<string, string>),
+    };
+
+    // Ajouter le token d'authentification si disponible
+    if (token) {
+      headers["Authorization"] = `Bearer ${token}`;
+    }
+
     const response = await fetch(endpoint, {
       ...options,
-      headers: {
-        ...options.headers,
-        "Content-Type": "application/json",
-        // Header ngrok pour éviter la page d'avertissement (toujours en dernier pour ne pas être écrasé)
-        "ngrok-skip-browser-warning": "true",
-      },
+      headers,
       mode: "cors", // Activer CORS explicitement
       credentials: "omit", // Pas de cookies pour simplifier CORS
     });
