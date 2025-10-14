@@ -230,15 +230,27 @@ export default function ChatPage() {
 
   const loadInvitations = async () => {
     try {
+      const token = localStorage.getItem("token");
+      const userData = localStorage.getItem("user");
+      console.log("Token utilisé:", token ? "Présent" : "Absent");
+      console.log("User data:", userData);
+
+      if (!token) {
+        console.error("Aucun token trouvé");
+        return;
+      }
+
       const response = await fetch(
         "https://believable-spontaneity-production.up.railway.app/api/admin/chat/invitations",
         {
           headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
+            Authorization: `Bearer ${token}`,
             "Content-Type": "application/json",
           },
         }
       );
+
+      console.log("Response status:", response.status);
 
       if (response.ok) {
         const data = await response.json();
@@ -248,7 +260,8 @@ export default function ChatPage() {
           console.error("Erreur API:", data.message);
         }
       } else {
-        console.error("Erreur HTTP:", response.status);
+        const errorText = await response.text();
+        console.error("Erreur HTTP:", response.status, errorText);
       }
     } catch (error) {
       console.error("Erreur lors du chargement des invitations:", error);
