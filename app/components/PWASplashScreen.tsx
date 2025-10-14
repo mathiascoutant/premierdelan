@@ -28,21 +28,41 @@ export default function PWASplashScreen() {
   // Vérifier s'il y a une action GitHub en cours
   const checkGitHubAction = async () => {
     try {
-      // Vérifier si on peut accéder à la page d'accueil
-      const response = await fetch(window.location.origin, {
-        method: "HEAD",
-        cache: "no-cache",
-      });
+      // Faire plusieurs vérifications pour être sûr
+      const checks = [];
 
-      if (response.ok) {
-        console.log("✅ Pas d'action GitHub en cours - Page accessible");
-        return false; // Pas de déploiement en cours
-      } else {
-        console.log("⏳ Action GitHub en cours - Page non accessible");
-        return true; // Déploiement en cours
+      for (let i = 0; i < 3; i++) {
+        try {
+          const response = await fetch(window.location.origin, {
+            method: "HEAD",
+            cache: "no-cache",
+          });
+          checks.push(response.ok);
+          await new Promise((resolve) => setTimeout(resolve, 200)); // 200ms entre chaque check
+        } catch (error) {
+          checks.push(false);
+        }
       }
+
+      // Si au moins 2/3 des vérifications réussissent, pas d'action GitHub
+      const successCount = checks.filter(Boolean).length;
+      const hasGitHubAction = successCount < 2;
+
+      console.log(
+        `🔍 Vérification GitHub: ${successCount}/3 succès - ${
+          hasGitHubAction ? "Action GitHub en cours" : "Pas d'action GitHub"
+        }`
+      );
+
+      // Vérification supplémentaire : si on a au moins 1 succès, on considère qu'il n'y a pas d'action
+      if (successCount >= 1) {
+        console.log("✅ Au moins 1 succès - Pas d'action GitHub");
+        return false;
+      }
+
+      return hasGitHubAction;
     } catch (error) {
-      console.log("✅ Pas d'action GitHub en cours - Page accessible");
+      console.log("✅ Pas d'action GitHub en cours - Erreur de vérification");
       return false; // Si erreur, considérer qu'il n'y a pas de déploiement
     }
   };
