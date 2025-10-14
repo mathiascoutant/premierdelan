@@ -131,13 +131,13 @@ export default function PWASplashScreen() {
 
           if (newProgress >= 100) {
             clearInterval(interval);
-            // Masquer le splash screen après 1 seconde
+            // Masquer le splash screen après 2 secondes (au lieu de 1)
             setTimeout(() => {
               setIsVisible(false);
-            }, 1000);
+            }, 2000);
           }
         }
-      }, 400); // 400ms entre chaque étape
+      }, 500); // 500ms entre chaque étape (au lieu de 400ms)
 
       return () => clearInterval(interval);
     } else {

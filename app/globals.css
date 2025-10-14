@@ -41,6 +41,32 @@
     height: 100vh !important;
     z-index: 9999 !important;
     background: #1a1410 !important; /* ink color */
+    overflow: hidden !important;
+  }
+
+  /* Fix pour la barre blanche sur mobile PWA */
+  @media (display-mode: standalone) {
+    body {
+      overflow-x: hidden !important;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    html {
+      overflow-x: hidden !important;
+    }
+
+    /* Masquer la scrollbar sur PWA */
+    ::-webkit-scrollbar {
+      display: none !important;
+    }
+
+    /* Fix pour le viewport sur PWA */
+    .pwa-splash-screen {
+      width: 100vw !important;
+      height: 100vh !important;
+      max-width: 100vw !important;
+      max-height: 100vh !important;
+    }
   }
 
   /* Scrollbar invisible */
