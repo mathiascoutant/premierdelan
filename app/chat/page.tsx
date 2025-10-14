@@ -72,7 +72,7 @@ export default function ChatPage() {
   const loadConversations = async () => {
     try {
       const response = await fetch(
-        "https://believable-spontaneity-production.up.railway.app/api/chat/conversations",
+        "https://believable-spontaneity-production.up.railway.app/api/admin/chat/conversations",
         {
           headers: {
             Authorization: `Bearer ${localStorage.getItem("token")}`,
@@ -106,7 +106,7 @@ export default function ChatPage() {
 
     try {
       const response = await fetch(
-        `https://believable-spontaneity-production.up.railway.app/api/chat/admins/search?q=${encodeURIComponent(
+        `https://believable-spontaneity-production.up.railway.app/api/admin/chat/admins/search?q=${encodeURIComponent(
           query
         )}&limit=10`,
         {
@@ -135,7 +135,7 @@ export default function ChatPage() {
   const sendInvitation = async (adminId: string) => {
     try {
       const response = await fetch(
-        "https://believable-spontaneity-production.up.railway.app/api/chat/invitations",
+        "https://believable-spontaneity-production.up.railway.app/api/admin/chat/invitations",
         {
           method: "POST",
           headers: {
@@ -172,7 +172,7 @@ export default function ChatPage() {
 
     try {
       const response = await fetch(
-        `https://believable-spontaneity-production.up.railway.app/api/chat/conversations/${selectedConversation.id}/messages`,
+        `https://believable-spontaneity-production.up.railway.app/api/admin/chat/conversations/${selectedConversation.id}/messages`,
         {
           method: "POST",
           headers: {
@@ -204,7 +204,7 @@ export default function ChatPage() {
   const loadMessages = async (conversationId: string) => {
     try {
       const response = await fetch(
-        `https://believable-spontaneity-production.up.railway.app/api/chat/conversations/${conversationId}/messages`,
+        `https://believable-spontaneity-production.up.railway.app/api/admin/chat/conversations/${conversationId}/messages`,
         {
           headers: {
             Authorization: `Bearer ${localStorage.getItem("token")}`,
@@ -231,7 +231,7 @@ export default function ChatPage() {
   const loadInvitations = async () => {
     try {
       const response = await fetch(
-        "https://believable-spontaneity-production.up.railway.app/api/chat/invitations",
+        "https://believable-spontaneity-production.up.railway.app/api/admin/chat/invitations",
         {
           headers: {
             Authorization: `Bearer ${localStorage.getItem("token")}`,
@@ -261,7 +261,7 @@ export default function ChatPage() {
   ) => {
     try {
       const response = await fetch(
-        `https://believable-spontaneity-production.up.railway.app/api/chat/invitations/${invitationId}/respond`,
+        `https://believable-spontaneity-production.up.railway.app/api/admin/chat/invitations/${invitationId}/respond`,
         {
           method: "PUT",
           headers: {
