@@ -313,14 +313,14 @@ export default function PWASplashScreen() {
         <div className="relative z-10 text-center px-4 sm:px-8 max-w-sm mx-auto">
           {/* Logo moderne */}
           <div className="mb-12 sm:mb-16">
-            <div className="relative">
+            <div className="relative w-24 h-24 sm:w-32 sm:h-32 mx-auto overflow-hidden">
+              {/* Effet de pulsation */}
+              <div className="absolute inset-0 w-24 h-24 sm:w-32 sm:h-32 bg-gold/10 rounded-full animate-ping"></div>
+
               {/* Cercle de fond avec effet de lueur */}
-              <div className="w-24 h-24 sm:w-32 sm:h-32 mx-auto bg-gradient-to-br from-gold/20 to-gold/5 rounded-full flex items-center justify-center border border-gold/30 shadow-2xl">
+              <div className="relative w-24 h-24 sm:w-32 sm:h-32 bg-gradient-to-br from-gold/20 to-gold/5 rounded-full flex items-center justify-center border border-gold/30 shadow-2xl">
                 <div className="text-4xl sm:text-5xl text-gold">⚜</div>
               </div>
-
-              {/* Effet de pulsation */}
-              <div className="absolute inset-0 w-24 h-24 sm:w-32 sm:h-32 mx-auto bg-gold/10 rounded-full animate-ping"></div>
             </div>
           </div>
 
@@ -339,7 +339,7 @@ export default function PWASplashScreen() {
           {isDeploymentInProgress ? (
             /* Page de mise à jour */
             <div className="space-y-6">
-              <div className="mb-8">
+              <div className="mb-8 text-center">
                 <div className="w-16 h-16 mx-auto bg-gold/20 rounded-full flex items-center justify-center mb-4">
                   <div className="text-2xl text-gold animate-spin">⚙</div>
                 </div>
