@@ -28,10 +28,16 @@ export default function PWASplashScreen() {
   // Vérifier le statut du déploiement GitHub Actions
   const checkDeploymentStatus = async () => {
     try {
-      // Vérifier si on peut accéder à la page d'accueil (si elle répond, le déploiement est fini)
-      const response = await fetch(window.location.origin, {
+      // Vérifier si on peut accéder à la page d'accueil avec un timestamp
+      const timestamp = Date.now();
+      const response = await fetch(`${window.location.origin}?t=${timestamp}`, {
         method: "HEAD",
         cache: "no-cache",
+        headers: {
+          "Cache-Control": "no-cache, no-store, must-revalidate",
+          Pragma: "no-cache",
+          Expires: "0",
+        },
       });
 
       if (response.ok) {
@@ -65,29 +71,20 @@ export default function PWASplashScreen() {
         if (newProgress >= 100) {
           clearInterval(interval);
           setTimeout(async () => {
-            // Vérifier le déploiement seulement si paramètre URL
-            const urlParams = new URLSearchParams(window.location.search);
-            const checkDeployment =
-              urlParams.get("check-deployment") === "true";
+            // Toujours vérifier le déploiement à la fin de l'animation
+            console.log("🔍 Vérification déploiement à la fin de l'animation");
+            const isDeploymentFinished = await checkDeploymentStatus();
 
-            if (checkDeployment) {
-              const isDeploymentFinished = await checkDeploymentStatus();
-
-              if (!isDeploymentFinished) {
-                // Déploiement en cours, afficher la page de mise à jour
-                console.log(
-                  "⏳ Déploiement en cours - Affichage page mise à jour"
-                );
-                setIsDeploymentInProgress(true);
-                startDeploymentMonitoring();
-              } else {
-                // Déploiement terminé, masquer le splash screen
-                console.log("✅ Déploiement terminé - Masquage splash screen");
-                setIsVisible(false);
-              }
+            if (!isDeploymentFinished) {
+              // Déploiement en cours, afficher la page de mise à jour
+              console.log(
+                "⏳ Déploiement en cours - Affichage page mise à jour"
+              );
+              setIsDeploymentInProgress(true);
+              startDeploymentMonitoring();
             } else {
-              // Pas de vérification, masquer directement
-              console.log("✅ Masquage splash screen normal");
+              // Déploiement terminé, masquer le splash screen
+              console.log("✅ Déploiement terminé - Masquage splash screen");
               setIsVisible(false);
             }
           }, 2000);
@@ -217,10 +214,10 @@ export default function PWASplashScreen() {
         console.log("🚀 Lancement animation normale");
         const cleanup = launchNormalAnimation();
 
-        // Vérifier le statut du déploiement en arrière-plan (optionnel)
-        // const initialDeploymentCheck = await checkDeploymentStatus();
-        // Pour l'instant, on désactive la détection automatique
-        console.log("🚀 Déploiement considéré comme terminé par défaut");
+        // Pas de vérification au démarrage, seulement à la fin de l'animation
+        console.log(
+          "🚀 Lancement animation normale - Vérification déploiement à la fin"
+        );
 
         return cleanup;
       } else {
