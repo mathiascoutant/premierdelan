@@ -310,27 +310,27 @@ export default function PWASplashScreen() {
         </div>
 
         {/* Contenu centré */}
-        <div className="relative z-10 text-center px-8 max-w-sm mx-auto">
+        <div className="relative z-10 text-center px-4 sm:px-8 max-w-sm mx-auto">
           {/* Logo moderne */}
-          <div className="mb-16">
+          <div className="mb-12 sm:mb-16">
             <div className="relative">
               {/* Cercle de fond avec effet de lueur */}
-              <div className="w-32 h-32 mx-auto bg-gradient-to-br from-gold/20 to-gold/5 rounded-full flex items-center justify-center border border-gold/30 shadow-2xl">
-                <div className="text-5xl text-gold">⚜</div>
+              <div className="w-24 h-24 sm:w-32 sm:h-32 mx-auto bg-gradient-to-br from-gold/20 to-gold/5 rounded-full flex items-center justify-center border border-gold/30 shadow-2xl">
+                <div className="text-4xl sm:text-5xl text-gold">⚜</div>
               </div>
 
               {/* Effet de pulsation */}
-              <div className="absolute inset-0 w-32 h-32 mx-auto bg-gold/10 rounded-full animate-ping"></div>
+              <div className="absolute inset-0 w-24 h-24 sm:w-32 sm:h-32 mx-auto bg-gold/10 rounded-full animate-ping"></div>
             </div>
           </div>
 
           {/* Titre moderne */}
-          <div className="mb-12">
-            <h1 className="font-cinzel text-3xl text-gold mb-2 tracking-wider">
+          <div className="mb-8 sm:mb-12">
+            <h1 className="font-cinzel text-2xl sm:text-3xl text-gold mb-2 tracking-wider">
               PREMIER DE L&apos;AN
             </h1>
-            <div className="w-16 h-px bg-gold/50 mx-auto mb-3"></div>
-            <p className="font-crimson text-parchment/80 text-sm tracking-wider">
+            <div className="w-12 sm:w-16 h-px bg-gold/50 mx-auto mb-3"></div>
+            <p className="font-crimson text-parchment/80 text-xs sm:text-sm tracking-wider">
               Édition 2026
             </p>
           </div>
@@ -374,11 +374,11 @@ export default function PWASplashScreen() {
             </div>
           ) : (
             /* Animation normale */
-            <div className="space-y-4">
+            <div className="space-y-3 sm:space-y-4">
               {/* Barre de progression moderne */}
-              <div className="mb-8">
+              <div className="mb-6 sm:mb-8">
                 {/* Barre de progression */}
-                <div className="relative w-72 h-1.5 bg-parchment/10 rounded-full overflow-hidden mx-auto mb-4">
+                <div className="relative w-64 sm:w-72 h-1.5 bg-parchment/10 rounded-full overflow-hidden mx-auto mb-4">
                   {/* Fond avec effet de brillance */}
                   <div className="absolute inset-0 bg-gradient-to-r from-transparent via-parchment/5 to-transparent"></div>
 
