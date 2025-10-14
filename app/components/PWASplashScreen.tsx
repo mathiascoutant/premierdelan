@@ -8,6 +8,8 @@ export default function PWASplashScreen() {
   const [progress, setProgress] = useState(0);
   const [shouldShowSplash, setShouldShowSplash] = useState(true);
   const [isInitialized, setIsInitialized] = useState(false);
+  const [isDeploymentInProgress, setIsDeploymentInProgress] = useState(false);
+  const [deploymentCheckCount, setDeploymentCheckCount] = useState(0);
   const isPWA = useIsPWA();
 
   // Vérifier si le splash screen a déjà été affiché dans cette session de navigation
@@ -21,6 +23,88 @@ export default function PWASplashScreen() {
     if (typeof window !== "undefined") {
       sessionStorage.setItem("pwa_splash_shown", "true");
     }
+  };
+
+  // Vérifier le statut du déploiement GitHub Actions
+  const checkDeploymentStatus = async () => {
+    try {
+      // Vérifier si on peut accéder à la page d'accueil (si elle répond, le déploiement est fini)
+      const response = await fetch(window.location.origin, {
+        method: "HEAD",
+        cache: "no-cache",
+      });
+
+      if (response.ok) {
+        console.log("✅ Déploiement terminé - Page accessible");
+        setIsDeploymentInProgress(false);
+        return true;
+      } else {
+        console.log("⏳ Déploiement en cours - Page non accessible");
+        setIsDeploymentInProgress(true);
+        return false;
+      }
+    } catch (error) {
+      console.log("⏳ Déploiement en cours - Erreur de connexion");
+      setIsDeploymentInProgress(true);
+      return false;
+    }
+  };
+
+  // Lancer l'animation normale du splash screen
+  const launchNormalAnimation = () => {
+    const progressSteps = [20, 33, 55, 70, 85, 99, 100];
+    let currentStep = 0;
+
+    const interval = setInterval(() => {
+      if (currentStep < progressSteps.length) {
+        const newProgress = progressSteps[currentStep];
+        setProgress(newProgress);
+        console.log("📊 Progression:", newProgress + "%");
+        currentStep++;
+
+        if (newProgress >= 100) {
+          clearInterval(interval);
+          setTimeout(async () => {
+            // Vérifier le déploiement à la fin de l'animation
+            const isDeploymentFinished = await checkDeploymentStatus();
+
+            if (!isDeploymentFinished) {
+              // Déploiement en cours, afficher la page de mise à jour
+              console.log(
+                "⏳ Déploiement en cours - Affichage page mise à jour après chargement"
+              );
+              setIsDeploymentInProgress(true);
+              startDeploymentMonitoring();
+            } else {
+              // Déploiement terminé, masquer le splash screen
+              console.log("✅ Déploiement terminé - Masquage splash screen");
+              setIsVisible(false);
+            }
+          }, 2000);
+        }
+      }
+    }, 500);
+
+    return () => clearInterval(interval);
+  };
+
+  // Surveiller le déploiement et masquer le splash screen quand terminé
+  const startDeploymentMonitoring = () => {
+    const monitoringInterval = setInterval(async () => {
+      const isDeploymentFinished = await checkDeploymentStatus();
+      setDeploymentCheckCount((prev) => prev + 1);
+
+      if (isDeploymentFinished) {
+        clearInterval(monitoringInterval);
+        console.log("🎉 Déploiement terminé - Masquage splash screen");
+        setIsDeploymentInProgress(false);
+        setTimeout(() => {
+          setIsVisible(false);
+        }, 1000); // Attendre 1 seconde puis masquer
+      }
+    }, 2000); // Vérifier toutes les 2 secondes
+
+    return () => clearInterval(monitoringInterval);
   };
 
   // Réinitialiser le flag quand la PWA est complètement fermée et rouverte
@@ -39,111 +123,108 @@ export default function PWASplashScreen() {
   };
 
   useEffect(() => {
-    // Marquer comme initialisé d'abord
-    setIsInitialized(true);
+    const initializeSplash = async () => {
+      // Marquer comme initialisé d'abord
+      setIsInitialized(true);
 
-    // Réinitialiser le flag au début pour détecter les nouveaux lancements
-    resetSplashFlag();
+      // Réinitialiser le flag au début pour détecter les nouveaux lancements
+      resetSplashFlag();
 
-    // TEST : Afficher le splash screen sur mobile (même si pas PWA)
-    const checkIfPWAMode = () => {
-      // Ne JAMAIS afficher sur localhost (développement)
-      const isLocalhost =
-        window.location.hostname === "localhost" ||
-        window.location.hostname === "127.0.0.1";
-      if (isLocalhost) {
-        return false;
+      // TEST : Afficher le splash screen sur mobile (même si pas PWA)
+      const checkIfPWAMode = () => {
+        // Ne JAMAIS afficher sur localhost (développement)
+        const isLocalhost =
+          window.location.hostname === "localhost" ||
+          window.location.hostname === "127.0.0.1";
+        if (isLocalhost) {
+          return false;
+        }
+
+        // Vérifications pour détecter PWA installée
+        const isStandalone = window.matchMedia(
+          "(display-mode: standalone)"
+        ).matches;
+        const isFullscreen = window.matchMedia(
+          "(display-mode: fullscreen)"
+        ).matches;
+        const isIOSStandalone = (window.navigator as any).standalone === true;
+
+        // Vérifications supplémentaires pour éviter les faux positifs
+        const isInBrowser = !isStandalone && !isFullscreen && !isIOSStandalone;
+        const isChromeOnMac = /Macintosh.*Chrome/.test(navigator.userAgent);
+        const isDesktop =
+          !/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+            navigator.userAgent
+          );
+
+        // Ne JAMAIS afficher si on est dans un navigateur web classique
+        if (isInBrowser) {
+          return false;
+        }
+
+        // Ne JAMAIS afficher sur desktop (même en PWA)
+        if (isDesktop) {
+          return false;
+        }
+
+        // Afficher SEULEMENT si vraiment en mode PWA installée sur mobile
+        return isStandalone || isFullscreen || isIOSStandalone;
+      };
+
+      const urlParams = new URLSearchParams(window.location.search);
+      const forceSplash = urlParams.get("splash") === "true";
+
+      console.log("🔍 Vérification PWA:", {
+        isStandalone: window.matchMedia("(display-mode: standalone)").matches,
+        isFullscreen: window.matchMedia("(display-mode: fullscreen)").matches,
+        isIOSStandalone: (window.navigator as any).standalone,
+        isInBrowser:
+          !window.matchMedia("(display-mode: standalone)").matches &&
+          !window.matchMedia("(display-mode: fullscreen)").matches &&
+          !(window.navigator as any).standalone,
+        isDesktop:
+          !/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+            navigator.userAgent
+          ),
+        isChromeOnMac: /Macintosh.*Chrome/.test(navigator.userAgent),
+        hostname: window.location.hostname,
+        hasShown: hasShownSplash(),
+        userAgent: navigator.userAgent,
+      });
+
+      // Démarrer l'animation immédiatement si on est en PWA ou mobile
+      if (checkIfPWAMode() && !hasShownSplash()) {
+        console.log("🚀 PWA détectée - Lancement du splash screen");
+        console.log("📱 État avant affichage:", {
+          isVisible,
+          shouldShowSplash,
+          isInitialized,
+        });
+        setIsVisible(true);
+        markSplashAsShown();
+
+        // Toujours lancer l'animation normale d'abord
+        console.log("🚀 Lancement animation normale");
+        const cleanup = launchNormalAnimation();
+
+        // Vérifier le statut du déploiement en arrière-plan
+        const initialDeploymentCheck = await checkDeploymentStatus();
+
+        if (!initialDeploymentCheck) {
+          // Déploiement en cours, préparer la page de mise à jour
+          console.log("⏳ Déploiement en cours - Préparation page mise à jour");
+          setIsDeploymentInProgress(true);
+          startDeploymentMonitoring();
+        }
+
+        return cleanup;
+      } else {
+        console.log("🌐 Pas en PWA ou déjà affiché - Pas de splash screen");
+        setShouldShowSplash(false);
       }
-
-      // Vérifications pour détecter PWA installée
-      const isStandalone = window.matchMedia(
-        "(display-mode: standalone)"
-      ).matches;
-      const isFullscreen = window.matchMedia(
-        "(display-mode: fullscreen)"
-      ).matches;
-      const isIOSStandalone = (window.navigator as any).standalone === true;
-
-      // Vérifications supplémentaires pour éviter les faux positifs
-      const isInBrowser = !isStandalone && !isFullscreen && !isIOSStandalone;
-      const isChromeOnMac = /Macintosh.*Chrome/.test(navigator.userAgent);
-      const isDesktop =
-        !/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
-          navigator.userAgent
-        );
-
-      // Ne JAMAIS afficher si on est dans un navigateur web classique
-      if (isInBrowser) {
-        return false;
-      }
-
-      // Ne JAMAIS afficher sur desktop (même en PWA)
-      if (isDesktop) {
-        return false;
-      }
-
-      // Afficher SEULEMENT si vraiment en mode PWA installée sur mobile
-      return isStandalone || isFullscreen || isIOSStandalone;
     };
 
-    const urlParams = new URLSearchParams(window.location.search);
-    const forceSplash = urlParams.get("splash") === "true";
-
-    console.log("🔍 Vérification PWA:", {
-      isStandalone: window.matchMedia("(display-mode: standalone)").matches,
-      isFullscreen: window.matchMedia("(display-mode: fullscreen)").matches,
-      isIOSStandalone: (window.navigator as any).standalone,
-      isInBrowser:
-        !window.matchMedia("(display-mode: standalone)").matches &&
-        !window.matchMedia("(display-mode: fullscreen)").matches &&
-        !(window.navigator as any).standalone,
-      isDesktop:
-        !/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
-          navigator.userAgent
-        ),
-      isChromeOnMac: /Macintosh.*Chrome/.test(navigator.userAgent),
-      hostname: window.location.hostname,
-      hasShown: hasShownSplash(),
-      userAgent: navigator.userAgent,
-    });
-
-    // Démarrer l'animation immédiatement si on est en PWA ou mobile
-    if (checkIfPWAMode() && !hasShownSplash()) {
-      console.log("🚀 PWA détectée - Lancement du splash screen");
-      console.log("📱 État avant affichage:", {
-        isVisible,
-        shouldShowSplash,
-        isInitialized,
-      });
-      setIsVisible(true);
-      markSplashAsShown();
-
-      // Animation de la barre de progression par blocs
-      const progressSteps = [20, 33, 55, 70, 85, 99, 100];
-      let currentStep = 0;
-
-      const interval = setInterval(() => {
-        if (currentStep < progressSteps.length) {
-          const newProgress = progressSteps[currentStep];
-          setProgress(newProgress);
-          console.log("📊 Progression:", newProgress + "%");
-          currentStep++;
-
-          if (newProgress >= 100) {
-            clearInterval(interval);
-            // Masquer le splash screen après 2 secondes (au lieu de 1)
-            setTimeout(() => {
-              setIsVisible(false);
-            }, 2000);
-          }
-        }
-      }, 500); // 500ms entre chaque étape (au lieu de 400ms)
-
-      return () => clearInterval(interval);
-    } else {
-      console.log("🌐 Pas en PWA ou déjà affiché - Pas de splash screen");
-      setShouldShowSplash(false);
-    }
+    initializeSplash();
   }, []);
 
   // Écouter la fermeture de la PWA pour enregistrer le timestamp
@@ -233,53 +314,95 @@ export default function PWASplashScreen() {
             </p>
           </div>
 
-          {/* Barre de progression moderne */}
-          <div className="mb-8">
-            {/* Barre de progression */}
-            <div className="relative w-72 h-1.5 bg-parchment/10 rounded-full overflow-hidden mx-auto mb-4">
-              {/* Fond avec effet de brillance */}
-              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-parchment/5 to-transparent"></div>
+          {/* Contenu conditionnel selon le statut du déploiement */}
+          {isDeploymentInProgress ? (
+            /* Page de mise à jour */
+            <div className="space-y-6">
+              <div className="mb-8">
+                <div className="w-16 h-16 mx-auto bg-gold/20 rounded-full flex items-center justify-center mb-4">
+                  <div className="text-2xl text-gold animate-spin">⚙</div>
+                </div>
+                <h2 className="font-cinzel text-xl text-gold mb-2">
+                  Mise à jour en cours
+                </h2>
+                <p className="text-sm font-crimson text-parchment/70">
+                  Déploiement de la nouvelle version...
+                </p>
+              </div>
 
-              {/* Progression */}
-              <div
-                className="absolute left-0 top-0 h-full bg-gradient-to-r from-gold to-gold-light rounded-full transition-all duration-500 ease-out shadow-lg"
-                style={{ width: `${Math.min(progress, 100)}%` }}
-              >
-                {/* Effet de brillance sur la progression */}
-                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent"></div>
+              {/* Indicateur de vérification */}
+              <div className="space-y-3">
+                <div className="flex items-center justify-center space-x-2">
+                  <div
+                    className="w-2 h-2 bg-gold rounded-full animate-bounce"
+                    style={{ animationDelay: "0ms" }}
+                  ></div>
+                  <div
+                    className="w-2 h-2 bg-gold rounded-full animate-bounce"
+                    style={{ animationDelay: "200ms" }}
+                  ></div>
+                  <div
+                    className="w-2 h-2 bg-gold rounded-full animate-bounce"
+                    style={{ animationDelay: "400ms" }}
+                  ></div>
+                </div>
+                <p className="text-xs font-crimson text-parchment/60">
+                  Vérification #{deploymentCheckCount}...
+                </p>
               </div>
             </div>
+          ) : (
+            /* Animation normale */
+            <div className="space-y-4">
+              {/* Barre de progression moderne */}
+              <div className="mb-8">
+                {/* Barre de progression */}
+                <div className="relative w-72 h-1.5 bg-parchment/10 rounded-full overflow-hidden mx-auto mb-4">
+                  {/* Fond avec effet de brillance */}
+                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-parchment/5 to-transparent"></div>
 
-            {/* Pourcentage moderne */}
-            <div className="flex items-center justify-center space-x-2">
-              <span className="text-lg font-cinzel text-gold tabular-nums font-bold">
-                {Math.round(progress)}%
-              </span>
+                  {/* Progression */}
+                  <div
+                    className="absolute left-0 top-0 h-full bg-gradient-to-r from-gold to-gold-light rounded-full transition-all duration-500 ease-out shadow-lg"
+                    style={{ width: `${Math.min(progress, 100)}%` }}
+                  >
+                    {/* Effet de brillance sur la progression */}
+                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent"></div>
+                  </div>
+                </div>
+
+                {/* Pourcentage moderne */}
+                <div className="flex items-center justify-center space-x-2">
+                  <span className="text-lg font-cinzel text-gold tabular-nums font-bold">
+                    {Math.round(progress)}%
+                  </span>
+                </div>
+              </div>
+
+              {/* Message de chargement moderne */}
+              <div className="space-y-4">
+                <p className="text-sm font-crimson text-parchment/70 tracking-wide">
+                  Préparation de votre expérience médiévale...
+                </p>
+
+                {/* Indicateur de chargement moderne */}
+                <div className="flex items-center justify-center space-x-2">
+                  <div
+                    className="w-2 h-2 bg-gold rounded-full animate-bounce"
+                    style={{ animationDelay: "0ms" }}
+                  ></div>
+                  <div
+                    className="w-2 h-2 bg-gold rounded-full animate-bounce"
+                    style={{ animationDelay: "200ms" }}
+                  ></div>
+                  <div
+                    className="w-2 h-2 bg-gold rounded-full animate-bounce"
+                    style={{ animationDelay: "400ms" }}
+                  ></div>
+                </div>
+              </div>
             </div>
-          </div>
-
-          {/* Message de chargement moderne */}
-          <div className="space-y-4">
-            <p className="text-sm font-crimson text-parchment/70 tracking-wide">
-              Préparation de votre expérience médiévale...
-            </p>
-
-            {/* Indicateur de chargement moderne */}
-            <div className="flex items-center justify-center space-x-2">
-              <div
-                className="w-2 h-2 bg-gold rounded-full animate-bounce"
-                style={{ animationDelay: "0ms" }}
-              ></div>
-              <div
-                className="w-2 h-2 bg-gold rounded-full animate-bounce"
-                style={{ animationDelay: "200ms" }}
-              ></div>
-              <div
-                className="w-2 h-2 bg-gold rounded-full animate-bounce"
-                style={{ animationDelay: "400ms" }}
-              ></div>
-            </div>
-          </div>
+          )}
         </div>
       </div>
     </>
