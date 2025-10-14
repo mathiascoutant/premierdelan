@@ -25,44 +25,50 @@ export default function PWASplashScreen() {
     }
   };
 
-  // Vérifier s'il y a une action GitHub en cours
+  // Vérifier s'il y a une action GitHub en cours via l'API GitHub
   const checkGitHubAction = async () => {
     try {
-      // Faire plusieurs vérifications pour être sûr
-      const checks = [];
-
-      for (let i = 0; i < 3; i++) {
-        try {
-          const response = await fetch(window.location.origin, {
-            method: "HEAD",
-            cache: "no-cache",
-          });
-          checks.push(response.ok);
-          await new Promise((resolve) => setTimeout(resolve, 200)); // 200ms entre chaque check
-        } catch (error) {
-          checks.push(false);
+      // Utiliser l'API GitHub Actions pour vérifier les workflows en cours
+      const response = await fetch(
+        "https://api.github.com/repos/mathiascoutant/premierdelan/actions/runs?per_page=5&status=in_progress",
+        {
+          method: "GET",
+          headers: {
+            Accept: "application/vnd.github.v3+json",
+            "User-Agent": "PremierDeLAn-PWA",
+          },
         }
-      }
-
-      // Si au moins 2/3 des vérifications réussissent, pas d'action GitHub
-      const successCount = checks.filter(Boolean).length;
-      const hasGitHubAction = successCount < 2;
-
-      console.log(
-        `🔍 Vérification GitHub: ${successCount}/3 succès - ${
-          hasGitHubAction ? "Action GitHub en cours" : "Pas d'action GitHub"
-        }`
       );
 
-      // Vérification supplémentaire : si on a au moins 1 succès, on considère qu'il n'y a pas d'action
-      if (successCount >= 1) {
-        console.log("✅ Au moins 1 succès - Pas d'action GitHub");
+      if (!response.ok) {
+        console.log("✅ API GitHub inaccessible - Pas d'action GitHub");
         return false;
       }
 
-      return hasGitHubAction;
+      const data = await response.json();
+      const inProgressRuns =
+        data.workflow_runs?.filter(
+          (run: any) => run.status === "in_progress" || run.status === "queued"
+        ) || [];
+
+      const hasActionInProgress = inProgressRuns.length > 0;
+
+      console.log(
+        `🔍 API GitHub: ${inProgressRuns.length} action(s) en cours - ${
+          hasActionInProgress ? "Action GitHub en cours" : "Pas d'action GitHub"
+        }`
+      );
+
+      if (hasActionInProgress) {
+        console.log(
+          "📋 Actions en cours:",
+          inProgressRuns.map((run: any) => `${run.name} (${run.status})`)
+        );
+      }
+
+      return hasActionInProgress;
     } catch (error) {
-      console.log("✅ Pas d'action GitHub en cours - Erreur de vérification");
+      console.log("✅ API GitHub inaccessible - Pas d'action GitHub");
       return false; // Si erreur, considérer qu'il n'y a pas de déploiement
     }
   };
@@ -82,11 +88,24 @@ export default function PWASplashScreen() {
         if (newProgress >= 100) {
           clearInterval(interval);
           setTimeout(async () => {
-            // Désactivation temporaire de la détection automatique
+            // Vérifier s'il y a une action GitHub en cours via l'API
             console.log(
-              "✅ Détection automatique désactivée - Masquage splash screen"
+              "🔍 Vérification action GitHub via API à la fin de l'animation"
             );
-            setIsVisible(false);
+            const isGitHubActionInProgress = await checkGitHubAction();
+
+            if (isGitHubActionInProgress) {
+              // Action GitHub en cours, afficher la page de mise à jour
+              console.log(
+                "⏳ Action GitHub en cours - Affichage page mise à jour"
+              );
+              setIsDeploymentInProgress(true);
+              startDeploymentMonitoring();
+            } else {
+              // Pas d'action GitHub, masquer le splash screen
+              console.log("✅ Pas d'action GitHub - Masquage splash screen");
+              setIsVisible(false);
+            }
           }, 2000);
         }
       }
@@ -95,7 +114,7 @@ export default function PWASplashScreen() {
     return () => clearInterval(interval);
   };
 
-  // Surveiller l'action GitHub et masquer le splash screen quand terminé
+  // Surveiller l'action GitHub via l'API et masquer le splash screen quand terminé
   const startDeploymentMonitoring = () => {
     const monitoringInterval = setInterval(async () => {
       const isGitHubActionInProgress = await checkGitHubAction();
@@ -109,7 +128,7 @@ export default function PWASplashScreen() {
           setIsVisible(false);
         }, 1000); // Attendre 1 seconde puis masquer
       }
-    }, 2000); // Vérifier toutes les 2 secondes
+    }, 3000); // Vérifier toutes les 3 secondes (API GitHub)
 
     return () => clearInterval(monitoringInterval);
   };
