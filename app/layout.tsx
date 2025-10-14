@@ -25,6 +25,12 @@ export const metadata: Metadata = {
     process.env.NODE_ENV === "production"
       ? "/premierdelan/manifest.json"
       : "/manifest.json",
+  viewport: {
+    width: "device-width",
+    initialScale: 1,
+    maximumScale: 1,
+    userScalable: false,
+  },
 };
 
 export default function RootLayout({

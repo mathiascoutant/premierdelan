@@ -30,6 +30,9 @@
     @apply bg-parchment text-ink antialiased;
     font-family: var(--font-crimson);
     overflow-x: hidden;
+    width: 100vw;
+    max-width: 100vw;
+    box-sizing: border-box;
   }
 
   /* Fix pour le splash screen PWA */
@@ -49,23 +52,40 @@
     body {
       overflow-x: hidden !important;
       -webkit-overflow-scrolling: touch;
+      width: 100vw !important;
+      max-width: 100vw !important;
     }
-
+    
     html {
       overflow-x: hidden !important;
+      width: 100vw !important;
+      max-width: 100vw !important;
     }
-
+    
     /* Masquer la scrollbar sur PWA */
     ::-webkit-scrollbar {
       display: none !important;
     }
-
+    
     /* Fix pour le viewport sur PWA */
     .pwa-splash-screen {
       width: 100vw !important;
       height: 100vh !important;
       max-width: 100vw !important;
       max-height: 100vh !important;
+      overflow: hidden !important;
+    }
+    
+    /* Fix pour tous les éléments sur PWA */
+    * {
+      max-width: 100vw !important;
+      box-sizing: border-box !important;
+    }
+    
+    /* Fix spécifique pour les conteneurs */
+    main, div, section {
+      max-width: 100vw !important;
+      overflow-x: hidden !important;
     }
   }
 
@@ -75,6 +95,9 @@
     -ms-overflow-style: none;
     scroll-behavior: smooth;
     scroll-padding-top: 80px; /* Offset pour le header fixe */
+    width: 100vw;
+    max-width: 100vw;
+    overflow-x: hidden;
   }
 
   html::-webkit-scrollbar {
