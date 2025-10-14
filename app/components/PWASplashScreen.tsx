@@ -310,10 +310,10 @@ export default function PWASplashScreen() {
         </div>
 
         {/* Contenu centré */}
-        <div className="relative z-10 text-center px-4 sm:px-8 max-w-sm mx-auto">
+        <div className="relative z-10 text-center px-4 sm:px-8 w-full max-w-sm mx-auto flex flex-col items-center justify-center">
           {/* Logo moderne */}
-          <div className="mb-12 sm:mb-16">
-            <div className="relative w-24 h-24 sm:w-32 sm:h-32 mx-auto overflow-hidden">
+          <div className="mb-12 sm:mb-16 flex justify-center">
+            <div className="relative w-24 h-24 sm:w-32 sm:h-32 overflow-hidden">
               {/* Effet de pulsation */}
               <div className="absolute inset-0 w-24 h-24 sm:w-32 sm:h-32 bg-gold/10 rounded-full animate-ping"></div>
 
