@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "../hooks/useAuth";
 import { useRouter } from "next/navigation";
+import { apiRequest } from "../config/api";
 import {
   FiSearch,
   FiPlus,
@@ -71,25 +72,15 @@ export default function ChatPage() {
 
   const loadConversations = async () => {
     try {
-      const response = await fetch(
+      const data = await apiRequest(
         "https://believable-spontaneity-production.up.railway.app/api/admin/chat/conversations",
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-            "Content-Type": "application/json",
-          },
-        }
+        { method: "GET" }
       );
 
-      if (response.ok) {
-        const data = await response.json();
-        if (data.success) {
-          setConversations(data.conversations);
-        } else {
-          console.error("Erreur API:", data.message);
-        }
+      if (data.success) {
+        setConversations(data.conversations);
       } else {
-        console.error("Erreur HTTP:", response.status);
+        console.error("Erreur API:", data.message);
       }
     } catch (error) {
       console.error("Erreur lors du chargement des conversations:", error);
@@ -105,27 +96,17 @@ export default function ChatPage() {
     }
 
     try {
-      const response = await fetch(
+      const data = await apiRequest(
         `https://believable-spontaneity-production.up.railway.app/api/admin/chat/admins/search?q=${encodeURIComponent(
           query
         )}&limit=10`,
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-            "Content-Type": "application/json",
-          },
-        }
+        { method: "GET" }
       );
 
-      if (response.ok) {
-        const data = await response.json();
-        if (data.success) {
-          setSearchResults(data.admins);
-        } else {
-          console.error("Erreur API:", data.message);
-        }
+      if (data.success) {
+        setSearchResults(data.admins);
       } else {
-        console.error("Erreur HTTP:", response.status);
+        console.error("Erreur API:", data.message);
       }
     } catch (error) {
       console.error("Erreur lors de la recherche:", error);
@@ -134,14 +115,10 @@ export default function ChatPage() {
 
   const sendInvitation = async (adminId: string) => {
     try {
-      const response = await fetch(
+      const data = await apiRequest(
         "https://believable-spontaneity-production.up.railway.app/api/admin/chat/invitations",
         {
           method: "POST",
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-            "Content-Type": "application/json",
-          },
           body: JSON.stringify({
             toUserId: adminId,
             message: "Salut, on peut discuter ?",
@@ -149,18 +126,13 @@ export default function ChatPage() {
         }
       );
 
-      if (response.ok) {
-        const data = await response.json();
-        if (data.success) {
-          console.log("Invitation envoyée avec succès");
-          setShowNewChat(false);
-          setSearchQuery("");
-          setSearchResults([]);
-        } else {
-          console.error("Erreur API:", data.message);
-        }
+      if (data.success) {
+        console.log("Invitation envoyée avec succès");
+        setShowNewChat(false);
+        setSearchQuery("");
+        setSearchResults([]);
       } else {
-        console.error("Erreur HTTP:", response.status);
+        console.error("Erreur API:", data.message);
       }
     } catch (error) {
       console.error("Erreur lors de l'envoi de l'invitation:", error);
@@ -171,30 +143,21 @@ export default function ChatPage() {
     if (!newMessage.trim() || !selectedConversation) return;
 
     try {
-      const response = await fetch(
+      const data = await apiRequest(
         `https://believable-spontaneity-production.up.railway.app/api/admin/chat/conversations/${selectedConversation.id}/messages`,
         {
           method: "POST",
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-            "Content-Type": "application/json",
-          },
           body: JSON.stringify({
             content: newMessage,
           }),
         }
       );
 
-      if (response.ok) {
-        const data = await response.json();
-        if (data.success) {
-          setMessages((prev) => [...prev, data.message]);
-          setNewMessage("");
-        } else {
-          console.error("Erreur API:", data.message);
-        }
+      if (data.success) {
+        setMessages((prev) => [...prev, data.message]);
+        setNewMessage("");
       } else {
-        console.error("Erreur HTTP:", response.status);
+        console.error("Erreur API:", data.message);
       }
     } catch (error) {
       console.error("Erreur lors de l'envoi du message:", error);
@@ -203,25 +166,15 @@ export default function ChatPage() {
 
   const loadMessages = async (conversationId: string) => {
     try {
-      const response = await fetch(
+      const data = await apiRequest(
         `https://believable-spontaneity-production.up.railway.app/api/admin/chat/conversations/${conversationId}/messages`,
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-            "Content-Type": "application/json",
-          },
-        }
+        { method: "GET" }
       );
 
-      if (response.ok) {
-        const data = await response.json();
-        if (data.success) {
-          setMessages(data.messages);
-        } else {
-          console.error("Erreur API:", data.message);
-        }
+      if (data.success) {
+        setMessages(data.messages);
       } else {
-        console.error("Erreur HTTP:", response.status);
+        console.error("Erreur API:", data.message);
       }
     } catch (error) {
       console.error("Erreur lors du chargement des messages:", error);
@@ -230,38 +183,15 @@ export default function ChatPage() {
 
   const loadInvitations = async () => {
     try {
-      const token = localStorage.getItem("token");
-      const userData = localStorage.getItem("user");
-      console.log("Token utilisé:", token ? "Présent" : "Absent");
-      console.log("User data:", userData);
-
-      if (!token) {
-        console.error("Aucun token trouvé");
-        return;
-      }
-
-      const response = await fetch(
+      const data = await apiRequest(
         "https://believable-spontaneity-production.up.railway.app/api/admin/chat/invitations",
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-        }
+        { method: "GET" }
       );
 
-      console.log("Response status:", response.status);
-
-      if (response.ok) {
-        const data = await response.json();
-        if (data.success) {
-          setInvitations(data.invitations);
-        } else {
-          console.error("Erreur API:", data.message);
-        }
+      if (data.success) {
+        setInvitations(data.invitations);
       } else {
-        const errorText = await response.text();
-        console.error("Erreur HTTP:", response.status, errorText);
+        console.error("Erreur API:", data.message);
       }
     } catch (error) {
       console.error("Erreur lors du chargement des invitations:", error);
@@ -273,29 +203,20 @@ export default function ChatPage() {
     action: "accept" | "reject"
   ) => {
     try {
-      const response = await fetch(
+      const data = await apiRequest(
         `https://believable-spontaneity-production.up.railway.app/api/admin/chat/invitations/${invitationId}/respond`,
         {
           method: "PUT",
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-            "Content-Type": "application/json",
-          },
           body: JSON.stringify({ action }),
         }
       );
 
-      if (response.ok) {
-        const data = await response.json();
-        if (data.success) {
-          // Recharger les conversations et invitations
-          loadConversations();
-          loadInvitations();
-        } else {
-          console.error("Erreur API:", data.message);
-        }
+      if (data.success) {
+        // Recharger les conversations et invitations
+        loadConversations();
+        loadInvitations();
       } else {
-        console.error("Erreur HTTP:", response.status);
+        console.error("Erreur API:", data.message);
       }
     } catch (error) {
       console.error("Erreur lors de la réponse à l'invitation:", error);
