@@ -82,24 +82,11 @@ export default function PWASplashScreen() {
         if (newProgress >= 100) {
           clearInterval(interval);
           setTimeout(async () => {
-            // Vérifier s'il y a une action GitHub en cours
+            // Désactivation temporaire de la détection automatique
             console.log(
-              "🔍 Vérification action GitHub à la fin de l'animation"
+              "✅ Détection automatique désactivée - Masquage splash screen"
             );
-            const isGitHubActionInProgress = await checkGitHubAction();
-
-            if (isGitHubActionInProgress) {
-              // Action GitHub en cours, afficher la page de mise à jour
-              console.log(
-                "⏳ Action GitHub en cours - Affichage page mise à jour"
-              );
-              setIsDeploymentInProgress(true);
-              startDeploymentMonitoring();
-            } else {
-              // Pas d'action GitHub, masquer le splash screen
-              console.log("✅ Pas d'action GitHub - Masquage splash screen");
-              setIsVisible(false);
-            }
+            setIsVisible(false);
           }, 2000);
         }
       }
