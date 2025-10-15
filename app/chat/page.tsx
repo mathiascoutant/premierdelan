@@ -122,15 +122,21 @@ export default function ChatPage() {
         { method: "GET" }
       );
 
+      console.log("💬 Réponse complète conversations:", data);
+
       if (data.success) {
-        console.log("💬 Conversations reçues:", data.conversations);
-        setConversations(data.conversations || []);
+        // L'API peut retourner data.conversations ou data.data.conversations
+        const conversations =
+          data.conversations || data.data?.conversations || data.data || [];
+        console.log("💬 Conversations reçues:", conversations);
+        setConversations(Array.isArray(conversations) ? conversations : []);
       } else {
         console.error("Erreur API:", data.message);
         setConversations([]);
       }
     } catch (error) {
       console.error("Erreur lors du chargement des conversations:", error);
+      setConversations([]);
     }
   };
 
@@ -257,15 +263,21 @@ export default function ChatPage() {
         { method: "GET" }
       );
 
+      console.log("📨 Réponse complète invitations:", data);
+
       if (data.success) {
-        console.log("📨 Invitations reçues:", data.invitations);
-        setInvitations(data.invitations || []);
+        // L'API peut retourner data.invitations ou data.data.invitations
+        const invitations =
+          data.invitations || data.data?.invitations || data.data || [];
+        console.log("📨 Invitations reçues:", invitations);
+        setInvitations(Array.isArray(invitations) ? invitations : []);
       } else {
         console.error("Erreur API:", data.message);
         setInvitations([]);
       }
     } catch (error) {
       console.error("Erreur lors du chargement des invitations:", error);
+      setInvitations([]);
     }
   };
 
@@ -342,46 +354,59 @@ export default function ChatPage() {
               <h3 className="text-sm font-medium text-gray-700 mb-2">
                 Invitations reçues
               </h3>
-              {invitations.map((invitation) => (
-                <div
-                  key={invitation.id}
-                  className="flex items-center justify-between p-3 hover:bg-gray-50 rounded-lg"
-                >
-                  <div className="flex items-center space-x-3">
-                    <div className="w-8 h-8 bg-orange-600 text-white rounded-full flex items-center justify-center text-sm font-medium">
-                      {invitation.fromUser.firstname.charAt(0)}
-                      {invitation.fromUser.lastname.charAt(0)}
+              {invitations.map((invitation) => {
+                const fromUser =
+                  invitation.fromUser || invitation.from_user || {};
+                const firstname =
+                  fromUser.firstname || fromUser.firstName || "?";
+                const lastname = fromUser.lastname || fromUser.lastName || "?";
+
+                return (
+                  <div
+                    key={invitation.id || invitation._id}
+                    className="flex items-center justify-between p-3 hover:bg-gray-50 rounded-lg"
+                  >
+                    <div className="flex items-center space-x-3">
+                      <div className="w-8 h-8 bg-orange-600 text-white rounded-full flex items-center justify-center text-sm font-medium">
+                        {firstname.charAt(0)}
+                        {lastname.charAt(0)}
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium text-gray-900">
+                          {firstname} {lastname}
+                        </p>
+                        <p className="text-xs text-gray-500">
+                          {invitation.message || "Invitation de chat"}
+                        </p>
+                      </div>
                     </div>
-                    <div>
-                      <p className="text-sm font-medium text-gray-900">
-                        {invitation.fromUser.firstname}{" "}
-                        {invitation.fromUser.lastname}
-                      </p>
-                      <p className="text-xs text-gray-500">
-                        {invitation.message}
-                      </p>
+                    <div className="flex space-x-2">
+                      <button
+                        onClick={() =>
+                          respondToInvitation(
+                            invitation.id || invitation._id,
+                            "accept"
+                          )
+                        }
+                        className="px-2 py-1 bg-green-600 text-white text-xs rounded-full hover:bg-green-700 transition-colors"
+                      >
+                        <FiCheck className="w-3 h-3" />
+                      </button>
+                      <button
+                        onClick={() =>
+                          respondToInvitation(
+                            invitation.id || invitation._id,
+                            "reject"
+                          )
+                        }
+                        className="px-2 py-1 bg-red-600 text-white text-xs rounded-full hover:bg-red-700 transition-colors"
+                      >
+                        <FiX className="w-3 h-3" />
+                      </button>
                     </div>
                   </div>
-                  <div className="flex space-x-2">
-                    <button
-                      onClick={() =>
-                        respondToInvitation(invitation.id, "accept")
-                      }
-                      className="px-2 py-1 bg-green-600 text-white text-xs rounded-full hover:bg-green-700 transition-colors"
-                    >
-                      <FiCheck className="w-3 h-3" />
-                    </button>
-                    <button
-                      onClick={() =>
-                        respondToInvitation(invitation.id, "reject")
-                      }
-                      className="px-2 py-1 bg-red-600 text-white text-xs rounded-full hover:bg-red-700 transition-colors"
-                    >
-                      <FiX className="w-3 h-3" />
-                    </button>
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         )}
