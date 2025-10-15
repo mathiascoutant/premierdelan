@@ -71,7 +71,7 @@ Système de chat en temps réel entre administrateurs avec notifications PWA, in
 
 ## 🔗 Endpoints à Créer
 
-### 1. GET `/api/chat/conversations`
+### 1. GET `/api/admin/chat/conversations`
 
 **Récupérer les conversations de l'admin connecté**
 
@@ -107,7 +107,7 @@ Authorization: Bearer <token>
 }
 ```
 
-### 2. GET `/api/chat/conversations/:id/messages`
+### 2. GET `/api/admin/chat/conversations/:id/messages`
 
 **Récupérer les messages d'une conversation**
 
@@ -134,7 +134,7 @@ Authorization: Bearer <token>
 }
 ```
 
-### 3. POST `/api/chat/conversations/:id/messages`
+### 3. POST `/api/admin/chat/conversations/:id/messages`
 
 **Envoyer un message dans une conversation**
 
@@ -168,7 +168,7 @@ Content-Type: application/json
 }
 ```
 
-### 4. GET `/api/chat/admins/search`
+### 4. GET `/api/admin/chat/admins/search`
 
 **Rechercher des admins pour créer une conversation**
 
@@ -200,7 +200,7 @@ Authorization: Bearer <token>
 }
 ```
 
-### 5. POST `/api/chat/invitations`
+### 5. POST `/api/admin/chat/invitations`
 
 **Envoyer une invitation de chat**
 
@@ -236,7 +236,7 @@ Content-Type: application/json
 }
 ```
 
-### 6. PUT `/api/chat/invitations/:id/respond`
+### 6. PUT `/api/admin/chat/invitations/:id/respond`
 
 **Accepter ou refuser une invitation**
 
@@ -268,7 +268,7 @@ Content-Type: application/json
 }
 ```
 
-### 7. GET `/api/chat/invitations`
+### 7. GET `/api/admin/chat/invitations`
 
 **Récupérer les invitations reçues**
 
@@ -338,7 +338,7 @@ Authorization: Bearer <token>
 
 ### Endpoints de notifications
 
-### 8. POST `/api/chat/notifications/send`
+### 8. POST `/api/admin/chat/notifications/send`
 
 **Envoyer une notification de chat**
 
@@ -421,7 +421,7 @@ const ws = new WebSocket(
 
 ```bash
 curl -X GET \
-  "https://believable-spontaneity-production.up.railway.app/api/chat/admins/search?q=jean" \
+  "https://believable-spontaneity-production.up.railway.app/api/admin/chat/admins/search?q=jean" \
   -H "Authorization: Bearer <token>"
 ```
 
@@ -429,7 +429,7 @@ curl -X GET \
 
 ```bash
 curl -X POST \
-  https://believable-spontaneity-production.up.railway.app/api/chat/invitations \
+  https://believable-spontaneity-production.up.railway.app/api/admin/chat/invitations \
   -H "Authorization: Bearer <token>" \
   -H "Content-Type: application/json" \
   -d '{
@@ -442,7 +442,7 @@ curl -X POST \
 
 ```bash
 curl -X POST \
-  https://believable-spontaneity-production.up.railway.app/api/chat/conversations/conv_123/messages \
+  https://believable-spontaneity-production.up.railway.app/api/admin/chat/conversations/conv_123/messages \
   -H "Authorization: Bearer <token>" \
   -H "Content-Type: application/json" \
   -d '{
@@ -455,14 +455,14 @@ curl -X POST \
 ## ✅ Checklist d'implémentation
 
 - [ ] Créer les collections `conversations`, `messages`, `chat_invitations`
-- [ ] Créer l'endpoint GET `/api/chat/conversations`
-- [ ] Créer l'endpoint GET `/api/chat/conversations/:id/messages`
-- [ ] Créer l'endpoint POST `/api/chat/conversations/:id/messages`
-- [ ] Créer l'endpoint GET `/api/chat/admins/search`
-- [ ] Créer l'endpoint POST `/api/chat/invitations`
-- [ ] Créer l'endpoint PUT `/api/chat/invitations/:id/respond`
-- [ ] Créer l'endpoint GET `/api/chat/invitations`
-- [ ] Créer l'endpoint POST `/api/chat/notifications/send`
+- [ ] Créer l'endpoint GET `/api/admin/chat/conversations`
+- [ ] Créer l'endpoint GET `/api/admin/chat/conversations/:id/messages`
+- [ ] Créer l'endpoint POST `/api/admin/chat/conversations/:id/messages`
+- [ ] Créer l'endpoint GET `/api/admin/chat/admins/search`
+- [ ] Créer l'endpoint POST `/api/admin/chat/invitations`
+- [ ] Créer l'endpoint PUT `/api/admin/chat/invitations/:id/respond`
+- [ ] Créer l'endpoint GET `/api/admin/chat/invitations`
+- [ ] Créer l'endpoint POST `/api/admin/chat/notifications/send`
 - [ ] Configurer les notifications Firebase pour le chat
 - [ ] Implémenter WebSocket (optionnel)
 - [ ] Tester tous les endpoints

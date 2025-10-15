@@ -93,6 +93,16 @@ export async function apiRequest(endpoint: string, options: RequestInit = {}) {
       headers["Authorization"] = `Bearer ${token}`;
     }
 
+    // Debug pour voir ce qui est envoyé
+    if (options.method === "POST" || options.method === "PUT") {
+      console.log("📤 API Request:", {
+        endpoint,
+        method: options.method,
+        headers,
+        body: options.body,
+      });
+    }
+
     const response = await fetch(endpoint, {
       ...options,
       headers,
@@ -116,10 +126,24 @@ export async function apiRequest(endpoint: string, options: RequestInit = {}) {
 
     // Erreur client (400-499) -> Erreur métier normale
     if (!response.ok) {
-      const error = await response
-        .json()
-        .catch(() => ({ message: "Erreur réseau" }));
-      throw new Error(error.message || `Erreur ${response.status}`);
+      let error;
+      const contentType = response.headers.get("content-type");
+
+      if (contentType && contentType.includes("application/json")) {
+        error = await response
+          .json()
+          .catch(() => ({ message: "Erreur réseau" }));
+      } else {
+        const text = await response.text();
+        error = { message: text || `Erreur ${response.status}` };
+      }
+
+      console.error("❌ Erreur backend:", error);
+      console.error("❌ Status:", response.status);
+      console.error("❌ Content-Type:", contentType);
+      throw new Error(
+        error.message || error.error || `Erreur ${response.status}`
+      );
     }
 
     return response.json();

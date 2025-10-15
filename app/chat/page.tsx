@@ -42,8 +42,17 @@ interface Message {
 }
 
 export default function ChatPage() {
-  const { user, isAdmin } = useAuth();
+  const { user, isAdmin, isLoading: authLoading } = useAuth();
   const router = useRouter();
+
+  console.log(
+    "🚀 ChatPage render - user:",
+    user,
+    "isAdmin:",
+    isAdmin(),
+    "authLoading:",
+    authLoading
+  );
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [selectedConversation, setSelectedConversation] =
     useState<Conversation | null>(null);
@@ -54,21 +63,57 @@ export default function ChatPage() {
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const [invitations, setInvitations] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [dataLoaded, setDataLoaded] = useState(false);
 
   // Vérifier si l'utilisateur est admin
   useEffect(() => {
-    if (!isAdmin()) {
-      router.push("/");
+    console.log(
+      "🔍 useEffect admin check - authLoading:",
+      authLoading,
+      "isLoading:",
+      isLoading
+    );
+
+    if (authLoading || isLoading) {
+      console.log("⏳ En attente du chargement...");
+      return; // Attendre que l'utilisateur soit chargé
     }
-  }, [isAdmin, router]);
+
+    console.log("✅ Vérification admin:", isAdmin());
+    console.log("👤 User:", user);
+
+    if (!isAdmin()) {
+      console.log("❌ Redirection vers l'accueil - utilisateur pas admin");
+      router.push("/");
+    } else {
+      console.log("✅ Utilisateur admin confirmé");
+    }
+  }, [isAdmin, router, user, isLoading, authLoading]);
 
   // Charger les conversations
   useEffect(() => {
-    if (isAdmin()) {
-      loadConversations();
-      loadInvitations();
+    console.log(
+      "📡 useEffect load data - isLoading:",
+      isLoading,
+      "isAdmin:",
+      isAdmin()
+    );
+
+    if (!authLoading && isAdmin() && !dataLoaded) {
+      console.log("🚀 Chargement des données...");
+      const loadData = async () => {
+        setIsLoading(true);
+        try {
+          await Promise.all([loadConversations(), loadInvitations()]);
+          console.log("✅ Données chargées avec succès");
+          setDataLoaded(true);
+        } finally {
+          setIsLoading(false);
+        }
+      };
+      loadData();
     }
-  }, [isAdmin]);
+  }, [authLoading]);
 
   const loadConversations = async () => {
     try {
@@ -78,14 +123,14 @@ export default function ChatPage() {
       );
 
       if (data.success) {
-        setConversations(data.conversations);
+        console.log("💬 Conversations reçues:", data.conversations);
+        setConversations(data.conversations || []);
       } else {
         console.error("Erreur API:", data.message);
+        setConversations([]);
       }
     } catch (error) {
       console.error("Erreur lors du chargement des conversations:", error);
-    } finally {
-      setIsLoading(false);
     }
   };
 
@@ -96,6 +141,7 @@ export default function ChatPage() {
     }
 
     try {
+      console.log("🔍 Recherche d'admins avec query:", query);
       const data = await apiRequest(
         `https://believable-spontaneity-production.up.railway.app/api/admin/chat/admins/search?q=${encodeURIComponent(
           query
@@ -103,39 +149,62 @@ export default function ChatPage() {
         { method: "GET" }
       );
 
+      console.log("📊 Résultats de recherche:", data);
+
       if (data.success) {
-        setSearchResults(data.admins);
+        // L'API retourne les admins dans data.data.admins ou data.admins
+        const admins = data.data?.admins || data.admins || [];
+        console.log("✅ Admins trouvés:", admins);
+        console.log("📝 Premier admin:", admins[0]);
+        setSearchResults(Array.isArray(admins) ? admins : []);
       } else {
         console.error("Erreur API:", data.message);
+        setSearchResults([]);
       }
     } catch (error) {
       console.error("Erreur lors de la recherche:", error);
+      setSearchResults([]);
     }
   };
 
   const sendInvitation = async (adminId: string) => {
     try {
+      console.log("📤 Envoi d'invitation à adminId:", adminId);
+      const payload = {
+        toUserId: adminId,
+        to_user_id: adminId,
+        recipient_id: adminId,
+        recipientId: adminId,
+        message: "Salut, on peut discuter ?",
+      };
+      console.log("📦 Payload (tous les formats):", payload);
+
       const data = await apiRequest(
         "https://believable-spontaneity-production.up.railway.app/api/admin/chat/invitations",
         {
           method: "POST",
-          body: JSON.stringify({
-            toUserId: adminId,
-            message: "Salut, on peut discuter ?",
-          }),
+          body: JSON.stringify(payload),
         }
       );
 
+      console.log("📨 Réponse invitation:", data);
+
       if (data.success) {
-        console.log("Invitation envoyée avec succès");
+        console.log("✅ Invitation envoyée avec succès");
+        // Fermer la modal
         setShowNewChat(false);
         setSearchQuery("");
         setSearchResults([]);
+        // Recharger les conversations pour voir la nouvelle invitation
+        loadConversations();
       } else {
-        console.error("Erreur API:", data.message);
+        console.error("❌ Erreur API:", data.message);
+        alert(data.message || "Erreur lors de l'envoi de l'invitation");
       }
-    } catch (error) {
-      console.error("Erreur lors de l'envoi de l'invitation:", error);
+    } catch (error: any) {
+      console.error("❌ Erreur lors de l'envoi de l'invitation:", error);
+      console.error("❌ Error details:", error.message);
+      alert("Erreur lors de l'envoi de l'invitation: " + (error.message || ""));
     }
   };
 
@@ -189,9 +258,11 @@ export default function ChatPage() {
       );
 
       if (data.success) {
-        setInvitations(data.invitations);
+        console.log("📨 Invitations reçues:", data.invitations);
+        setInvitations(data.invitations || []);
       } else {
         console.error("Erreur API:", data.message);
+        setInvitations([]);
       }
     } catch (error) {
       console.error("Erreur lors du chargement des invitations:", error);
@@ -262,25 +333,10 @@ export default function ChatPage() {
               <FiPlus className="w-4 h-4" />
             </button>
           </div>
-
-          {/* Search */}
-          <div className="relative">
-            <FiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-            <input
-              type="text"
-              placeholder="Rechercher un admin..."
-              value={searchQuery}
-              onChange={(e) => {
-                setSearchQuery(e.target.value);
-                searchAdmins(e.target.value);
-              }}
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            />
-          </div>
         </div>
 
         {/* Invitations reçues */}
-        {invitations.length > 0 && (
+        {invitations && invitations.length > 0 && (
           <div className="border-b border-gray-200">
             <div className="p-2">
               <h3 className="text-sm font-medium text-gray-700 mb-2">
@@ -330,42 +386,6 @@ export default function ChatPage() {
           </div>
         )}
 
-        {/* Search Results */}
-        {showNewChat && searchResults.length > 0 && (
-          <div className="border-b border-gray-200">
-            <div className="p-2">
-              <h3 className="text-sm font-medium text-gray-700 mb-2">
-                Résultats de recherche
-              </h3>
-              {searchResults.map((admin) => (
-                <div
-                  key={admin.id}
-                  className="flex items-center justify-between p-3 hover:bg-gray-50 rounded-lg cursor-pointer"
-                >
-                  <div className="flex items-center space-x-3">
-                    <div className="w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center text-sm font-medium">
-                      {admin.firstname.charAt(0)}
-                      {admin.lastname.charAt(0)}
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium text-gray-900">
-                        {admin.firstname} {admin.lastname}
-                      </p>
-                      <p className="text-xs text-gray-500">{admin.email}</p>
-                    </div>
-                  </div>
-                  <button
-                    onClick={() => sendInvitation(admin.id)}
-                    className="p-1 text-blue-600 hover:bg-blue-100 rounded"
-                  >
-                    <FiPlus className="w-4 h-4" />
-                  </button>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
         {/* Conversations List */}
         <div className="flex-1 overflow-y-auto">
           {isLoading ? (
@@ -373,7 +393,7 @@ export default function ChatPage() {
               <div className="w-6 h-6 border-2 border-gray-300 border-t-blue-600 rounded-full animate-spin mx-auto mb-2"></div>
               <p className="text-sm text-gray-500">Chargement...</p>
             </div>
-          ) : conversations.length === 0 ? (
+          ) : !conversations || conversations.length === 0 ? (
             <div className="p-4 text-center">
               <FiMessageCircle className="w-12 h-12 text-gray-300 mx-auto mb-4" />
               <p className="text-sm text-gray-500">Aucune conversation</p>
@@ -554,6 +574,98 @@ export default function ChatPage() {
           </div>
         )}
       </div>
+
+      {/* Modal Nouvelle Conversation */}
+      {showNewChat && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg shadow-xl max-w-md w-full max-h-[80vh] flex flex-col">
+            {/* Header Modal */}
+            <div className="p-6 border-b border-gray-200">
+              <div className="flex items-center justify-between">
+                <h2 className="text-xl font-semibold text-gray-900">
+                  Nouvelle conversation
+                </h2>
+                <button
+                  onClick={() => {
+                    setShowNewChat(false);
+                    setSearchQuery("");
+                    setSearchResults([]);
+                  }}
+                  className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full transition-colors"
+                >
+                  <FiX className="w-5 h-5" />
+                </button>
+              </div>
+            </div>
+
+            {/* Search Input */}
+            <div className="p-6 border-b border-gray-200">
+              <div className="relative">
+                <FiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                <input
+                  type="text"
+                  placeholder="Rechercher un admin par prénom ou nom..."
+                  value={searchQuery}
+                  onChange={(e) => {
+                    setSearchQuery(e.target.value);
+                    searchAdmins(e.target.value);
+                  }}
+                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  autoFocus
+                />
+              </div>
+            </div>
+
+            {/* Search Results */}
+            <div className="flex-1 overflow-y-auto p-4">
+              {searchQuery.length < 2 ? (
+                <div className="text-center py-12">
+                  <FiSearch className="w-12 h-12 text-gray-300 mx-auto mb-4" />
+                  <p className="text-sm text-gray-500">
+                    Tapez au moins 2 caractères pour rechercher
+                  </p>
+                </div>
+              ) : searchResults && searchResults.length > 0 ? (
+                <div className="space-y-2">
+                  {searchResults.map((admin) => (
+                    <div
+                      key={admin.id}
+                      className="flex items-center justify-between p-4 hover:bg-gray-50 rounded-lg border border-gray-200 transition-colors"
+                    >
+                      <div className="flex items-center space-x-3">
+                        <div className="w-12 h-12 bg-blue-600 text-white rounded-full flex items-center justify-center text-sm font-medium">
+                          {admin.firstname.charAt(0)}
+                          {admin.lastname.charAt(0)}
+                        </div>
+                        <div>
+                          <p className="text-sm font-semibold text-gray-900">
+                            {admin.firstname} {admin.lastname}
+                          </p>
+                          <p className="text-xs text-gray-500">{admin.email}</p>
+                        </div>
+                      </div>
+                      <button
+                        onClick={() => sendInvitation(admin.id)}
+                        className="px-4 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition-colors font-medium"
+                      >
+                        Inviter
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-12">
+                  <FiMessageCircle className="w-12 h-12 text-gray-300 mx-auto mb-4" />
+                  <p className="text-sm text-gray-500">Aucun admin trouvé</p>
+                  <p className="text-xs text-gray-400 mt-1">
+                    Essayez une autre recherche
+                  </p>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
