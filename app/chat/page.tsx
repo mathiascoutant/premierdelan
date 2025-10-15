@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useAuth } from "../hooks/useAuth";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { apiRequest } from "../config/api";
 import {
   FiSearch,
@@ -34,16 +34,20 @@ interface Conversation {
 }
 
 interface Message {
-  id: string;
+  id?: string;
+  _id?: string;
   content: string;
-  senderId: string;
-  timestamp: string;
+  senderId?: string;
+  sender_id?: string;
+  timestamp?: string;
+  created_at?: string;
   isRead: boolean;
 }
 
 export default function ChatPage() {
   const { user, isAdmin, isLoading: authLoading } = useAuth();
   const router = useRouter();
+  const searchParams = useSearchParams();
 
   console.log(
     "🚀 ChatPage render - user:",
@@ -64,6 +68,9 @@ export default function ChatPage() {
   const [invitations, setInvitations] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [dataLoaded, setDataLoaded] = useState(false);
+  const [refreshInterval, setRefreshInterval] = useState<NodeJS.Timeout | null>(
+    null
+  );
 
   // Vérifier si l'utilisateur est admin
   useEffect(() => {
@@ -229,8 +236,13 @@ export default function ChatPage() {
       );
 
       if (data.success) {
-        setMessages((prev) => [...prev, data.message]);
+        setMessages((prev) => {
+          const prevArray = Array.isArray(prev) ? prev : [];
+          return [...prevArray, data.message];
+        });
         setNewMessage("");
+        // Rafraîchir immédiatement les conversations pour mettre à jour le lastMessage
+        loadConversations();
       } else {
         console.error("Erreur API:", data.message);
       }
@@ -246,13 +258,20 @@ export default function ChatPage() {
         { method: "GET" }
       );
 
+      console.log("📬 Réponse complète messages:", data);
+
       if (data.success) {
-        setMessages(data.messages);
+        const messages =
+          data.messages || data.data?.messages || data.data || [];
+        console.log("📬 Messages reçus:", messages);
+        setMessages(Array.isArray(messages) ? messages : []);
       } else {
         console.error("Erreur API:", data.message);
+        setMessages([]);
       }
     } catch (error) {
       console.error("Erreur lors du chargement des messages:", error);
+      setMessages([]);
     }
   };
 
@@ -310,6 +329,40 @@ export default function ChatPage() {
     setSelectedConversation(conversation);
     loadMessages(conversation.id);
   };
+
+  // Ouvrir automatiquement une conversation depuis une notification
+  useEffect(() => {
+    const conversationId = searchParams.get("conversation");
+    if (conversationId && conversations.length > 0 && !selectedConversation) {
+      console.log(
+        "🔔 Ouverture automatique de la conversation:",
+        conversationId
+      );
+      const conversation = conversations.find((c) => c.id === conversationId);
+      if (conversation && conversation.status === "accepted") {
+        handleConversationSelect(conversation);
+      }
+    }
+  }, [searchParams, conversations, selectedConversation]);
+
+  // Polling automatique pour rafraîchir les conversations et messages
+  useEffect(() => {
+    if (!isAdmin() || authLoading) return;
+
+    // Rafraîchir toutes les 3 secondes
+    const interval = setInterval(() => {
+      console.log("🔄 Polling automatique...");
+      loadConversations();
+      loadInvitations();
+
+      // Rafraîchir les messages de la conversation active
+      if (selectedConversation && selectedConversation.status === "accepted") {
+        loadMessages(selectedConversation.id);
+      }
+    }, 3000);
+
+    return () => clearInterval(interval);
+  }, [isAdmin, authLoading, selectedConversation]);
 
   if (!isAdmin()) {
     return (
@@ -431,11 +484,21 @@ export default function ChatPage() {
               {conversations.map((conversation) => (
                 <div
                   key={conversation.id}
-                  onClick={() => handleConversationSelect(conversation)}
-                  className={`p-3 rounded-lg cursor-pointer transition-colors ${
+                  onClick={() => {
+                    if (conversation.status === "accepted") {
+                      handleConversationSelect(conversation);
+                    }
+                  }}
+                  className={`p-3 rounded-lg transition-colors ${
+                    conversation.status === "accepted"
+                      ? "cursor-pointer"
+                      : "cursor-not-allowed opacity-60"
+                  } ${
                     selectedConversation?.id === conversation.id
                       ? "bg-blue-50 border border-blue-200"
-                      : "hover:bg-gray-50"
+                      : conversation.status === "accepted"
+                      ? "hover:bg-gray-50"
+                      : ""
                   }`}
                 >
                   <div className="flex items-center space-x-3">
@@ -466,20 +529,29 @@ export default function ChatPage() {
                           <FiX className="w-4 h-4 text-red-500" />
                         )}
                       </div>
-                      {conversation.lastMessage && (
-                        <p className="text-xs text-gray-500 truncate">
-                          {conversation.lastMessage.content}
+                      {conversation.status === "pending" ? (
+                        <p className="text-xs text-orange-500 italic">
+                          En attente d'acceptation...
+                        </p>
+                      ) : conversation.lastMessage ? (
+                        <>
+                          <p className="text-xs text-gray-500 truncate">
+                            {conversation.lastMessage.content}
+                          </p>
+                          <p className="text-xs text-gray-400">
+                            {new Date(
+                              conversation.lastMessage.timestamp
+                            ).toLocaleTimeString("fr-FR", {
+                              hour: "2-digit",
+                              minute: "2-digit",
+                            })}
+                          </p>
+                        </>
+                      ) : (
+                        <p className="text-xs text-gray-400 italic">
+                          Aucun message
                         </p>
                       )}
-                      <p className="text-xs text-gray-400">
-                        {conversation.lastMessage &&
-                          new Date(
-                            conversation.lastMessage.timestamp
-                          ).toLocaleTimeString("fr-FR", {
-                            hour: "2-digit",
-                            minute: "2-digit",
-                          })}
-                      </p>
                     </div>
                   </div>
                 </div>
@@ -529,38 +601,45 @@ export default function ChatPage() {
 
             {/* Messages */}
             <div className="flex-1 overflow-y-auto p-4 space-y-4">
-              {messages.map((message) => (
-                <div
-                  key={message.id}
-                  className={`flex ${
-                    message.senderId === user?.id
-                      ? "justify-end"
-                      : "justify-start"
-                  }`}
-                >
-                  <div
-                    className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${
-                      message.senderId === user?.id
-                        ? "bg-blue-600 text-white"
-                        : "bg-white border border-gray-200 text-gray-900"
-                    }`}
-                  >
-                    <p className="text-sm">{message.content}</p>
-                    <p
-                      className={`text-xs mt-1 ${
-                        message.senderId === user?.id
-                          ? "text-blue-100"
-                          : "text-gray-500"
+              {messages &&
+                messages.map((message) => {
+                  if (!message) return null;
+                  const senderId = message.senderId || message.sender_id;
+                  const isMyMessage = senderId === user?.id;
+
+                  return (
+                    <div
+                      key={message.id || message._id}
+                      className={`flex ${
+                        isMyMessage ? "justify-end" : "justify-start"
                       }`}
                     >
-                      {new Date(message.timestamp).toLocaleTimeString("fr-FR", {
-                        hour: "2-digit",
-                        minute: "2-digit",
-                      })}
-                    </p>
-                  </div>
-                </div>
-              ))}
+                      <div
+                        className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${
+                          isMyMessage
+                            ? "bg-blue-600 text-white"
+                            : "bg-white border border-gray-200 text-gray-900"
+                        }`}
+                      >
+                        <p className="text-sm">{message.content}</p>
+                        <p
+                          className={`text-xs mt-1 ${
+                            isMyMessage ? "text-blue-100" : "text-gray-500"
+                          }`}
+                        >
+                          {new Date(
+                            message.timestamp ||
+                              message.created_at ||
+                              Date.now()
+                          ).toLocaleTimeString("fr-FR", {
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          })}
+                        </p>
+                      </div>
+                    </div>
+                  );
+                })}
             </div>
 
             {/* Message Input */}
