@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useAuth } from "../hooks/useAuth";
 import { useRouter, useSearchParams } from "next/navigation";
 import { apiRequest } from "../config/api";
@@ -44,7 +44,7 @@ interface Message {
   isRead: boolean;
 }
 
-export default function ChatPage() {
+function ChatPageContent() {
   const { user, isAdmin, isLoading: authLoading } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -771,5 +771,22 @@ export default function ChatPage() {
         </div>
       )}
     </div>
+  );
+}
+
+export default function ChatPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-white flex items-center justify-center">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+            <p className="text-gray-600">Chargement du chat...</p>
+          </div>
+        </div>
+      }
+    >
+      <ChatPageContent />
+    </Suspense>
   );
 }
