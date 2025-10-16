@@ -73,7 +73,7 @@ Système de chat en temps réel entre administrateurs avec notifications PWA, in
 
 ### 1. GET `/api/admin/chat/conversations`
 
-**Récupérer les conversations de l'admin connecté**
+**Récupérer les conversations de l'admin connecté (incluant les invitations en attente)**
 
 **Headers requis** :
 
@@ -102,10 +102,26 @@ Authorization: Bearer <token>
       },
       "status": "accepted",
       "unreadCount": 2
+    },
+    {
+      "id": "inv_789",
+      "participant": {
+        "id": "admin_789",
+        "firstname": "Marie",
+        "lastname": "Martin",
+        "email": "marie@email.com"
+      },
+      "status": "pending",
+      "unreadCount": 0
     }
   ]
 }
 ```
+
+**⚠️ Important** : Cet endpoint doit retourner :
+
+- Les **conversations acceptées** (status: "accepted") avec leurs messages
+- Les **invitations envoyées en attente** (status: "pending") pour que l'expéditeur puisse voir le statut
 
 ### 2. GET `/api/admin/chat/conversations/:id/messages`
 
@@ -267,6 +283,13 @@ Content-Type: application/json
   }
 }
 ```
+
+**⚠️ Important** : Lors de l'acceptation (`action: "accept"`), le backend doit :
+
+1. Mettre à jour le statut de l'invitation à "accepted"
+2. **Créer une nouvelle conversation** dans la collection `conversations` avec les deux participants
+3. Retourner l'ID de la conversation créée
+4. Envoyer une notification au demandeur que son invitation a été acceptée
 
 ### 7. GET `/api/admin/chat/invitations`
 
