@@ -19,35 +19,33 @@ firebase.initializeApp({
 
 const messaging = firebase.messaging();
 
-// Gestion des notifications en arrière-plan (Firebase uniquement)
-messaging.onBackgroundMessage((payload) => {
-  console.log("📨 Message Firebase reçu en arrière-plan:", payload);
+// ✅ Listener push natif pour les notifications FCM
+self.addEventListener("push", function (event) {
+  console.log("📨 Message push reçu !", event);
 
-  const notificationTitle =
-    payload.notification?.title || payload.data?.title || "Notification";
-  const notificationBody =
-    payload.notification?.body ||
-    payload.data?.body ||
-    payload.data?.message ||
-    "";
+  let data = {};
+  let title = "Notification";
+  let body = "";
 
-  const notificationOptions = {
-    body: notificationBody,
-    icon: "/icon-192x192.png",
-    badge: "/icon-192x192.png",
-    data: payload.data || {},
-    tag: payload.data?.type || "default",
-    requireInteraction: true,
-  };
+  try {
+    if (event.data) {
+      data = event.data.json();
+      title = data.notification?.title || data.data?.title || "Notification";
+      body = data.notification?.body || data.data?.message || "";
+    }
+  } catch (e) {
+    console.error("Erreur parsing push:", e);
+  }
 
-  console.log(
-    "🔔 Affichage notification:",
-    notificationTitle,
-    notificationOptions
-  );
-  return self.registration.showNotification(
-    notificationTitle,
-    notificationOptions
+  event.waitUntil(
+    self.registration.showNotification(title, {
+      body: body,
+      icon: "/icon-192x192.png",
+      badge: "/icon-192x192.png",
+      data: data.data || data,
+      tag: data.data?.type || "default",
+      requireInteraction: true,
+    })
   );
 });
 
