@@ -19,34 +19,7 @@ firebase.initializeApp({
 
 const messaging = firebase.messaging();
 
-// ✅ Listener push natif pour les notifications FCM
-self.addEventListener("push", function (event) {
-  console.log("📨 Message push reçu !", event);
-
-  if (!event.data) {
-    console.log("❌ Pas de data dans l'event");
-    return;
-  }
-
-  try {
-    const payload = event.data.json();
-
-    // ✅ LOGGER LE PAYLOAD COMPLET POUR DEBUG
-    console.log("🔍 PAYLOAD COMPLET:", JSON.stringify(payload, null, 2));
-    console.log("🔍 Type de payload:", typeof payload);
-    console.log("🔍 Keys du payload:", Object.keys(payload));
-    console.log("🔍 payload.notification:", payload.notification);
-    console.log("🔍 payload.data:", payload.data);
-
-    // NE RIEN FAIRE - Laisser le système afficher nativement
-    console.log("✅ Pas de traitement - Affichage natif par le système");
-    return;
-  } catch (e) {
-    console.error("❌ Erreur parsing push:", e);
-  }
-});
-
-// Gestion du clic sur la notification
+// ✅ GARDER UNIQUEMENT le listener pour les clics sur les notifications
 self.addEventListener("notificationclick", function (event) {
   console.log("🔔 Clic sur notification:", event.notification.data);
   event.notification.close();
