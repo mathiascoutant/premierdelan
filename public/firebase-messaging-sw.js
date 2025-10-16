@@ -15,13 +15,43 @@ firebase.initializeApp({
 
 const messaging = firebase.messaging();
 
-// Gestion des notifications en arrière-plan
-messaging.onBackgroundMessage((payload) => {
-  console.log('📨 Message reçu en arrière-plan:', payload);
+// Écouter les messages push natifs
+self.addEventListener('push', function(event) {
+  console.log('📨 Message push reçu !', event);
+  
+  let data = {};
+  let title = 'Notification';
+  let body = '';
+  
+  try {
+    if (event.data) {
+      data = event.data.json();
+      title = data.notification?.title || data.data?.title || 'Notification';
+      body = data.notification?.body || data.data?.message || '';
+    }
+  } catch (e) {
+    console.error('Erreur parsing push:', e);
+  }
+  
+  event.waitUntil(
+    self.registration.showNotification(title, {
+      body: body,
+      icon: '/icon-192x192.png',
+      badge: '/icon-192x192.png',
+      data: data.data || data,
+      tag: data.data?.type || 'default',
+      requireInteraction: true,
+    })
+  );
+});
 
-  const notificationTitle = payload.notification.title;
+// Gestion des notifications en arrière-plan (Firebase)
+messaging.onBackgroundMessage((payload) => {
+  console.log('📨 Message Firebase reçu en arrière-plan:', payload);
+
+  const notificationTitle = payload.notification?.title || 'Notification';
   const notificationOptions = {
-    body: payload.notification.body,
+    body: payload.notification?.body || '',
     icon: '/icon-192x192.png',
     badge: '/icon-192x192.png',
     data: payload.data || {},
