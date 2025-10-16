@@ -1,6 +1,6 @@
 {
   "name": "Premier de l'An",
-  "short_name": "PremierAn",
+  "short_name": "",
   "description": "Organisation d'événements privés d'excellence",
   "start_url": "/premierdelan/",
   "display": "standalone",
