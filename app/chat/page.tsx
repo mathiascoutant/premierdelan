@@ -1,19 +1,21 @@
 "use client";
 
-import { useState, useEffect, Suspense } from "react";
+import { useState, useEffect, Suspense, useRef } from "react";
 import { useAuth } from "../hooks/useAuth";
 import { useRouter, useSearchParams } from "next/navigation";
 import { apiRequest } from "../config/api";
 import {
-  FiSearch,
-  FiPlus,
   FiMessageCircle,
   FiSend,
-  FiMoreVertical,
-  FiCheck,
   FiX,
+  FiCheck,
   FiClock,
   FiArrowLeft,
+  FiSearch,
+  FiUsers,
+  FiMail,
+  FiPlus,
+  FiCheckCircle,
 } from "react-icons/fi";
 
 interface Conversation {
@@ -41,78 +43,49 @@ interface Message {
   sender_id?: string;
   timestamp?: string;
   created_at?: string;
-  isRead: boolean;
+  delivered_at?: string;
+  read_at?: string;
+  isRead?: boolean;
+  is_read?: boolean;
 }
 
 function ChatPageContent() {
   const { user, isAdmin, isLoading: authLoading } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
+  const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  console.log(
-    "🚀 ChatPage render - user:",
-    user,
-    "isAdmin:",
-    isAdmin(),
-    "authLoading:",
-    authLoading
-  );
+  const [activeTab, setActiveTab] = useState<"chats" | "invitations">("chats");
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [selectedConversation, setSelectedConversation] =
     useState<Conversation | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState("");
-  const [searchQuery, setSearchQuery] = useState("");
-  const [showNewChat, setShowNewChat] = useState(false);
-  const [searchResults, setSearchResults] = useState<any[]>([]);
   const [invitations, setInvitations] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [dataLoaded, setDataLoaded] = useState(false);
-  const [refreshInterval, setRefreshInterval] = useState<NodeJS.Timeout | null>(
-    null
-  );
+  const [showNewChat, setShowNewChat] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchResults, setSearchResults] = useState<any[]>([]);
 
-  // Vérifier si l'utilisateur est admin
+  // Scroll automatique vers le bas (instantané)
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "instant" });
+  };
+
   useEffect(() => {
-    console.log(
-      "🔍 useEffect admin check - authLoading:",
-      authLoading,
-      "isLoading:",
-      isLoading
-    );
-
-    if (authLoading || isLoading) {
-      console.log("⏳ En attente du chargement...");
-      return; // Attendre que l'utilisateur soit chargé
-    }
-
-    console.log("✅ Vérification admin:", isAdmin());
-    console.log("👤 User:", user);
-
+    if (authLoading || isLoading) return;
     if (!isAdmin()) {
-      console.log("❌ Redirection vers l'accueil - utilisateur pas admin");
       router.push("/");
-    } else {
-      console.log("✅ Utilisateur admin confirmé");
     }
   }, [isAdmin, router, user, isLoading, authLoading]);
 
-  // Charger les conversations
   useEffect(() => {
-    console.log(
-      "📡 useEffect load data - isLoading:",
-      isLoading,
-      "isAdmin:",
-      isAdmin()
-    );
-
     if (!authLoading && isAdmin() && !dataLoaded) {
-      console.log("🚀 Chargement des données...");
       const loadData = async () => {
         setIsLoading(true);
         try {
           await Promise.all([loadConversations(), loadInvitations()]);
-          console.log("✅ Données chargées avec succès");
           setDataLoaded(true);
         } finally {
           setIsLoading(false);
@@ -120,7 +93,7 @@ function ChatPageContent() {
       };
       loadData();
     }
-  }, [authLoading]);
+  }, [isAdmin, authLoading, dataLoaded]);
 
   const loadConversations = async () => {
     try {
@@ -128,150 +101,15 @@ function ChatPageContent() {
         "https://believable-spontaneity-production.up.railway.app/api/admin/chat/conversations",
         { method: "GET" }
       );
-
-      console.log("💬 Réponse complète conversations:", data);
-
       if (data.success) {
-        // L'API peut retourner data.conversations ou data.data.conversations
         const conversations =
           data.conversations || data.data?.conversations || data.data || [];
-        console.log("💬 Conversations reçues:", conversations);
         setConversations(Array.isArray(conversations) ? conversations : []);
       } else {
-        console.error("Erreur API:", data.message);
         setConversations([]);
       }
     } catch (error) {
-      console.error("Erreur lors du chargement des conversations:", error);
       setConversations([]);
-    }
-  };
-
-  const searchAdmins = async (query: string) => {
-    if (query.length < 2) {
-      setSearchResults([]);
-      return;
-    }
-
-    try {
-      console.log("🔍 Recherche d'admins avec query:", query);
-      const data = await apiRequest(
-        `https://believable-spontaneity-production.up.railway.app/api/admin/chat/admins/search?q=${encodeURIComponent(
-          query
-        )}&limit=10`,
-        { method: "GET" }
-      );
-
-      console.log("📊 Résultats de recherche:", data);
-
-      if (data.success) {
-        // L'API retourne les admins dans data.data.admins ou data.admins
-        const admins = data.data?.admins || data.admins || [];
-        console.log("✅ Admins trouvés:", admins);
-        console.log("📝 Premier admin:", admins[0]);
-        setSearchResults(Array.isArray(admins) ? admins : []);
-      } else {
-        console.error("Erreur API:", data.message);
-        setSearchResults([]);
-      }
-    } catch (error) {
-      console.error("Erreur lors de la recherche:", error);
-      setSearchResults([]);
-    }
-  };
-
-  const sendInvitation = async (adminId: string) => {
-    try {
-      console.log("📤 Envoi d'invitation à adminId:", adminId);
-      const payload = {
-        toUserId: adminId,
-        to_user_id: adminId,
-        recipient_id: adminId,
-        recipientId: adminId,
-        message: "Salut, on peut discuter ?",
-      };
-      console.log("📦 Payload (tous les formats):", payload);
-
-      const data = await apiRequest(
-        "https://believable-spontaneity-production.up.railway.app/api/admin/chat/invitations",
-        {
-          method: "POST",
-          body: JSON.stringify(payload),
-        }
-      );
-
-      console.log("📨 Réponse invitation:", data);
-
-      if (data.success) {
-        console.log("✅ Invitation envoyée avec succès");
-        // Fermer la modal
-        setShowNewChat(false);
-        setSearchQuery("");
-        setSearchResults([]);
-        // Recharger les conversations pour voir la nouvelle invitation
-        loadConversations();
-      } else {
-        console.error("❌ Erreur API:", data.message);
-        alert(data.message || "Erreur lors de l'envoi de l'invitation");
-      }
-    } catch (error: any) {
-      console.error("❌ Erreur lors de l'envoi de l'invitation:", error);
-      console.error("❌ Error details:", error.message);
-      alert("Erreur lors de l'envoi de l'invitation: " + (error.message || ""));
-    }
-  };
-
-  const sendMessage = async () => {
-    if (!newMessage.trim() || !selectedConversation) return;
-
-    try {
-      const data = await apiRequest(
-        `https://believable-spontaneity-production.up.railway.app/api/admin/chat/conversations/${selectedConversation.id}/messages`,
-        {
-          method: "POST",
-          body: JSON.stringify({
-            content: newMessage,
-          }),
-        }
-      );
-
-      if (data.success) {
-        setMessages((prev) => {
-          const prevArray = Array.isArray(prev) ? prev : [];
-          return [...prevArray, data.message];
-        });
-        setNewMessage("");
-        // Rafraîchir immédiatement les conversations pour mettre à jour le lastMessage
-        loadConversations();
-      } else {
-        console.error("Erreur API:", data.message);
-      }
-    } catch (error) {
-      console.error("Erreur lors de l'envoi du message:", error);
-    }
-  };
-
-  const loadMessages = async (conversationId: string) => {
-    try {
-      const data = await apiRequest(
-        `https://believable-spontaneity-production.up.railway.app/api/admin/chat/conversations/${conversationId}/messages`,
-        { method: "GET" }
-      );
-
-      console.log("📬 Réponse complète messages:", data);
-
-      if (data.success) {
-        const messages =
-          data.messages || data.data?.messages || data.data || [];
-        console.log("📬 Messages reçus:", messages);
-        setMessages(Array.isArray(messages) ? messages : []);
-      } else {
-        console.error("Erreur API:", data.message);
-        setMessages([]);
-      }
-    } catch (error) {
-      console.error("Erreur lors du chargement des messages:", error);
-      setMessages([]);
     }
   };
 
@@ -281,22 +119,107 @@ function ChatPageContent() {
         "https://believable-spontaneity-production.up.railway.app/api/admin/chat/invitations",
         { method: "GET" }
       );
-
-      console.log("📨 Réponse complète invitations:", data);
-
       if (data.success) {
-        // L'API peut retourner data.invitations ou data.data.invitations
         const invitations =
           data.invitations || data.data?.invitations || data.data || [];
-        console.log("📨 Invitations reçues:", invitations);
         setInvitations(Array.isArray(invitations) ? invitations : []);
       } else {
-        console.error("Erreur API:", data.message);
         setInvitations([]);
       }
     } catch (error) {
-      console.error("Erreur lors du chargement des invitations:", error);
       setInvitations([]);
+    }
+  };
+
+  const loadMessages = async (conversationId: string) => {
+    try {
+      const data = await apiRequest(
+        `https://believable-spontaneity-production.up.railway.app/api/admin/chat/conversations/${conversationId}/messages`,
+        { method: "GET" }
+      );
+      if (data.success) {
+        const messages =
+          data.messages || data.data?.messages || data.data || [];
+        setMessages(Array.isArray(messages) ? messages : []);
+      } else {
+        setMessages([]);
+      }
+    } catch (error) {
+      setMessages([]);
+    }
+  };
+
+  const sendMessage = async () => {
+    if (!newMessage.trim() || !selectedConversation) return;
+    try {
+      const data = await apiRequest(
+        `https://believable-spontaneity-production.up.railway.app/api/admin/chat/conversations/${selectedConversation.id}/messages`,
+        {
+          method: "POST",
+          body: JSON.stringify({ content: newMessage }),
+        }
+      );
+      if (data.success) {
+        setMessages((prev) => {
+          const prevArray = Array.isArray(prev) ? prev : [];
+          return [...prevArray, data.message];
+        });
+        setNewMessage("");
+        loadConversations();
+      }
+    } catch (error) {
+      console.error("Erreur:", error);
+    }
+  };
+
+  const searchAdmins = async (query: string) => {
+    if (query.length < 2) {
+      setSearchResults([]);
+      return;
+    }
+    try {
+      const data = await apiRequest(
+        `https://believable-spontaneity-production.up.railway.app/api/admin/chat/admins/search?q=${encodeURIComponent(
+          query
+        )}&limit=10`,
+        { method: "GET" }
+      );
+      if (data.success) {
+        const admins = data.data?.admins || data.admins || [];
+        setSearchResults(Array.isArray(admins) ? admins : []);
+      } else {
+        setSearchResults([]);
+      }
+    } catch (error) {
+      setSearchResults([]);
+    }
+  };
+
+  const sendInvitation = async (adminId: string) => {
+    try {
+      const payload = {
+        toUserId: adminId,
+        to_user_id: adminId,
+        recipient_id: adminId,
+        recipientId: adminId,
+        message: "Salut, on peut discuter ?",
+      };
+
+      const data = await apiRequest(
+        "https://believable-spontaneity-production.up.railway.app/api/admin/chat/invitations",
+        {
+          method: "POST",
+          body: JSON.stringify(payload),
+        }
+      );
+      if (data.success) {
+        setShowNewChat(false);
+        setSearchQuery("");
+        setSearchResults([]);
+        loadConversations();
+      }
+    } catch (error: any) {
+      console.error("Erreur:", error);
     }
   };
 
@@ -312,32 +235,46 @@ function ChatPageContent() {
           body: JSON.stringify({ action }),
         }
       );
-
       if (data.success) {
-        // Recharger les conversations et invitations
         loadConversations();
         loadInvitations();
-      } else {
-        console.error("Erreur API:", data.message);
       }
     } catch (error) {
-      console.error("Erreur lors de la réponse à l'invitation:", error);
+      console.error("Erreur:", error);
     }
   };
 
   const handleConversationSelect = (conversation: Conversation) => {
     setSelectedConversation(conversation);
     loadMessages(conversation.id);
+    // Marquer comme lu après 1 seconde
+    setTimeout(() => {
+      markConversationAsRead(conversation.id);
+    }, 1000);
   };
 
-  // Ouvrir automatiquement une conversation depuis une notification
+  // Marquer la conversation comme lue
+  const markConversationAsRead = async (conversationId: string) => {
+    try {
+      await apiRequest(
+        `https://believable-spontaneity-production.up.railway.app/api/admin/chat/conversations/${conversationId}/mark-read`,
+        { method: "POST" }
+      );
+    } catch (error) {
+      console.error("Erreur marquage lu:", error);
+    }
+  };
+
+  // Scroll vers le bas quand les messages changent
+  useEffect(() => {
+    if (messages.length > 0) {
+      scrollToBottom();
+    }
+  }, [messages]);
+
   useEffect(() => {
     const conversationId = searchParams.get("conversation");
     if (conversationId && conversations.length > 0 && !selectedConversation) {
-      console.log(
-        "🔔 Ouverture automatique de la conversation:",
-        conversationId
-      );
       const conversation = conversations.find((c) => c.id === conversationId);
       if (conversation && conversation.status === "accepted") {
         handleConversationSelect(conversation);
@@ -345,17 +282,13 @@ function ChatPageContent() {
     }
   }, [searchParams, conversations, selectedConversation]);
 
-  // Polling automatique pour rafraîchir les conversations et messages
   useEffect(() => {
     if (!isAdmin() || authLoading) return;
 
-    // Rafraîchir toutes les 3 secondes
     const interval = setInterval(() => {
-      console.log("🔄 Polling automatique...");
       loadConversations();
       loadInvitations();
 
-      // Rafraîchir les messages de la conversation active
       if (selectedConversation && selectedConversation.status === "accepted") {
         loadMessages(selectedConversation.id);
       }
@@ -365,268 +298,88 @@ function ChatPageContent() {
   }, [isAdmin, authLoading, selectedConversation]);
 
   if (!isAdmin()) {
+    return null;
+  }
+
+  if (isLoading) {
     return (
-      <div className="min-h-screen bg-white flex items-center justify-center">
+      <div className="fixed inset-0 bg-gradient-to-br from-gray-900 via-black to-gray-900 flex items-center justify-center">
         <div className="text-center">
-          <h1 className="text-2xl font-bold text-gray-900 mb-4">
-            Accès refusé
-          </h1>
-          <p className="text-gray-600">
-            Seuls les administrateurs peuvent accéder au chat.
+          <div className="w-16 h-16 border-4 border-amber-500/30 border-t-amber-500 rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-amber-500 text-sm font-medium tracking-wide">
+            Chargement...
           </p>
         </div>
       </div>
     );
   }
 
-  return (
-    <div className="min-h-screen bg-gray-50 flex">
-      {/* Sidebar */}
-      <div
-        className={`w-80 bg-white border-r border-gray-200 flex flex-col ${
-          selectedConversation ? "hidden lg:flex" : "flex"
-        }`}
-      >
-        {/* Header */}
-        <div className="p-4 border-b border-gray-200">
-          <div className="flex items-center justify-between mb-4">
-            <h1 className="text-xl font-semibold text-gray-900">Chat Admin</h1>
-            <button
-              onClick={() => setShowNewChat(!showNewChat)}
-              className="p-2 bg-blue-600 text-white rounded-full hover:bg-blue-700 transition-colors"
-            >
-              <FiPlus className="w-4 h-4" />
-            </button>
+  // VUE CONVERSATION
+  if (selectedConversation) {
+    return (
+      <div className="fixed inset-0 bg-gradient-to-br from-gray-900 via-black to-gray-900 flex flex-col">
+        {/* Header luxe */}
+        <div className="flex-none bg-black/40 backdrop-blur-sm border-b border-amber-500/20 px-4 py-4 flex items-center gap-3">
+          <button
+            onClick={() => setSelectedConversation(null)}
+            className="p-2 -ml-2 text-amber-500 hover:bg-amber-500/10 rounded-full transition-colors"
+          >
+            <FiArrowLeft className="w-6 h-6" />
+          </button>
+          <div className="w-12 h-12 rounded-full bg-gradient-to-br from-amber-500 to-amber-600 text-white flex items-center justify-center font-bold text-sm shadow-lg shadow-amber-500/30">
+            {selectedConversation.participant.firstname.charAt(0)}
+            {selectedConversation.participant.lastname.charAt(0)}
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="font-bold text-white truncate text-sm tracking-wide">
+              {selectedConversation.participant.firstname}{" "}
+              {selectedConversation.participant.lastname}
+            </p>
+            <p className="text-xs text-emerald-400 font-medium">● En ligne</p>
           </div>
         </div>
 
-        {/* Invitations reçues */}
-        {invitations && invitations.length > 0 && (
-          <div className="border-b border-gray-200">
-            <div className="p-2">
-              <h3 className="text-sm font-medium text-gray-700 mb-2">
-                Invitations reçues
-              </h3>
-              {invitations.map((invitation) => {
-                const fromUser =
-                  invitation.fromUser || invitation.from_user || {};
-                const firstname =
-                  fromUser.firstname || fromUser.firstName || "?";
-                const lastname = fromUser.lastname || fromUser.lastName || "?";
-
-                return (
-                  <div
-                    key={invitation.id || invitation._id}
-                    className="flex items-center justify-between p-3 hover:bg-gray-50 rounded-lg"
-                  >
-                    <div className="flex items-center space-x-3">
-                      <div className="w-8 h-8 bg-orange-600 text-white rounded-full flex items-center justify-center text-sm font-medium">
-                        {firstname.charAt(0)}
-                        {lastname.charAt(0)}
-                      </div>
-                      <div>
-                        <p className="text-sm font-medium text-gray-900">
-                          {firstname} {lastname}
-                        </p>
-                        <p className="text-xs text-gray-500">
-                          {invitation.message || "Invitation de chat"}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="flex space-x-2">
-                      <button
-                        onClick={() =>
-                          respondToInvitation(
-                            invitation.id || invitation._id,
-                            "accept"
-                          )
-                        }
-                        className="px-2 py-1 bg-green-600 text-white text-xs rounded-full hover:bg-green-700 transition-colors"
-                      >
-                        <FiCheck className="w-3 h-3" />
-                      </button>
-                      <button
-                        onClick={() =>
-                          respondToInvitation(
-                            invitation.id || invitation._id,
-                            "reject"
-                          )
-                        }
-                        className="px-2 py-1 bg-red-600 text-white text-xs rounded-full hover:bg-red-700 transition-colors"
-                      >
-                        <FiX className="w-3 h-3" />
-                      </button>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        )}
-
-        {/* Conversations List */}
-        <div className="flex-1 overflow-y-auto">
-          {isLoading ? (
-            <div className="p-4 text-center">
-              <div className="w-6 h-6 border-2 border-gray-300 border-t-blue-600 rounded-full animate-spin mx-auto mb-2"></div>
-              <p className="text-sm text-gray-500">Chargement...</p>
-            </div>
-          ) : !conversations || conversations.length === 0 ? (
-            <div className="p-4 text-center">
-              <FiMessageCircle className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-              <p className="text-sm text-gray-500">Aucune conversation</p>
-              <p className="text-xs text-gray-400 mt-1">
-                Recherchez un admin pour commencer
+        {/* Messages avec fond élégant */}
+        <div className="flex-1 overflow-y-auto px-4 py-4 pb-20">
+          {messages.length === 0 ? (
+            <div className="h-full flex flex-col items-center justify-center opacity-40">
+              <div className="w-16 h-16 rounded-full bg-amber-500/10 flex items-center justify-center mb-3">
+                <FiMessageCircle className="w-8 h-8 text-amber-500" />
+              </div>
+              <p className="text-gray-400 text-sm font-medium">
+                Commencez la conversation
               </p>
             </div>
           ) : (
-            <div className="p-2">
-              {conversations.map((conversation) => (
-                <div
-                  key={conversation.id}
-                  onClick={() => {
-                    if (conversation.status === "accepted") {
-                      handleConversationSelect(conversation);
-                    }
-                  }}
-                  className={`p-3 rounded-lg transition-colors ${
-                    conversation.status === "accepted"
-                      ? "cursor-pointer"
-                      : "cursor-not-allowed opacity-60"
-                  } ${
-                    selectedConversation?.id === conversation.id
-                      ? "bg-blue-50 border border-blue-200"
-                      : conversation.status === "accepted"
-                      ? "hover:bg-gray-50"
-                      : ""
-                  }`}
-                >
-                  <div className="flex items-center space-x-3">
-                    <div className="relative">
-                      <div className="w-10 h-10 bg-blue-600 text-white rounded-full flex items-center justify-center text-sm font-medium">
-                        {conversation.participant.firstname.charAt(0)}
-                        {conversation.participant.lastname.charAt(0)}
-                      </div>
-                      {conversation.unreadCount > 0 && (
-                        <div className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center">
-                          {conversation.unreadCount}
-                        </div>
-                      )}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between">
-                        <p className="text-sm font-medium text-gray-900 truncate">
-                          {conversation.participant.firstname}{" "}
-                          {conversation.participant.lastname}
-                        </p>
-                        {conversation.status === "pending" && (
-                          <FiClock className="w-4 h-4 text-orange-500" />
-                        )}
-                        {conversation.status === "accepted" && (
-                          <FiCheck className="w-4 h-4 text-green-500" />
-                        )}
-                        {conversation.status === "rejected" && (
-                          <FiX className="w-4 h-4 text-red-500" />
-                        )}
-                      </div>
-                      {conversation.status === "pending" ? (
-                        <p className="text-xs text-orange-500 italic">
-                          En attente d'acceptation...
-                        </p>
-                      ) : conversation.lastMessage ? (
-                        <>
-                          <p className="text-xs text-gray-500 truncate">
-                            {conversation.lastMessage.content}
-                          </p>
-                          <p className="text-xs text-gray-400">
-                            {new Date(
-                              conversation.lastMessage.timestamp
-                            ).toLocaleTimeString("fr-FR", {
-                              hour: "2-digit",
-                              minute: "2-digit",
-                            })}
-                          </p>
-                        </>
-                      ) : (
-                        <p className="text-xs text-gray-400 italic">
-                          Aucun message
-                        </p>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      </div>
+            <div className="space-y-3">
+              {messages.map((message, index) => {
+                if (!message) return null;
+                const senderId = message.senderId || message.sender_id;
+                const isMyMessage = senderId === user?.id;
 
-      {/* Chat Area */}
-      <div
-        className={`flex-1 flex flex-col ${
-          !selectedConversation ? "hidden lg:flex" : "flex"
-        }`}
-      >
-        {selectedConversation ? (
-          <>
-            {/* Chat Header */}
-            <div className="bg-white border-b border-gray-200 p-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-3">
-                  <button
-                    onClick={() => setSelectedConversation(null)}
-                    className="lg:hidden p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full"
+                return (
+                  <div
+                    key={message.id || message._id || index}
+                    className={`flex ${
+                      isMyMessage ? "justify-end" : "justify-start"
+                    }`}
                   >
-                    <FiArrowLeft className="w-5 h-5" />
-                  </button>
-                  <div className="w-10 h-10 bg-blue-600 text-white rounded-full flex items-center justify-center text-sm font-medium">
-                    {selectedConversation.participant.firstname.charAt(0)}
-                    {selectedConversation.participant.lastname.charAt(0)}
-                  </div>
-                  <div>
-                    <h2 className="text-lg font-semibold text-gray-900">
-                      {selectedConversation.participant.firstname}{" "}
-                      {selectedConversation.participant.lastname}
-                    </h2>
-                    <p className="text-sm text-gray-500">
-                      {selectedConversation.participant.email}
-                    </p>
-                  </div>
-                </div>
-                <button className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full">
-                  <FiMoreVertical className="w-5 h-5" />
-                </button>
-              </div>
-            </div>
-
-            {/* Messages */}
-            <div className="flex-1 overflow-y-auto p-4 space-y-4">
-              {messages &&
-                messages.map((message) => {
-                  if (!message) return null;
-                  const senderId = message.senderId || message.sender_id;
-                  const isMyMessage = senderId === user?.id;
-
-                  return (
                     <div
-                      key={message.id || message._id}
-                      className={`flex ${
-                        isMyMessage ? "justify-end" : "justify-start"
+                      className={`max-w-[80%] rounded-2xl px-4 py-3 shadow-lg ${
+                        isMyMessage
+                          ? "bg-gradient-to-br from-amber-500 to-amber-600 text-white"
+                          : "bg-white/5 backdrop-blur-sm text-white border border-white/10"
                       }`}
                     >
+                      <p className="text-sm leading-relaxed break-words font-medium">
+                        {message.content}
+                      </p>
                       <div
-                        className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${
-                          isMyMessage
-                            ? "bg-blue-600 text-white"
-                            : "bg-white border border-gray-200 text-gray-900"
+                        className={`flex items-center justify-end gap-1.5 mt-1.5 text-xs font-medium ${
+                          isMyMessage ? "text-amber-100" : "text-gray-400"
                         }`}
                       >
-                        <p className="text-sm">{message.content}</p>
-                        <p
-                          className={`text-xs mt-1 ${
-                            isMyMessage ? "text-blue-100" : "text-gray-500"
-                          }`}
-                        >
+                        <span>
                           {new Date(
                             message.timestamp ||
                               message.created_at ||
@@ -635,58 +388,284 @@ function ChatPageContent() {
                             hour: "2-digit",
                             minute: "2-digit",
                           })}
-                        </p>
+                        </span>
+                        {isMyMessage && (
+                          <>
+                            {message.read_at ? (
+                              // Message vu - 2 coches dorées
+                              <div
+                                className="flex items-center gap-0.5"
+                                title={`Vu à ${new Date(
+                                  message.read_at
+                                ).toLocaleTimeString("fr-FR", {
+                                  hour: "2-digit",
+                                  minute: "2-digit",
+                                })}`}
+                              >
+                                <FiCheck className="w-3.5 h-3.5 -mr-1.5 text-amber-300" />
+                                <FiCheck className="w-3.5 h-3.5 text-amber-300" />
+                              </div>
+                            ) : message.delivered_at ? (
+                              // Message distribué - 2 coches grises
+                              <div
+                                className="flex items-center gap-0.5"
+                                title="Distribué"
+                              >
+                                <FiCheck className="w-3.5 h-3.5 -mr-1.5 text-gray-400" />
+                                <FiCheck className="w-3.5 h-3.5 text-gray-400" />
+                              </div>
+                            ) : (
+                              // Message envoyé - 1 coche grise
+                              <FiCheck
+                                className="w-3.5 h-3.5 text-gray-400"
+                                title="Envoyé"
+                              />
+                            )}
+                          </>
+                        )}
                       </div>
                     </div>
-                  );
-                })}
+                  </div>
+                );
+              })}
+              {/* Élément invisible pour le scroll automatique */}
+              <div ref={messagesEndRef} />
             </div>
+          )}
+        </div>
 
-            {/* Message Input */}
-            <div className="bg-white border-t border-gray-200 p-4">
-              <div className="flex items-center space-x-3">
-                <input
-                  type="text"
-                  placeholder="Tapez votre message..."
-                  value={newMessage}
-                  onChange={(e) => setNewMessage(e.target.value)}
-                  onKeyPress={(e) => e.key === "Enter" && sendMessage()}
-                  className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                />
+        {/* Input luxe */}
+        <div className="fixed bottom-0 left-0 right-0 bg-black/60 backdrop-blur-md border-t border-amber-500/20 p-4 pb-6">
+          <div className="flex items-center gap-3">
+            <input
+              type="text"
+              value={newMessage}
+              onChange={(e) => setNewMessage(e.target.value)}
+              onKeyPress={(e) => e.key === "Enter" && sendMessage()}
+              placeholder="Écrire un message..."
+              className="flex-1 bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl px-5 py-3 text-white placeholder-gray-500 text-sm focus:outline-none focus:border-amber-500/50 focus:ring-2 focus:ring-amber-500/20 transition-all font-medium"
+            />
+            <button
+              onClick={sendMessage}
+              disabled={!newMessage.trim()}
+              className="w-12 h-12 bg-gradient-to-br from-amber-500 to-amber-600 text-white rounded-xl flex items-center justify-center disabled:opacity-30 shadow-lg shadow-amber-500/30 hover:shadow-amber-500/50 transition-all disabled:shadow-none active:scale-95"
+            >
+              <FiSend className="w-5 h-5" />
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // VUE LISTE LUXE
+  return (
+    <div className="fixed inset-0 bg-gradient-to-br from-gray-900 via-black to-gray-900 flex flex-col">
+      {/* Header prestigieux */}
+      <div className="flex-none bg-black/40 backdrop-blur-sm border-b border-amber-500/20 px-6 py-6">
+        <h1 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-amber-400 via-amber-500 to-amber-600 tracking-tight">
+          Messages
+        </h1>
+        <p className="text-sm text-gray-400 mt-1 font-medium">
+          {conversations.length} conversation
+          {conversations.length !== 1 ? "s" : ""}
+        </p>
+      </div>
+
+      {/* Contenu avec padding pour nav */}
+      <div className="flex-1 overflow-y-auto pb-24">
+        {activeTab === "chats" ? (
+          <div className="p-4 space-y-3">
+            {conversations.length === 0 ? (
+              <div className="py-20 text-center">
+                <div className="w-20 h-20 rounded-full bg-amber-500/10 flex items-center justify-center mx-auto mb-4">
+                  <FiMessageCircle className="w-10 h-10 text-amber-500" />
+                </div>
+                <p className="text-gray-300 text-sm font-medium mb-1">
+                  Aucune conversation
+                </p>
+                <p className="text-gray-500 text-xs mb-6">
+                  Démarrez une nouvelle discussion premium
+                </p>
                 <button
-                  onClick={sendMessage}
-                  disabled={!newMessage.trim()}
-                  className="p-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  onClick={() => setShowNewChat(true)}
+                  className="px-6 py-3 bg-gradient-to-r from-amber-500 to-amber-600 text-white rounded-xl text-sm font-bold shadow-lg shadow-amber-500/30 hover:shadow-amber-500/50 transition-all active:scale-95"
                 >
-                  <FiSend className="w-5 h-5" />
+                  Nouvelle conversation
                 </button>
               </div>
-            </div>
-          </>
+            ) : (
+              conversations.map((conv) => (
+                <button
+                  key={conv.id}
+                  onClick={() =>
+                    conv.status === "accepted" && handleConversationSelect(conv)
+                  }
+                  disabled={conv.status !== "accepted"}
+                  className={`w-full bg-white/5 backdrop-blur-sm rounded-2xl p-4 border border-white/10 text-left transition-all ${
+                    conv.status === "accepted"
+                      ? "hover:bg-white/10 hover:border-amber-500/30 active:scale-98"
+                      : "opacity-40"
+                  }`}
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="w-14 h-14 rounded-full bg-gradient-to-br from-amber-500 to-amber-600 text-white flex items-center justify-center font-bold text-sm flex-shrink-0 shadow-lg shadow-amber-500/30">
+                      {conv.participant.firstname.charAt(0)}
+                      {conv.participant.lastname.charAt(0)}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-baseline justify-between mb-1">
+                        <p className="font-bold text-white text-sm truncate tracking-wide">
+                          {conv.participant.firstname}{" "}
+                          {conv.participant.lastname}
+                        </p>
+                        {conv.lastMessage && (
+                          <span className="text-xs text-gray-500 ml-2 font-medium">
+                            {new Date(
+                              conv.lastMessage.timestamp
+                            ).toLocaleTimeString("fr-FR", {
+                              hour: "2-digit",
+                              minute: "2-digit",
+                            })}
+                          </span>
+                        )}
+                      </div>
+                      {conv.status === "pending" ? (
+                        <div className="flex items-center gap-1.5 text-amber-500">
+                          <FiClock className="w-3.5 h-3.5" />
+                          <p className="text-xs font-medium">
+                            En attente d'acceptation
+                          </p>
+                        </div>
+                      ) : conv.lastMessage ? (
+                        <p className="text-sm text-gray-400 truncate font-medium">
+                          {conv.lastMessage.content}
+                        </p>
+                      ) : (
+                        <p className="text-xs text-gray-500 italic">
+                          Nouvelle conversation
+                        </p>
+                      )}
+                    </div>
+                    {conv.unreadCount > 0 && (
+                      <div className="bg-gradient-to-r from-amber-500 to-amber-600 text-white text-xs rounded-full min-w-[24px] h-6 flex items-center justify-center px-2 font-bold flex-shrink-0 shadow-lg shadow-amber-500/40">
+                        {conv.unreadCount}
+                      </div>
+                    )}
+                  </div>
+                </button>
+              ))
+            )}
+          </div>
         ) : (
-          <div className="flex-1 flex items-center justify-center">
-            <div className="text-center">
-              <FiMessageCircle className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-              <h2 className="text-xl font-semibold text-gray-900 mb-2">
-                Sélectionnez une conversation
-              </h2>
-              <p className="text-gray-500">
-                Choisissez une conversation dans la liste pour commencer à
-                discuter
-              </p>
-            </div>
+          <div className="p-4 space-y-3">
+            {invitations.length === 0 ? (
+              <div className="py-20 text-center">
+                <div className="w-20 h-20 rounded-full bg-amber-500/10 flex items-center justify-center mx-auto mb-4">
+                  <FiMail className="w-10 h-10 text-amber-500" />
+                </div>
+                <p className="text-gray-300 text-sm font-medium">
+                  Aucune invitation
+                </p>
+                <p className="text-gray-500 text-xs mt-1">Vous êtes à jour</p>
+              </div>
+            ) : (
+              invitations.map((inv) => (
+                <div
+                  key={inv.id}
+                  className="bg-white/5 backdrop-blur-sm rounded-2xl p-4 border border-amber-500/20"
+                >
+                  <div className="flex gap-3">
+                    <div className="w-14 h-14 rounded-full bg-gradient-to-br from-amber-500 to-amber-600 text-white flex items-center justify-center font-bold text-sm flex-shrink-0 shadow-lg shadow-amber-500/30">
+                      {inv.fromUser?.firstname?.charAt(0) || "?"}
+                      {inv.fromUser?.lastname?.charAt(0) || "?"}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-bold text-white text-sm mb-1 tracking-wide">
+                        {inv.fromUser?.firstname} {inv.fromUser?.lastname}
+                      </p>
+                      <p className="text-xs text-gray-400 mb-4 font-medium">
+                        {inv.message || "Souhaite vous contacter"}
+                      </p>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => respondToInvitation(inv.id, "accept")}
+                          className="flex-1 bg-gradient-to-r from-amber-500 to-amber-600 text-white px-4 py-2.5 rounded-xl text-sm font-bold shadow-lg shadow-amber-500/30 hover:shadow-amber-500/50 transition-all active:scale-95"
+                        >
+                          <FiCheck className="inline w-4 h-4 mr-1" />
+                          Accepter
+                        </button>
+                        <button
+                          onClick={() => respondToInvitation(inv.id, "reject")}
+                          className="flex-1 bg-white/5 backdrop-blur-sm border border-white/10 text-gray-300 px-4 py-2.5 rounded-xl text-sm font-bold hover:bg-white/10 transition-all active:scale-95"
+                        >
+                          <FiX className="inline w-4 h-4 mr-1" />
+                          Refuser
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))
+            )}
           </div>
         )}
       </div>
 
-      {/* Modal Nouvelle Conversation */}
+      {/* BOTTOM NAV LUXE */}
+      <div className="fixed bottom-0 left-0 right-0 bg-black/60 backdrop-blur-md border-t border-amber-500/20 pb-safe">
+        <div className="flex items-center justify-around h-20 px-2">
+          <button
+            onClick={() => setActiveTab("chats")}
+            className={`flex-1 flex flex-col items-center justify-center gap-1.5 transition-all ${
+              activeTab === "chats"
+                ? "text-amber-500"
+                : "text-gray-500 hover:text-gray-400"
+            }`}
+          >
+            <FiMessageCircle className="w-6 h-6" />
+            <span className="text-xs font-bold tracking-wide">Discussions</span>
+            {activeTab === "chats" && (
+              <div className="w-12 h-1 bg-gradient-to-r from-amber-500 to-amber-600 rounded-full mt-0.5" />
+            )}
+          </button>
+
+          <button
+            onClick={() => setShowNewChat(true)}
+            className="w-16 h-16 -mt-10 bg-gradient-to-br from-amber-500 to-amber-600 text-white rounded-2xl shadow-xl shadow-amber-500/40 flex items-center justify-center active:scale-95 transition-all hover:shadow-2xl hover:shadow-amber-500/60"
+          >
+            <FiPlus className="w-8 h-8" />
+          </button>
+
+          <button
+            onClick={() => setActiveTab("invitations")}
+            className={`flex-1 flex flex-col items-center justify-center gap-1.5 relative transition-all ${
+              activeTab === "invitations"
+                ? "text-amber-500"
+                : "text-gray-500 hover:text-gray-400"
+            }`}
+          >
+            <FiMail className="w-6 h-6" />
+            <span className="text-xs font-bold tracking-wide">Invitations</span>
+            {invitations.length > 0 && (
+              <span className="absolute top-1 right-8 bg-gradient-to-r from-red-500 to-red-600 text-white text-xs rounded-full min-w-[20px] h-5 flex items-center justify-center px-1.5 font-bold shadow-lg shadow-red-500/50">
+                {invitations.length}
+              </span>
+            )}
+            {activeTab === "invitations" && (
+              <div className="w-12 h-1 bg-gradient-to-r from-amber-500 to-amber-600 rounded-full mt-0.5" />
+            )}
+          </button>
+        </div>
+      </div>
+
+      {/* Modal luxe */}
       {showNewChat && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg shadow-xl max-w-md w-full max-h-[80vh] flex flex-col">
-            {/* Header Modal */}
-            <div className="p-6 border-b border-gray-200">
-              <div className="flex items-center justify-between">
-                <h2 className="text-xl font-semibold text-gray-900">
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-end">
+          <div className="bg-gradient-to-br from-gray-900 to-black w-full rounded-t-3xl max-h-[90vh] flex flex-col border-t border-amber-500/20">
+            <div className="p-6 border-b border-amber-500/20">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-xl font-bold text-white tracking-wide">
                   Nouvelle conversation
                 </h2>
                 <button
@@ -695,62 +674,63 @@ function ChatPageContent() {
                     setSearchQuery("");
                     setSearchResults([]);
                   }}
-                  className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full transition-colors"
+                  className="p-2 text-gray-400 hover:text-white hover:bg-white/5 rounded-full transition-all"
                 >
-                  <FiX className="w-5 h-5" />
+                  <FiX className="w-6 h-6" />
                 </button>
               </div>
-            </div>
-
-            {/* Search Input */}
-            <div className="p-6 border-b border-gray-200">
               <div className="relative">
-                <FiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                <FiSearch className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
                 <input
                   type="text"
-                  placeholder="Rechercher un admin par prénom ou nom..."
+                  placeholder="Rechercher un administrateur..."
                   value={searchQuery}
                   onChange={(e) => {
                     setSearchQuery(e.target.value);
                     searchAdmins(e.target.value);
                   }}
-                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full pl-12 pr-4 py-3.5 bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-amber-500/50 focus:ring-2 focus:ring-amber-500/20 transition-all text-sm font-medium"
                   autoFocus
                 />
               </div>
             </div>
-
-            {/* Search Results */}
             <div className="flex-1 overflow-y-auto p-4">
               {searchQuery.length < 2 ? (
-                <div className="text-center py-12">
-                  <FiSearch className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-                  <p className="text-sm text-gray-500">
-                    Tapez au moins 2 caractères pour rechercher
+                <div className="text-center py-16">
+                  <div className="w-16 h-16 rounded-full bg-amber-500/10 flex items-center justify-center mx-auto mb-4">
+                    <FiSearch className="w-8 h-8 text-amber-500" />
+                  </div>
+                  <p className="text-sm text-gray-400 font-medium">
+                    Tapez au moins 2 caractères
+                  </p>
+                  <p className="text-xs text-gray-600 mt-1">
+                    pour lancer la recherche
                   </p>
                 </div>
-              ) : searchResults && searchResults.length > 0 ? (
-                <div className="space-y-2">
+              ) : searchResults.length > 0 ? (
+                <div className="space-y-3">
                   {searchResults.map((admin) => (
                     <div
                       key={admin.id}
-                      className="flex items-center justify-between p-4 hover:bg-gray-50 rounded-lg border border-gray-200 transition-colors"
+                      className="flex items-center justify-between p-4 bg-white/5 backdrop-blur-sm rounded-2xl border border-white/10 hover:bg-white/10 transition-all"
                     >
-                      <div className="flex items-center space-x-3">
-                        <div className="w-12 h-12 bg-blue-600 text-white rounded-full flex items-center justify-center text-sm font-medium">
+                      <div className="flex items-center gap-3 flex-1 min-w-0">
+                        <div className="w-12 h-12 rounded-full bg-gradient-to-br from-amber-500 to-amber-600 text-white flex items-center justify-center font-bold text-sm shadow-lg shadow-amber-500/30">
                           {admin.firstname.charAt(0)}
                           {admin.lastname.charAt(0)}
                         </div>
-                        <div>
-                          <p className="text-sm font-semibold text-gray-900">
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-bold text-white truncate tracking-wide">
                             {admin.firstname} {admin.lastname}
                           </p>
-                          <p className="text-xs text-gray-500">{admin.email}</p>
+                          <p className="text-xs text-gray-500 truncate font-medium">
+                            {admin.email}
+                          </p>
                         </div>
                       </div>
                       <button
                         onClick={() => sendInvitation(admin.id)}
-                        className="px-4 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition-colors font-medium"
+                        className="ml-3 px-5 py-2.5 bg-gradient-to-r from-amber-500 to-amber-600 text-white text-sm rounded-xl font-bold shadow-lg shadow-amber-500/30 hover:shadow-amber-500/50 transition-all active:scale-95"
                       >
                         Inviter
                       </button>
@@ -758,10 +738,14 @@ function ChatPageContent() {
                   ))}
                 </div>
               ) : (
-                <div className="text-center py-12">
-                  <FiMessageCircle className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-                  <p className="text-sm text-gray-500">Aucun admin trouvé</p>
-                  <p className="text-xs text-gray-400 mt-1">
+                <div className="text-center py-16">
+                  <div className="w-16 h-16 rounded-full bg-white/5 flex items-center justify-center mx-auto mb-4">
+                    <FiUsers className="w-8 h-8 text-gray-500" />
+                  </div>
+                  <p className="text-sm text-gray-400 font-medium">
+                    Aucun résultat
+                  </p>
+                  <p className="text-xs text-gray-600 mt-1">
                     Essayez une autre recherche
                   </p>
                 </div>
@@ -778,11 +762,8 @@ export default function ChatPage() {
   return (
     <Suspense
       fallback={
-        <div className="min-h-screen bg-white flex items-center justify-center">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-            <p className="text-gray-600">Chargement du chat...</p>
-          </div>
+        <div className="fixed inset-0 bg-gradient-to-br from-gray-900 via-black to-gray-900 flex items-center justify-center">
+          <div className="w-16 h-16 border-4 border-amber-500/30 border-t-amber-500 rounded-full animate-spin"></div>
         </div>
       }
     >

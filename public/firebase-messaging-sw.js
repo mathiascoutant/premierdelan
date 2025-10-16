@@ -23,30 +23,41 @@ const messaging = firebase.messaging();
 self.addEventListener("push", function (event) {
   console.log("📨 Message push reçu !", event);
 
-  let data = {};
-  let title = "Notification";
-  let body = "";
+  // ✅ NE PAS traiter si le message a déjà un payload notification
+  // Laisser FCM afficher nativement pour éviter le "from premierdelan"
+  if (!event.data) {
+    return;
+  }
 
   try {
-    if (event.data) {
-      data = event.data.json();
-      title = data.notification?.title || data.data?.title || "Notification";
-      body = data.notification?.body || data.data?.message || "";
+    const payload = event.data.json();
+
+    // ✅ Si FCM a déjà un champ notification, ne rien faire
+    // Le système l'affichera automatiquement sans "from"
+    if (payload.notification) {
+      console.log(
+        "✅ Notification FCM native, affichage automatique par le système"
+      );
+      return;
     }
+
+    // Sinon, traiter comme avant (pour les data-only messages)
+    let title = payload.data?.title || "Notification";
+    let body = payload.data?.message || "";
+
+    event.waitUntil(
+      self.registration.showNotification(title, {
+        body: body,
+        icon: "/icon-192x192.png",
+        badge: "/icon-192x192.png",
+        data: payload.data || {},
+        tag: payload.data?.type || "default",
+        requireInteraction: true,
+      })
+    );
   } catch (e) {
     console.error("Erreur parsing push:", e);
   }
-
-  event.waitUntil(
-    self.registration.showNotification(title, {
-      body: body,
-      icon: "/icon-192x192.png",
-      badge: "/icon-192x192.png",
-      data: data.data || data,
-      tag: data.data?.type || "default",
-      requireInteraction: true,
-    })
-  );
 });
 
 // Gestion du clic sur la notification
