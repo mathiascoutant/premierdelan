@@ -375,9 +375,7 @@ function ChatPageContent() {
             </button>
             <button
               onClick={() => {
-                const basePath =
-                  process.env.NODE_ENV === "production" ? "/premierdelan" : "";
-                router.push(basePath + "/");
+                router.push("/");
               }}
               className="p-2 text-amber-500 hover:bg-amber-500/10 rounded-full transition-colors"
               title="Retour à l'accueil"
@@ -525,9 +523,7 @@ function ChatPageContent() {
         <div className="flex items-center gap-3">
           <button
             onClick={() => {
-              const basePath =
-                process.env.NODE_ENV === "production" ? "/premierdelan" : "";
-              router.push(basePath + "/");
+              router.push("/");
             }}
             className="p-2 -ml-2 text-amber-500 hover:bg-amber-500/10 rounded-full transition-colors flex-shrink-0"
             title="Retour à l'accueil"
