@@ -21,20 +21,55 @@ const messaging = firebase.messaging();
 
 // ✅ GARDER UNIQUEMENT le listener pour les clics sur les notifications
 self.addEventListener("notificationclick", function (event) {
-  console.log("🔔 Clic sur notification:", event.notification.data);
+  console.log("👆 Notification cliquée");
+  console.log("📦 Data complète:", event.notification.data);
+  
   event.notification.close();
 
   const data = event.notification.data;
-  let url = "https://mathiascoutant.github.io/premierdelan/";
+  console.log("📦 Type:", data.type);
+  console.log("📦 ConversationId:", data.conversationId);
+  
+  // URL de base selon l'environnement
+  const baseUrl = self.location.origin + "/premierdelan";
+  
+  event.waitUntil(
+    clients
+      .matchAll({ type: "window", includeUncontrolled: true })
+      .then(function (clientList) {
+        console.log("🔍 Clients trouvés:", clientList.length);
 
-  // Si c'est un message de chat, rediriger vers la conversation
-  if (data.type === "chat_message" && data.conversationId) {
-    url = `https://mathiascoutant.github.io/premierdelan/chat?conversation=${data.conversationId}`;
-  }
-  // Si c'est une invitation, rediriger vers le chat
-  else if (data.type === "chat_invitation") {
-    url = "https://mathiascoutant.github.io/premierdelan/chat";
-  }
+        // Chercher un client déjà ouvert
+        for (let i = 0; i < clientList.length; i++) {
+          const client = clientList[i];
+          if (client.url.includes("premierdelan") && "focus" in client) {
+            console.log("🪟 Focus sur client existant");
+            
+            // Envoyer un message au client pour qu'il gère la redirection
+            client.postMessage({
+              type: "NOTIFICATION_CLICK",
+              data: data,
+            });
+            
+            return client.focus();
+          }
+        }
 
-  event.waitUntil(clients.openWindow(url));
+        // Aucun client ouvert, ouvrir une nouvelle fenêtre
+        console.log("🆕 Ouverture nouvelle fenêtre");
+        let targetUrl = baseUrl + "/";
+        
+        // Construire l'URL cible selon le type de notification
+        if (data.type === "chat_message" && data.conversationId) {
+          targetUrl = baseUrl + `/chat?conversation=${data.conversationId}`;
+          console.log("💬 URL conversation:", targetUrl);
+        } else if (data.type === "chat_invitation") {
+          targetUrl = baseUrl + "/chat";
+          console.log("📨 URL chat:", targetUrl);
+        }
+        
+        console.log("🎯 URL cible complète:", targetUrl);
+        return clients.openWindow(targetUrl);
+      })
+  );
 });
