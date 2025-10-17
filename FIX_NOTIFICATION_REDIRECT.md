@@ -1,8 +1,25 @@
 # 🔔 Fix: Redirection des notifications vers les conversations
 
-## 🐛 Problème
+## ✅ RÉSOLU (v2.2.0)
+
+**Bug identifié** : Le service worker backend redirige vers `/messages` mais la vraie route frontend est `/chat`
+
+**Solution** : Utiliser `/chat?conversation=...` dans toutes les redirections
+
+---
+
+## 🐛 Problème (historique)
 
 Quand on clique sur une notification de message, on arrive sur la page d'accueil au lieu d'arriver directement dans la conversation.
+
+## ⚠️ IMPORTANT : Routes frontend
+
+**Route correcte** : `/chat`  
+**❌ NE PAS utiliser** : `/messages`, `/conversations`, `/messaging`
+
+Toutes les URLs de notification doivent pointer vers :
+- Base : `https://mathiascoutant.github.io/premierdelan/chat`
+- Avec conversation : `https://mathiascoutant.github.io/premierdelan/chat?conversation={id}`
 
 ## ✅ Format attendu par le frontend
 
@@ -154,6 +171,7 @@ def send_chat_notification(recipient_fcm_token, sender_name, message_content, co
                     badge='/icon-192x192.png'
                 ),
                 fcm_options=messaging.WebpushFCMOptions(
+                    # ⚠️ IMPORTANT : Utiliser /chat et pas /messages !
                     link=f'https://mathiascoutant.github.io/premierdelan/chat?conversation={conversation_id}'
                 )
             )

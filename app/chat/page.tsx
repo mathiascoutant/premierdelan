@@ -68,6 +68,7 @@ function ChatPageContent() {
   const [showNewChat, setShowNewChat] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<any[]>([]);
+  const [pendingConversationId, setPendingConversationId] = useState<string | null>(null);
 
   // Scroll automatique vers le bas (instantané)
   const scrollToBottom = () => {
@@ -313,15 +314,48 @@ function ChatPageContent() {
     }
   }, [messages]);
 
+  // Détecter le paramètre conversation dans l'URL
   useEffect(() => {
     const conversationId = searchParams.get("conversation");
-    if (conversationId && conversations.length > 0 && !selectedConversation) {
-      const conversation = conversations.find((c) => c.id === conversationId);
-      if (conversation && conversation.status === "accepted") {
-        handleConversationSelect(conversation);
-      }
+    
+    if (conversationId && !pendingConversationId && !selectedConversation) {
+      console.log("🔗 [Chat] Paramètre conversation détecté dans URL:", conversationId);
+      setPendingConversationId(conversationId);
     }
-  }, [searchParams, conversations, selectedConversation]);
+  }, [searchParams, pendingConversationId, selectedConversation]);
+
+  // Ouvrir la conversation dès que les conversations sont chargées
+  useEffect(() => {
+    if (!pendingConversationId || selectedConversation || conversations.length === 0) {
+      return;
+    }
+
+    console.log("🔎 [Chat] Tentative d'ouverture conversation:", pendingConversationId);
+    console.log("📊 [Chat] Conversations disponibles:", conversations.length);
+    
+    const conversation = conversations.find((c) => c.id === pendingConversationId);
+    
+    if (conversation) {
+      console.log("✅ [Chat] Conversation trouvée:", conversation.participant);
+      if (conversation.status === "accepted") {
+        console.log("🚀 [Chat] Ouverture conversation");
+        handleConversationSelect(conversation);
+        setPendingConversationId(null);
+        
+        // Nettoyer l'URL après ouverture
+        window.history.replaceState({}, '', '/chat');
+      } else {
+        console.warn("⚠️ [Chat] Conversation pas acceptée, statut:", conversation.status);
+        setPendingConversationId(null);
+      }
+    } else {
+      console.error("❌ [Chat] Conversation non trouvée:", pendingConversationId);
+      console.log("📋 [Chat] IDs disponibles:", conversations.map(c => ({ 
+        id: c.id, 
+        name: `${c.participant.firstname} ${c.participant.lastname}` 
+      })));
+    }
+  }, [pendingConversationId, conversations, selectedConversation]);
 
   useEffect(() => {
     if (!isAdmin() || authLoading) return;
