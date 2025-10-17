@@ -54,16 +54,21 @@ self.addEventListener('push', function(event) {
         );
       })
     );
+    
+    // ✅ NE PAS créer de notification pour chat_message
+    // iOS/FCM s'en occupe automatiquement via FCMOptions.Link
+    console.log('✅ [SW] Pas de showNotification pour chat_message (iOS gère ça)');
+    return;
   }
 
-  // Afficher la notification
-  const title = payload.notification?.title || 'Nouveau message';
+  // Afficher la notification pour les autres types
+  const title = payload.notification?.title || 'Notification';
   const options = {
     body: payload.notification?.body || '',
     icon: '/icon-192x192.png',
     badge: '/icon-192x192.png',
     data: notificationData,
-    tag: 'chat-' + (notificationData.conversationId || Date.now())
+    tag: notificationData.type || 'notification'
   };
   
   event.waitUntil(
