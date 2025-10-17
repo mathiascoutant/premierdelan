@@ -138,9 +138,14 @@ export async function apiRequest(endpoint: string, options: RequestInit = {}) {
         error = { message: text || `Erreur ${response.status}` };
       }
 
-      console.error("❌ Erreur backend:", error);
-      console.error("❌ Status:", response.status);
-      console.error("❌ Content-Type:", contentType);
+      // Ne pas logger les 404 sur les endpoints d'inscription (cas normal: pas inscrit)
+      const isInscriptionCheck = endpoint.includes("/inscription?user_email=");
+      if (!isInscriptionCheck || response.status !== 404) {
+        console.error("❌ Erreur backend:", error);
+        console.error("❌ Status:", response.status);
+        console.error("❌ Content-Type:", contentType);
+      }
+      
       throw new Error(
         error.message || error.error || `Erreur ${response.status}`
       );
@@ -148,7 +153,13 @@ export async function apiRequest(endpoint: string, options: RequestInit = {}) {
 
     return response.json();
   } catch (error) {
-    console.error("API Request Error:", error);
+    // Ne pas logger les erreurs 404 sur les checks d'inscription
+    const isInscriptionCheck = endpoint.includes("/inscription?user_email=");
+    const is404Error = error instanceof Error && error.message.includes("404");
+    
+    if (!isInscriptionCheck || !is404Error) {
+      console.error("API Request Error:", error);
+    }
 
     // Erreur réseau (timeout, DNS, serveur inaccessible, etc.)
     // TODO: Désactivé temporairement pour debug

@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Cinzel, Crimson_Text } from "next/font/google";
 import "./globals.css";
 import PWASplashScreen from "./components/PWASplashScreen";
+import NotificationRedirectHandler from "./components/NotificationRedirectHandler";
 import { ThemeProvider } from "./hooks/useTheme";
 
 const cinzel = Cinzel({
@@ -45,6 +46,7 @@ export default function RootLayout({
       <body className={crimsonText.className}>
         <ThemeProvider>
           <PWASplashScreen />
+          <NotificationRedirectHandler />
           {children}
         </ThemeProvider>
       </body>

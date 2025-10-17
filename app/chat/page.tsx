@@ -102,8 +102,42 @@ function ChatPageContent() {
         { method: "GET" }
       );
       if (data.success) {
-        const conversations =
+        let conversations =
           data.conversations || data.data?.conversations || data.data || [];
+        
+        // Normaliser les données du backend (snake_case -> camelCase)
+        conversations = conversations.map((conv: any) => {
+          const normalized: any = {
+            id: conv.id,
+            participant: conv.participant,
+            status: conv.status,
+            unreadCount: conv.unread_count || conv.unreadCount || 0,
+          };
+          
+          // Gérer last_message (snake_case) ou lastMessage (camelCase)
+          const lastMsg = conv.last_message || conv.lastMessage;
+          if (lastMsg) {
+            normalized.lastMessage = {
+              content: lastMsg.content,
+              timestamp: lastMsg.timestamp,
+              isRead: lastMsg.is_read !== undefined ? lastMsg.is_read : lastMsg.isRead,
+            };
+          }
+          
+          return normalized;
+        });
+        
+        // Debug: voir les unreadCount après normalisation
+        if (conversations.length > 0) {
+          console.log("📊 UnreadCounts après rechargement:", 
+            conversations.map((c: any) => ({ 
+              id: c.id, 
+              participant: `${c.participant?.firstname} ${c.participant?.lastname}`,
+              unreadCount: c.unreadCount 
+            }))
+          );
+        }
+        
         setConversations(Array.isArray(conversations) ? conversations : []);
       } else {
         setConversations([]);
@@ -247,7 +281,8 @@ function ChatPageContent() {
   const handleConversationSelect = (conversation: Conversation) => {
     setSelectedConversation(conversation);
     loadMessages(conversation.id);
-    // Marquer comme lu après 1 seconde
+    
+    // Marquer comme lu après 1 seconde (le backend mettra à jour unreadCount)
     setTimeout(() => {
       markConversationAsRead(conversation.id);
     }, 1000);
@@ -256,12 +291,17 @@ function ChatPageContent() {
   // Marquer la conversation comme lue
   const markConversationAsRead = async (conversationId: string) => {
     try {
-      await apiRequest(
+      console.log("📖 Marquage conversation comme lue:", conversationId);
+      const response = await apiRequest(
         `https://believable-spontaneity-production.up.railway.app/api/admin/chat/conversations/${conversationId}/mark-read`,
         { method: "POST" }
       );
+      console.log("✅ Réponse backend mark-read:", response);
+      
+      // Recharger les conversations pour synchroniser avec le backend
+      await loadConversations();
     } catch (error) {
-      console.error("Erreur marquage lu:", error);
+      console.error("❌ Erreur marquage lu:", error);
     }
   };
 
@@ -321,7 +361,11 @@ function ChatPageContent() {
         {/* Header luxe */}
         <div className="flex-none bg-black/40 backdrop-blur-sm border-b border-amber-500/20 px-4 py-4 flex items-center gap-3">
           <button
-            onClick={() => setSelectedConversation(null)}
+            onClick={() => {
+              setSelectedConversation(null);
+              // Recharger les conversations pour avoir les compteurs à jour
+              loadConversations();
+            }}
             className="p-2 -ml-2 text-amber-500 hover:bg-amber-500/10 rounded-full transition-colors"
           >
             <FiArrowLeft className="w-6 h-6" />
@@ -538,12 +582,23 @@ function ChatPageContent() {
                           </p>
                         </div>
                       ) : conv.lastMessage ? (
-                        <p className="text-sm text-gray-400 truncate font-medium">
-                          {conv.lastMessage.content}
-                        </p>
+                        <div className="flex items-center gap-2">
+                          {conv.unreadCount > 0 && (
+                            <div className="w-2 h-2 bg-amber-500 rounded-full flex-shrink-0 animate-pulse" />
+                          )}
+                          <p
+                            className={`text-sm truncate ${
+                              conv.unreadCount > 0
+                                ? "text-white font-bold"
+                                : "text-gray-400 font-medium"
+                            }`}
+                          >
+                            {conv.lastMessage.content}
+                          </p>
+                        </div>
                       ) : (
                         <p className="text-xs text-gray-500 italic">
-                          Nouvelle conversation
+                          Aucun message pour le moment
                         </p>
                       )}
                     </div>
