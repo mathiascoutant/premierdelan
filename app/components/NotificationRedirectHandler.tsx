@@ -20,26 +20,30 @@ export default function NotificationRedirectHandler() {
 
         console.log("🔔 Clic notification détecté:", data);
 
+        // Détecter le basePath à partir de l'URL actuelle
+        const currentPath = window.location.pathname;
+        const basePath = currentPath.includes("/premierdelan") ? "/premierdelan" : "";
+        console.log("🔧 BasePath détecté:", basePath);
+        
         // Redirection selon le type
-        // Next.js gère automatiquement le basePath configuré dans next.config.js
         if (data.type === "chat_message" && data.conversationId) {
           // Naviguer vers la conversation
-          const url = `/chat?conversation=${data.conversationId}`;
-          console.log("💬 Redirection vers conversation:", data.conversationId);
-          router.push(url);
+          const url = `${basePath}/chat?conversation=${data.conversationId}`;
+          console.log("💬 Redirection vers:", url);
+          window.location.href = url;
         } else if (data.type === "chat_invitation") {
-          router.push("/chat");
           console.log("📨 Redirection vers invitations");
+          window.location.href = `${basePath}/chat`;
         } else if (data.type === "new_inscription" && data.event_id) {
-          router.push("/admin/evenements");
           console.log("👥 Redirection vers événements admin");
+          window.location.href = `${basePath}/admin/evenements`;
         } else if (data.type === "alert") {
-          router.push("/admin");
           console.log("⚠️ Redirection vers admin");
+          window.location.href = `${basePath}/admin`;
         } else if (data.url) {
           // Fallback: utiliser l'URL directement si fournie
           console.log("🔗 Redirection vers URL:", data.url);
-          router.push(data.url);
+          window.location.href = data.url;
         }
       }
     };
