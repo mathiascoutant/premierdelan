@@ -16,6 +16,7 @@ import {
   FiMail,
   FiPlus,
   FiCheckCircle,
+  FiHome,
 } from "react-icons/fi";
 
 interface Conversation {
@@ -360,17 +361,31 @@ function ChatPageContent() {
       <div className="fixed inset-0 bg-gradient-to-br from-gray-900 via-black to-gray-900 flex flex-col">
         {/* Header luxe */}
         <div className="flex-none bg-black/40 backdrop-blur-sm border-b border-amber-500/20 px-4 py-4 flex items-center gap-3">
-          <button
-            onClick={() => {
-              setSelectedConversation(null);
-              // Recharger les conversations pour avoir les compteurs à jour
-              loadConversations();
-            }}
-            className="p-2 -ml-2 text-amber-500 hover:bg-amber-500/10 rounded-full transition-colors"
-          >
-            <FiArrowLeft className="w-6 h-6" />
-          </button>
-          <div className="w-12 h-12 rounded-full bg-gradient-to-br from-amber-500 to-amber-600 text-white flex items-center justify-center font-bold text-sm shadow-lg shadow-amber-500/30">
+          <div className="flex items-center gap-1">
+            <button
+              onClick={() => {
+                setSelectedConversation(null);
+                // Recharger les conversations pour avoir les compteurs à jour
+                loadConversations();
+              }}
+              className="p-2 -ml-2 text-amber-500 hover:bg-amber-500/10 rounded-full transition-colors"
+              title="Retour aux conversations"
+            >
+              <FiArrowLeft className="w-6 h-6" />
+            </button>
+            <button
+              onClick={() => {
+                const basePath =
+                  process.env.NODE_ENV === "production" ? "/premierdelan" : "";
+                router.push(basePath + "/");
+              }}
+              className="p-2 text-amber-500 hover:bg-amber-500/10 rounded-full transition-colors"
+              title="Retour à l'accueil"
+            >
+              <FiHome className="w-5 h-5" />
+            </button>
+          </div>
+          <div className="w-12 h-12 rounded-full bg-gradient-to-br from-amber-500 to-amber-600 text-white flex items-center justify-center font-bold text-sm shadow-lg shadow-amber-500/30 flex-shrink-0">
             {selectedConversation.participant.firstname.charAt(0)}
             {selectedConversation.participant.lastname.charAt(0)}
           </div>
@@ -506,14 +521,29 @@ function ChatPageContent() {
   return (
     <div className="fixed inset-0 bg-gradient-to-br from-gray-900 via-black to-gray-900 flex flex-col">
       {/* Header prestigieux */}
-      <div className="flex-none bg-black/40 backdrop-blur-sm border-b border-amber-500/20 px-6 py-6">
-        <h1 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-amber-400 via-amber-500 to-amber-600 tracking-tight">
-          Messages
-        </h1>
-        <p className="text-sm text-gray-400 mt-1 font-medium">
-          {conversations.length} conversation
-          {conversations.length !== 1 ? "s" : ""}
-        </p>
+      <div className="flex-none bg-black/40 backdrop-blur-sm border-b border-amber-500/20 px-4 sm:px-6 py-4">
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => {
+              const basePath =
+                process.env.NODE_ENV === "production" ? "/premierdelan" : "";
+              router.push(basePath + "/");
+            }}
+            className="p-2 -ml-2 text-amber-500 hover:bg-amber-500/10 rounded-full transition-colors flex-shrink-0"
+            title="Retour à l'accueil"
+          >
+            <FiHome className="w-6 h-6" />
+          </button>
+          <div className="flex-1 min-w-0">
+            <h1 className="text-2xl sm:text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-amber-400 via-amber-500 to-amber-600 tracking-tight">
+              Messages
+            </h1>
+            <p className="text-xs sm:text-sm text-gray-400 mt-0.5 font-medium">
+              {conversations.length} conversation
+              {conversations.length !== 1 ? "s" : ""}
+            </p>
+          </div>
+        </div>
       </div>
 
       {/* Contenu avec padding pour nav */}

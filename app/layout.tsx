@@ -3,6 +3,7 @@ import { Cinzel, Crimson_Text } from "next/font/google";
 import "./globals.css";
 import PWASplashScreen from "./components/PWASplashScreen";
 import NotificationRedirectHandler from "./components/NotificationRedirectHandler";
+import AppBadgeManager from "./components/AppBadgeManager";
 import { ThemeProvider } from "./hooks/useTheme";
 
 const cinzel = Cinzel({
@@ -47,6 +48,7 @@ export default function RootLayout({
         <ThemeProvider>
           <PWASplashScreen />
           <NotificationRedirectHandler />
+          <AppBadgeManager />
           {children}
         </ThemeProvider>
       </body>
