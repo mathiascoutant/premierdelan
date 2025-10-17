@@ -26,25 +26,53 @@ self.addEventListener("message", (event) => {
   }
 });
 
-// ✅ GARDER UNIQUEMENT le listener pour les clics sur les notifications
+// 🔔 Gestion du clic sur notification (iOS PWA Compatible)
 self.addEventListener("notificationclick", function (event) {
-  console.log("🔔 Clic sur notification:", event.notification.data);
+  console.log("🔔 [SW] Notification cliquée");
   event.notification.close();
 
-  const data = event.notification.data;
-  let url = "https://mathiascoutant.github.io/premierdelan/";
+  const data = event.notification.data || {};
+  console.log("📦 [SW] Data:", data);
 
-  // Si c'est un message de chat, rediriger vers la conversation
+  // 💾 SAUVEGARDER dans localStorage via postMessage + Cache API
   if (data.type === "chat_message" && data.conversationId) {
-    url = `https://mathiascoutant.github.io/premierdelan/chat?conversation=${data.conversationId}`;
-    console.log("💬 Ouverture conversation:", data.conversationId);
-  }
-  // Si c'est une invitation, rediriger vers le chat
-  else if (data.type === "chat_invitation") {
-    url = "https://mathiascoutant.github.io/premierdelan/chat";
-    console.log("📨 Ouverture chat");
+    console.log("💾 [SW] Sauvegarde conversationId:", data.conversationId);
+    
+    // Méthode 1: PostMessage aux clients ouverts
+    event.waitUntil(
+      self.clients.matchAll({ includeUncontrolled: true, type: 'window' })
+        .then(clients => {
+          clients.forEach(client => {
+            client.postMessage({
+              type: 'SAVE_CONVERSATION_ID',
+              conversationId: data.conversationId
+            });
+          });
+        })
+        .catch(e => console.warn("⚠️ [SW] PostMessage échoué:", e))
+    );
+    
+    // Méthode 2: Cache API (fallback robuste)
+    event.waitUntil(
+      caches.open('notification-data').then(cache => {
+        return cache.put('pending-conversation', 
+          new Response(JSON.stringify({ 
+            conversationId: data.conversationId,
+            timestamp: Date.now()
+          }))
+        );
+      }).catch(e => console.warn("⚠️ [SW] Cache échoué:", e))
+    );
   }
 
-  console.log("🎯 URL:", url);
-  event.waitUntil(clients.openWindow(url));
+  // 🎯 Ouvrir /chat (SANS paramètre pour compatibilité iOS)
+  const baseUrl = "https://mathiascoutant.github.io/premierdelan";
+  let targetUrl = baseUrl + "/";
+  
+  if (data.type === "chat_message" || data.type === "chat_invitation") {
+    targetUrl = baseUrl + "/chat";
+  }
+  
+  console.log("🎯 [SW] Ouverture:", targetUrl);
+  event.waitUntil(clients.openWindow(targetUrl));
 });

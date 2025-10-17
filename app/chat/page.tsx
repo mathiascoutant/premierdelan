@@ -75,6 +75,59 @@ function ChatPageContent() {
     messagesEndRef.current?.scrollIntoView({ behavior: "instant" });
   };
 
+  // 🔍 Vérifier localStorage/cache au chargement (iOS PWA Compatible)
+  useEffect(() => {
+    const checkPendingConversation = async () => {
+      // Méthode 1: localStorage (principal)
+      const storedId = localStorage.getItem('pending_conversation_id');
+      const timestamp = localStorage.getItem('pending_conversation_timestamp');
+      
+      if (storedId) {
+        console.log("🔍 [Chat] Conversation en attente (localStorage):", storedId);
+        
+        // Vérifier que ce n'est pas trop ancien (< 30 secondes)
+        const now = Date.now();
+        const age = timestamp ? now - parseInt(timestamp) : 0;
+        
+        if (age < 30000) {
+          console.log("✅ [Chat] Conversation valide");
+          setPendingConversationId(storedId);
+          
+          // Nettoyer immédiatement
+          localStorage.removeItem('pending_conversation_id');
+          localStorage.removeItem('pending_conversation_timestamp');
+          return;
+        } else {
+          console.log("⏰ [Chat] Conversation trop ancienne");
+          localStorage.removeItem('pending_conversation_id');
+          localStorage.removeItem('pending_conversation_timestamp');
+        }
+      }
+      
+      // Méthode 2: Cache API (fallback robuste)
+      if ('caches' in window) {
+        try {
+          const cache = await caches.open('notification-data');
+          const response = await cache.match('pending-conversation');
+          if (response) {
+            const data = await response.json();
+            const age = Date.now() - (data.timestamp || 0);
+            
+            if (age < 30000) {
+              console.log("🔍 [Chat] Conversation du cache:", data.conversationId);
+              setPendingConversationId(data.conversationId);
+            }
+            await cache.delete('pending-conversation');
+          }
+        } catch (e) {
+          // Silence
+        }
+      }
+    };
+
+    checkPendingConversation();
+  }, []);
+
   useEffect(() => {
     if (authLoading || isLoading) return;
     if (!isAdmin()) {

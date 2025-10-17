@@ -13,13 +13,23 @@ export default function NotificationRedirectHandler() {
 
     // Écouter les messages du service worker pour les redirections
     const handleServiceWorkerMessage = (event: MessageEvent) => {
-      console.log("📨 Message reçu du service worker:", event.data);
+      console.log("📨 [App] Message SW reçu:", event.data);
 
-      // Gérer la sauvegarde de conversation en attente
+      // Gérer la sauvegarde de conversation (NOUVEAU - iOS Compatible)
+      if (event.data && event.data.type === "SAVE_CONVERSATION_ID") {
+        const { conversationId } = event.data;
+        console.log("💾 [App] Sauvegarde conversationId:", conversationId);
+        localStorage.setItem("pending_conversation_id", conversationId);
+        localStorage.setItem("pending_conversation_timestamp", Date.now().toString());
+        return;
+      }
+      
+      // Ancien format (compatibilité)
       if (event.data && event.data.type === "SET_PENDING_CONVERSATION") {
         const { conversationId } = event.data;
-        console.log("💾 Sauvegarde conversationId en localStorage:", conversationId);
-        localStorage.setItem("pendingConversationId", conversationId);
+        console.log("💾 [App] Sauvegarde conversationId (ancien):", conversationId);
+        localStorage.setItem("pending_conversation_id", conversationId);
+        localStorage.setItem("pending_conversation_timestamp", Date.now().toString());
         return;
       }
 
