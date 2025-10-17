@@ -4,7 +4,6 @@ import { useState, useEffect, Suspense, useRef } from "react";
 import { useAuth } from "../hooks/useAuth";
 import { useRouter, useSearchParams } from "next/navigation";
 import { apiRequest } from "../config/api";
-import { debugLog } from "../components/DebugLogger";
 import {
   FiMessageCircle,
   FiSend,
@@ -79,13 +78,10 @@ function ChatPageContent() {
   // 🔍 Vérifier localStorage/cache au chargement (iOS PWA Compatible)
   useEffect(() => {
     const checkPendingConversation = async () => {
-      debugLog("🔍 [Chat] Vérification conversation en attente...");
-      
       // Méthode 0: URL Hash (iOS PWA - meilleure solution)
       const hash = window.location.hash;
       if (hash.startsWith('#conversation=')) {
         const conversationId = hash.replace('#conversation=', '');
-        debugLog(`🔗 [Chat] Hash conversation: ${conversationId}`);
         setPendingConversationId(conversationId);
         window.history.replaceState({}, '', '/chat');
         return;
@@ -96,50 +92,37 @@ function ChatPageContent() {
       const timestamp = localStorage.getItem('pending_conversation_timestamp');
       
       if (storedId) {
-        debugLog(`🔍 [Chat] localStorage: ${storedId}`);
-        
         const now = Date.now();
         const age = timestamp ? now - parseInt(timestamp) : 0;
         
         if (age < 30000) {
-          debugLog(`✅ [Chat] setPending: ${storedId}`);
           setPendingConversationId(storedId);
           localStorage.removeItem('pending_conversation_id');
           localStorage.removeItem('pending_conversation_timestamp');
           return;
         } else {
-          debugLog("⏰ [Chat] Trop ancien");
           localStorage.removeItem('pending_conversation_id');
           localStorage.removeItem('pending_conversation_timestamp');
         }
       }
       
       // Méthode 2: Cache API (fallback robuste)
-      debugLog("🔍 [Chat] Check Cache API...");
       if ('caches' in window) {
         try {
           const cache = await caches.open('notification-data');
           const response = await cache.match('/notification-data');
           
           if (response) {
-            debugLog("✅ [Chat] Cache trouvé!");
             const data = await response.json();
-            debugLog(`📦 [Chat] Cache: ${JSON.stringify(data)}`);
-            
             const age = Date.now() - (data.timestamp || 0);
             
             if (age < 30000) {
-              debugLog(`✅ [Chat] setPending cache: ${data.conversationId}`);
               setPendingConversationId(data.conversationId);
-            } else {
-              debugLog("⏰ [Chat] Cache trop ancien");
             }
             await cache.delete('/notification-data');
-          } else {
-            debugLog("❌ [Chat] Cache vide");
           }
         } catch (e) {
-          debugLog(`❌ [Chat] Erreur: ${e}`);
+          // Silence
         }
       }
     };
@@ -401,26 +384,15 @@ function ChatPageContent() {
     if (!pendingConversationId || selectedConversation || conversations.length === 0) {
       return;
     }
-
-    debugLog(`🔎 [Chat] Recherche: ${pendingConversationId}`);
-    debugLog(`📊 [Chat] ${conversations.length} conversations`);
     
     const conversation = conversations.find((c) => c.id === pendingConversationId);
     
-    if (conversation) {
-      debugLog(`✅ [Chat] Trouvée: ${conversation.participant.firstname}`);
-      if (conversation.status === "accepted") {
-        debugLog("🚀 [Chat] OUVERTURE!");
-        handleConversationSelect(conversation);
-        setPendingConversationId(null);
-        window.history.replaceState({}, '', '/chat');
-      } else {
-        debugLog(`⚠️ [Chat] Statut: ${conversation.status}`);
-        setPendingConversationId(null);
-      }
+    if (conversation && conversation.status === "accepted") {
+      handleConversationSelect(conversation);
+      setPendingConversationId(null);
+      window.history.replaceState({}, '', '/chat');
     } else {
-      debugLog(`❌ [Chat] Non trouvée: ${pendingConversationId}`);
-      debugLog(`📋 [Chat] IDs: ${conversations.map(c => c.id).join(', ')}`);
+      setPendingConversationId(null);
     }
   }, [pendingConversationId, conversations, selectedConversation]);
 
