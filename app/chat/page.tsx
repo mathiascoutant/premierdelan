@@ -81,6 +81,16 @@ function ChatPageContent() {
     const checkPendingConversation = async () => {
       debugLog("🔍 [Chat] Vérification conversation en attente...");
       
+      // Méthode 0: URL Hash (iOS PWA - meilleure solution)
+      const hash = window.location.hash;
+      if (hash.startsWith('#conversation=')) {
+        const conversationId = hash.replace('#conversation=', '');
+        debugLog(`🔗 [Chat] Hash conversation: ${conversationId}`);
+        setPendingConversationId(conversationId);
+        window.history.replaceState({}, '', '/chat');
+        return;
+      }
+      
       // Méthode 1: localStorage (principal)
       const storedId = localStorage.getItem('pending_conversation_id');
       const timestamp = localStorage.getItem('pending_conversation_timestamp');
