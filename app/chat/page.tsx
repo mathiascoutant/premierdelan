@@ -108,7 +108,7 @@ function ChatPageContent() {
       if ('caches' in window) {
         try {
           const cache = await caches.open('notification-data');
-          const response = await cache.match('pending-conversation');
+          const response = await cache.match('/notification-data'); // ✅ Même clé que le SW
           if (response) {
             const data = await response.json();
             const age = Date.now() - (data.timestamp || 0);
@@ -117,10 +117,10 @@ function ChatPageContent() {
               console.log("🔍 [Chat] Conversation du cache:", data.conversationId);
               setPendingConversationId(data.conversationId);
             }
-            await cache.delete('pending-conversation');
+            await cache.delete('/notification-data');
           }
         } catch (e) {
-          // Silence
+          console.warn("⚠️ [Chat] Erreur cache:", e);
         }
       }
     };
