@@ -26,6 +26,51 @@ self.addEventListener("message", (event) => {
   }
 });
 
+// 📨 Écouter les notifications push (CRUCIAL pour iOS)
+self.addEventListener('push', function(event) {
+  console.log('📨 [SW] Notification push reçue');
+  
+  if (!event.data) {
+    console.log('⚠️ [SW] Pas de données dans le push');
+    return;
+  }
+
+  const payload = event.data.json();
+  console.log('📦 [SW] Payload:', payload);
+  
+  const notificationData = payload.data || {};
+  
+  // 💾 SAUVEGARDER conversationId dans Cache API (iOS compatible)
+  if (notificationData.type === 'chat_message' && notificationData.conversationId) {
+    console.log('💾 [SW] Sauvegarde conversationId:', notificationData.conversationId);
+    
+    event.waitUntil(
+      caches.open('notification-data').then(cache => {
+        return cache.put('/notification-data', 
+          new Response(JSON.stringify({
+            conversationId: notificationData.conversationId,
+            timestamp: Date.now()
+          }))
+        );
+      })
+    );
+  }
+
+  // Afficher la notification
+  const title = payload.notification?.title || 'Nouveau message';
+  const options = {
+    body: payload.notification?.body || '',
+    icon: '/icon-192x192.png',
+    badge: '/icon-192x192.png',
+    data: notificationData,
+    tag: 'chat-' + (notificationData.conversationId || Date.now())
+  };
+  
+  event.waitUntil(
+    self.registration.showNotification(title, options)
+  );
+});
+
 // 🔔 Gestion du clic sur notification (iOS PWA Compatible)
 self.addEventListener("notificationclick", function (event) {
   console.log("🔔 [SW] Notification cliquée");
