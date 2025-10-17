@@ -19,6 +19,13 @@ firebase.initializeApp({
 
 const messaging = firebase.messaging();
 
+// ✅ Forcer l'activation immédiate du nouveau service worker
+self.addEventListener("message", (event) => {
+  if (event.data && event.data.type === "SKIP_WAITING") {
+    self.skipWaiting();
+  }
+});
+
 // ✅ GARDER UNIQUEMENT le listener pour les clics sur les notifications
 self.addEventListener("notificationclick", function (event) {
   console.log("👆 Notification cliquée");
