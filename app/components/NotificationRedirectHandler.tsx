@@ -15,10 +15,24 @@ export default function NotificationRedirectHandler() {
     const handleServiceWorkerMessage = (event: MessageEvent) => {
       console.log("📨 Message reçu du service worker:", event.data);
 
+      // Gérer la sauvegarde de conversation en attente
+      if (event.data && event.data.type === "SET_PENDING_CONVERSATION") {
+        const { conversationId } = event.data;
+        console.log("💾 Sauvegarde conversationId en localStorage:", conversationId);
+        localStorage.setItem("pendingConversationId", conversationId);
+        return;
+      }
+
       if (event.data && event.data.type === "NOTIFICATION_CLICK") {
         const { data } = event.data;
 
         console.log("🔔 Clic notification détecté:", data);
+
+        // Sauvegarder dans localStorage AVANT la redirection
+        if (data.type === "chat_message" && data.conversationId) {
+          console.log("💾 Sauvegarde conversationId en localStorage:", data.conversationId);
+          localStorage.setItem("pendingConversationId", data.conversationId);
+        }
 
         // Détecter le basePath à partir de l'URL actuelle
         const currentPath = window.location.pathname;
@@ -28,7 +42,7 @@ export default function NotificationRedirectHandler() {
         // Redirection selon le type
         if (data.type === "chat_message" && data.conversationId) {
           // Naviguer vers la conversation
-          const url = `${basePath}/chat?conversation=${data.conversationId}`;
+          const url = `${basePath}/chat`;
           console.log("💬 Redirection vers:", url);
           window.location.href = url;
         } else if (data.type === "chat_invitation") {
