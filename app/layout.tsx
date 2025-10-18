@@ -5,6 +5,7 @@ import PWASplashScreen from "./components/PWASplashScreen";
 import NotificationRedirectHandler from "./components/NotificationRedirectHandler";
 import AppBadgeManager from "./components/AppBadgeManager";
 import ServiceWorkerUpdater from "./components/ServiceWorkerUpdater";
+import BottomNav from "./components/BottomNav";
 import { ThemeProvider } from "./hooks/useTheme";
 
 const cinzel = Cinzel({
@@ -52,6 +53,7 @@ export default function RootLayout({
           <AppBadgeManager />
           <ServiceWorkerUpdater />
           {children}
+          <BottomNav />
         </ThemeProvider>
       </body>
     </html>

@@ -124,6 +124,26 @@ export async function apiRequest(endpoint: string, options: RequestInit = {}) {
       );
     }
 
+    // Erreur 401 (Unauthorized) -> Token expiré, déconnexion automatique
+    if (response.status === 401) {
+      console.warn("🔒 Token expiré ou invalide - Déconnexion automatique");
+
+      // Nettoyer le localStorage
+      if (typeof window !== "undefined") {
+        localStorage.removeItem("token");
+        localStorage.removeItem("auth_token");
+        localStorage.removeItem("user");
+        localStorage.removeItem("user_data");
+
+        // Rediriger vers la page de connexion
+        const basePath =
+          process.env.NODE_ENV === "production" ? "/premierdelan" : "";
+        window.location.href = `${basePath}/connexion`;
+      }
+
+      throw new Error("Session expirée - Veuillez vous reconnecter");
+    }
+
     // Erreur client (400-499) -> Erreur métier normale
     if (!response.ok) {
       let error;
@@ -145,7 +165,7 @@ export async function apiRequest(endpoint: string, options: RequestInit = {}) {
         console.error("❌ Status:", response.status);
         console.error("❌ Content-Type:", contentType);
       }
-      
+
       throw new Error(
         error.message || error.error || `Erreur ${response.status}`
       );
@@ -156,7 +176,7 @@ export async function apiRequest(endpoint: string, options: RequestInit = {}) {
     // Ne pas logger les erreurs 404 sur les checks d'inscription
     const isInscriptionCheck = endpoint.includes("/inscription?user_email=");
     const is404Error = error instanceof Error && error.message.includes("404");
-    
+
     if (!isInscriptionCheck || !is404Error) {
       console.error("API Request Error:", error);
     }

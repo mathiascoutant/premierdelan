@@ -4,20 +4,6 @@ import { useState, useEffect, Suspense, useRef } from "react";
 import { useAuth } from "../hooks/useAuth";
 import { useRouter, useSearchParams } from "next/navigation";
 import { apiRequest } from "../config/api";
-import {
-  FiMessageCircle,
-  FiSend,
-  FiX,
-  FiCheck,
-  FiClock,
-  FiArrowLeft,
-  FiSearch,
-  FiUsers,
-  FiMail,
-  FiPlus,
-  FiCheckCircle,
-  FiHome,
-} from "react-icons/fi";
 
 interface Conversation {
   id: string;
@@ -68,58 +54,55 @@ function ChatPageContent() {
   const [showNewChat, setShowNewChat] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<any[]>([]);
-  const [pendingConversationId, setPendingConversationId] = useState<string | null>(null);
+  const [pendingConversationId, setPendingConversationId] = useState<
+    string | null
+  >(null);
 
-  // Scroll automatique vers le bas (instantané)
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "instant" });
   };
 
-  // 🔍 Vérifier localStorage/cache au chargement (iOS PWA Compatible)
   useEffect(() => {
     const checkPendingConversation = async () => {
-      // Méthode 0: URL Hash (iOS PWA - meilleure solution)
       const hash = window.location.hash;
-      if (hash.startsWith('#conversation=')) {
-        const conversationId = hash.replace('#conversation=', '');
+      if (hash.startsWith("#conversation=")) {
+        const conversationId = hash.replace("#conversation=", "");
         setPendingConversationId(conversationId);
-        window.history.replaceState({}, '', '/chat');
+        window.history.replaceState({}, "", "/chat");
         return;
       }
-      
-      // Méthode 1: localStorage (principal)
-      const storedId = localStorage.getItem('pending_conversation_id');
-      const timestamp = localStorage.getItem('pending_conversation_timestamp');
-      
+
+      const storedId = localStorage.getItem("pending_conversation_id");
+      const timestamp = localStorage.getItem("pending_conversation_timestamp");
+
       if (storedId) {
         const now = Date.now();
         const age = timestamp ? now - parseInt(timestamp) : 0;
-        
+
         if (age < 30000) {
           setPendingConversationId(storedId);
-          localStorage.removeItem('pending_conversation_id');
-          localStorage.removeItem('pending_conversation_timestamp');
+          localStorage.removeItem("pending_conversation_id");
+          localStorage.removeItem("pending_conversation_timestamp");
           return;
         } else {
-          localStorage.removeItem('pending_conversation_id');
-          localStorage.removeItem('pending_conversation_timestamp');
+          localStorage.removeItem("pending_conversation_id");
+          localStorage.removeItem("pending_conversation_timestamp");
         }
       }
-      
-      // Méthode 2: Cache API (fallback robuste)
-      if ('caches' in window) {
+
+      if ("caches" in window) {
         try {
-          const cache = await caches.open('notification-data');
-          const response = await cache.match('/notification-data');
-          
+          const cache = await caches.open("notification-data");
+          const response = await cache.match("/notification-data");
+
           if (response) {
             const data = await response.json();
             const age = Date.now() - (data.timestamp || 0);
-            
+
             if (age < 30000) {
               setPendingConversationId(data.conversationId);
             }
-            await cache.delete('/notification-data');
+            await cache.delete("/notification-data");
           }
         } catch (e) {
           // Silence
@@ -161,7 +144,7 @@ function ChatPageContent() {
       if (data.success) {
         let conversations =
           data.conversations || data.data?.conversations || data.data || [];
-        
+
         // Normaliser les données du backend (snake_case -> camelCase)
         conversations = conversations.map((conv: any) => {
           const normalized: any = {
@@ -170,31 +153,23 @@ function ChatPageContent() {
             status: conv.status,
             unreadCount: conv.unread_count || conv.unreadCount || 0,
           };
-          
+
           // Gérer last_message (snake_case) ou lastMessage (camelCase)
           const lastMsg = conv.last_message || conv.lastMessage;
           if (lastMsg) {
             normalized.lastMessage = {
               content: lastMsg.content,
               timestamp: lastMsg.timestamp,
-              isRead: lastMsg.is_read !== undefined ? lastMsg.is_read : lastMsg.isRead,
+              isRead:
+                lastMsg.is_read !== undefined
+                  ? lastMsg.is_read
+                  : lastMsg.isRead,
             };
           }
-          
+
           return normalized;
         });
-        
-        // Debug: voir les unreadCount après normalisation
-        if (conversations.length > 0) {
-          console.log("📊 UnreadCounts après rechargement:", 
-            conversations.map((c: any) => ({ 
-              id: c.id, 
-              participant: `${c.participant?.firstname} ${c.participant?.lastname}`,
-              unreadCount: c.unreadCount 
-            }))
-          );
-        }
-        
+
         setConversations(Array.isArray(conversations) ? conversations : []);
       } else {
         setConversations([]);
@@ -232,6 +207,7 @@ function ChatPageContent() {
         const messages =
           data.messages || data.data?.messages || data.data || [];
         setMessages(Array.isArray(messages) ? messages : []);
+        setTimeout(scrollToBottom, 100);
       } else {
         setMessages([]);
       }
@@ -256,6 +232,7 @@ function ChatPageContent() {
           return [...prevArray, data.message];
         });
         setNewMessage("");
+        setTimeout(scrollToBottom, 100);
         loadConversations();
       }
     } catch (error) {
@@ -338,59 +315,55 @@ function ChatPageContent() {
   const handleConversationSelect = (conversation: Conversation) => {
     setSelectedConversation(conversation);
     loadMessages(conversation.id);
-    
-    // Marquer comme lu après 1 seconde (le backend mettra à jour unreadCount)
+
     setTimeout(() => {
       markConversationAsRead(conversation.id);
     }, 1000);
   };
 
-  // Marquer la conversation comme lue
   const markConversationAsRead = async (conversationId: string) => {
     try {
-      console.log("📖 Marquage conversation comme lue:", conversationId);
-      const response = await apiRequest(
+      await apiRequest(
         `https://believable-spontaneity-production.up.railway.app/api/admin/chat/conversations/${conversationId}/mark-read`,
         { method: "POST" }
       );
-      console.log("✅ Réponse backend mark-read:", response);
-      
-      // Recharger les conversations pour synchroniser avec le backend
       await loadConversations();
     } catch (error) {
       console.error("❌ Erreur marquage lu:", error);
     }
   };
 
-  // Scroll vers le bas quand les messages changent
   useEffect(() => {
     if (messages.length > 0) {
       scrollToBottom();
     }
   }, [messages]);
 
-  // Détecter le paramètre conversation dans l'URL
   useEffect(() => {
     const conversationId = searchParams.get("conversation");
-    
+
     if (conversationId && !pendingConversationId && !selectedConversation) {
-      console.log("🔗 [Chat] Paramètre conversation détecté dans URL:", conversationId);
       setPendingConversationId(conversationId);
     }
   }, [searchParams, pendingConversationId, selectedConversation]);
 
-  // Ouvrir la conversation dès que les conversations sont chargées
   useEffect(() => {
-    if (!pendingConversationId || selectedConversation || conversations.length === 0) {
+    if (
+      !pendingConversationId ||
+      selectedConversation ||
+      conversations.length === 0
+    ) {
       return;
     }
-    
-    const conversation = conversations.find((c) => c.id === pendingConversationId);
-    
+
+    const conversation = conversations.find(
+      (c) => c.id === pendingConversationId
+    );
+
     if (conversation && conversation.status === "accepted") {
       handleConversationSelect(conversation);
       setPendingConversationId(null);
-      window.history.replaceState({}, '', '/chat');
+      window.history.replaceState({}, "", "/chat");
     } else {
       setPendingConversationId(null);
     }
@@ -417,13 +390,8 @@ function ChatPageContent() {
 
   if (isLoading) {
     return (
-      <div className="fixed inset-0 bg-gradient-to-br from-gray-900 via-black to-gray-900 flex items-center justify-center">
-        <div className="text-center">
-          <div className="w-16 h-16 border-4 border-amber-500/30 border-t-amber-500 rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-amber-500 text-sm font-medium tracking-wide">
-            Chargement...
-          </p>
-        </div>
+      <div className="fixed inset-0 bg-gradient-to-br from-zinc-900 via-zinc-800 to-zinc-900 flex items-center justify-center">
+        <div className="w-12 h-12 border-4 border-[#d4af37] border-t-transparent rounded-full animate-spin"></div>
       </div>
     );
   }
@@ -431,52 +399,61 @@ function ChatPageContent() {
   // VUE CONVERSATION
   if (selectedConversation) {
     return (
-      <div className="fixed inset-0 bg-gradient-to-br from-gray-900 via-black to-gray-900 flex flex-col">
-        {/* Header luxe */}
-        <div className="flex-none bg-black/40 backdrop-blur-sm border-b border-amber-500/20 px-4 py-4 flex items-center gap-3">
-          <div className="flex items-center gap-1">
-            <button
-              onClick={() => {
-                setSelectedConversation(null);
-                // Recharger les conversations pour avoir les compteurs à jour
-                loadConversations();
-              }}
-              className="p-2 -ml-2 text-amber-500 hover:bg-amber-500/10 rounded-full transition-colors"
-              title="Retour aux conversations"
+      <div className="fixed inset-0 flex flex-col">
+        {/* Fond médiéval */}
+        <div className="fixed inset-0 bg-gradient-to-br from-zinc-900 via-zinc-800 to-zinc-900 -z-10"></div>
+        <div
+          className="fixed inset-0 opacity-40 -z-10"
+          style={{
+            backgroundImage: `radial-gradient(circle at 2px 2px, rgba(212,175,55,0.2) 1px, transparent 0)`,
+            backgroundSize: "40px 40px",
+          }}
+        ></div>
+
+        {/* Header conversation */}
+        <div className="flex-none bg-zinc-900/85 backdrop-blur-3xl border-b border-[#d4af37]/25 shadow-xl px-4 py-4 flex items-center gap-3">
+          <button
+            onClick={() => {
+              setSelectedConversation(null);
+              loadConversations();
+            }}
+            className="p-2 -ml-2 text-[#d4af37] hover:bg-[#d4af37]/10 rounded-full transition-colors"
+          >
+            <svg
+              className="w-6 h-6"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
             >
-              <FiArrowLeft className="w-6 h-6" />
-            </button>
-            <button
-              onClick={() => {
-                router.push("/");
-              }}
-              className="p-2 text-amber-500 hover:bg-amber-500/10 rounded-full transition-colors"
-              title="Retour à l'accueil"
-            >
-              <FiHome className="w-5 h-5" />
-            </button>
-          </div>
-          <div className="w-12 h-12 rounded-full bg-gradient-to-br from-amber-500 to-amber-600 text-white flex items-center justify-center font-bold text-sm shadow-lg shadow-amber-500/30 flex-shrink-0">
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M15 19l-7-7 7-7"
+              />
+            </svg>
+          </button>
+          <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-[#d4af37] to-[#c9a74f] text-black flex items-center justify-center font-black text-sm shadow-lg shadow-[#d4af37]/30 flex-shrink-0">
             {selectedConversation.participant.firstname.charAt(0)}
             {selectedConversation.participant.lastname.charAt(0)}
           </div>
           <div className="flex-1 min-w-0">
-            <p className="font-bold text-white truncate text-sm tracking-wide">
+            <p className="font-cinzel font-bold text-white truncate text-sm">
               {selectedConversation.participant.firstname}{" "}
               {selectedConversation.participant.lastname}
             </p>
-            <p className="text-xs text-emerald-400 font-medium">● En ligne</p>
+            <p className="text-xs text-[#d4af37] font-crimson">● En ligne</p>
           </div>
         </div>
 
-        {/* Messages avec fond élégant */}
-        <div className="flex-1 overflow-y-auto px-4 py-4 pb-20">
+        {/* Messages */}
+        <div className="flex-1 overflow-y-auto px-4 py-4 pb-40">
           {messages.length === 0 ? (
             <div className="h-full flex flex-col items-center justify-center opacity-40">
-              <div className="w-16 h-16 rounded-full bg-amber-500/10 flex items-center justify-center mb-3">
-                <FiMessageCircle className="w-8 h-8 text-amber-500" />
+              <div className="w-16 h-16 rounded-2xl bg-[#d4af37]/10 flex items-center justify-center mb-3">
+                <span className="text-3xl">💬</span>
               </div>
-              <p className="text-gray-400 text-sm font-medium">
+              <p className="text-gray-400 text-sm font-crimson">
                 Commencez la conversation
               </p>
             </div>
@@ -497,16 +474,16 @@ function ChatPageContent() {
                     <div
                       className={`max-w-[80%] rounded-2xl px-4 py-3 shadow-lg ${
                         isMyMessage
-                          ? "bg-gradient-to-br from-amber-500 to-amber-600 text-white"
-                          : "bg-white/5 backdrop-blur-sm text-white border border-white/10"
+                          ? "bg-gradient-to-br from-[#d4af37] to-[#c9a74f] text-black"
+                          : "bg-zinc-800/60 backdrop-blur-sm text-white border border-[#d4af37]/20"
                       }`}
                     >
-                      <p className="text-sm leading-relaxed break-words font-medium">
+                      <p className="text-sm leading-relaxed break-words font-crimson">
                         {message.content}
                       </p>
                       <div
-                        className={`flex items-center justify-end gap-1.5 mt-1.5 text-xs font-medium ${
-                          isMyMessage ? "text-amber-100" : "text-gray-400"
+                        className={`flex items-center justify-end gap-1.5 mt-1.5 text-xs font-crimson ${
+                          isMyMessage ? "text-black/60" : "text-gray-400"
                         }`}
                       >
                         <span>
@@ -522,34 +499,77 @@ function ChatPageContent() {
                         {isMyMessage && (
                           <>
                             {message.read_at ? (
-                              // Message vu - 2 coches dorées
-                              <div
-                                className="flex items-center gap-0.5"
-                                title={`Vu à ${new Date(
-                                  message.read_at
-                                ).toLocaleTimeString("fr-FR", {
-                                  hour: "2-digit",
-                                  minute: "2-digit",
-                                })}`}
-                              >
-                                <FiCheck className="w-3.5 h-3.5 -mr-1.5 text-amber-300" />
-                                <FiCheck className="w-3.5 h-3.5 text-amber-300" />
+                              <div className="flex items-center gap-0.5">
+                                <svg
+                                  className="w-3.5 h-3.5 -mr-1.5"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  viewBox="0 0 24 24"
+                                >
+                                  <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={2.5}
+                                    d="M5 13l4 4L19 7"
+                                  />
+                                </svg>
+                                <svg
+                                  className="w-3.5 h-3.5"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  viewBox="0 0 24 24"
+                                >
+                                  <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={2.5}
+                                    d="M5 13l4 4L19 7"
+                                  />
+                                </svg>
                               </div>
                             ) : message.delivered_at ? (
-                              // Message distribué - 2 coches grises
-                              <div
-                                className="flex items-center gap-0.5"
-                                title="Distribué"
-                              >
-                                <FiCheck className="w-3.5 h-3.5 -mr-1.5 text-gray-400" />
-                                <FiCheck className="w-3.5 h-3.5 text-gray-400" />
+                              <div className="flex items-center gap-0.5">
+                                <svg
+                                  className="w-3.5 h-3.5 -mr-1.5"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  viewBox="0 0 24 24"
+                                >
+                                  <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={2.5}
+                                    d="M5 13l4 4L19 7"
+                                  />
+                                </svg>
+                                <svg
+                                  className="w-3.5 h-3.5"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  viewBox="0 0 24 24"
+                                >
+                                  <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={2.5}
+                                    d="M5 13l4 4L19 7"
+                                  />
+                                </svg>
                               </div>
                             ) : (
-                              // Message envoyé - 1 coche grise
-                              <FiCheck
-                                className="w-3.5 h-3.5 text-gray-400"
-                                title="Envoyé"
-                              />
+                              <svg
+                                className="w-3.5 h-3.5"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth={2.5}
+                                  d="M5 13l4 4L19 7"
+                                />
+                              </svg>
                             )}
                           </>
                         )}
@@ -558,14 +578,13 @@ function ChatPageContent() {
                   </div>
                 );
               })}
-              {/* Élément invisible pour le scroll automatique */}
               <div ref={messagesEndRef} />
             </div>
           )}
         </div>
 
-        {/* Input luxe */}
-        <div className="fixed bottom-0 left-0 right-0 bg-black/60 backdrop-blur-md border-t border-amber-500/20 p-4 pb-6">
+        {/* Input message */}
+        <div className="fixed bottom-0 left-0 right-0 bg-zinc-900/85 backdrop-blur-3xl border-t border-[#d4af37]/25 p-4 pb-24">
           <div className="flex items-center gap-3">
             <input
               type="text"
@@ -573,14 +592,26 @@ function ChatPageContent() {
               onChange={(e) => setNewMessage(e.target.value)}
               onKeyPress={(e) => e.key === "Enter" && sendMessage()}
               placeholder="Écrire un message..."
-              className="flex-1 bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl px-5 py-3 text-white placeholder-gray-500 text-sm focus:outline-none focus:border-amber-500/50 focus:ring-2 focus:ring-amber-500/20 transition-all font-medium"
+              className="flex-1 bg-zinc-800/60 backdrop-blur-sm border border-[#d4af37]/20 rounded-2xl px-5 py-3 text-white placeholder-gray-500 text-sm focus:outline-none focus:border-[#d4af37]/50 focus:ring-2 focus:ring-[#d4af37]/20 transition-all font-crimson"
             />
             <button
               onClick={sendMessage}
               disabled={!newMessage.trim()}
-              className="w-12 h-12 bg-gradient-to-br from-amber-500 to-amber-600 text-white rounded-xl flex items-center justify-center disabled:opacity-30 shadow-lg shadow-amber-500/30 hover:shadow-amber-500/50 transition-all disabled:shadow-none active:scale-95"
+              className="w-12 h-12 bg-gradient-to-br from-[#d4af37] to-[#c9a74f] text-black rounded-2xl flex items-center justify-center disabled:opacity-30 shadow-lg shadow-[#d4af37]/30 hover:shadow-[#d4af37]/50 transition-all disabled:shadow-none active:scale-95"
             >
-              <FiSend className="w-5 h-5" />
+              <svg
+                className="w-5 h-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"
+                />
+              </svg>
             </button>
           </div>
         </div>
@@ -588,239 +619,246 @@ function ChatPageContent() {
     );
   }
 
-  // VUE LISTE LUXE
+  // VUE LISTE (reste du code dans le prochain message car limite de longueur)
   return (
-    <div className="fixed inset-0 bg-gradient-to-br from-gray-900 via-black to-gray-900 flex flex-col">
-      {/* Header prestigieux */}
-      <div className="flex-none bg-black/40 backdrop-blur-sm border-b border-amber-500/20 px-4 sm:px-6 py-4">
-        <div className="flex items-center gap-3">
+    <div className="fixed inset-0 flex flex-col pb-20">
+      {/* Fond médiéval */}
+      <div className="fixed inset-0 bg-gradient-to-br from-zinc-900 via-zinc-800 to-zinc-900 -z-10"></div>
+      <div
+        className="fixed inset-0 opacity-40 -z-10"
+        style={{
+          backgroundImage: `radial-gradient(circle at 2px 2px, rgba(212,175,55,0.2) 1px, transparent 0)`,
+          backgroundSize: "40px 40px",
+        }}
+      ></div>
+      <div className="fixed top-20 right-10 w-96 h-96 bg-[#d4af37]/10 rounded-full blur-[120px] -z-10"></div>
+      <div className="fixed bottom-20 left-10 w-96 h-96 bg-[#c9a74f]/10 rounded-full blur-[120px] -z-10"></div>
+
+      {/* Header */}
+      <div className="flex-none bg-zinc-900/85 backdrop-blur-3xl border-b border-[#d4af37]/25 shadow-xl px-4 py-4">
+        <div className="flex items-center justify-between mb-4">
           <button
-            onClick={() => {
-              router.push("/");
-            }}
-            className="p-2 -ml-2 text-amber-500 hover:bg-amber-500/10 rounded-full transition-colors flex-shrink-0"
-            title="Retour à l'accueil"
+            onClick={() => router.push("/")}
+            className="flex items-center gap-2 text-[#d4af37] hover:text-[#f4d03f] transition-colors"
           >
-            <FiHome className="w-6 h-6" />
+            <svg
+              className="w-6 h-6"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M15 19l-7-7 7-7"
+              />
+            </svg>
+            <span className="font-cinzel font-bold text-sm tracking-wider">
+              RETOUR
+            </span>
           </button>
-          <div className="flex-1 min-w-0">
-            <h1 className="text-2xl sm:text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-amber-400 via-amber-500 to-amber-600 tracking-tight">
-              Messages
-            </h1>
-            <p className="text-xs sm:text-sm text-gray-400 mt-0.5 font-medium">
-              {conversations.length} conversation
-              {conversations.length !== 1 ? "s" : ""}
-            </p>
-          </div>
+          <h1 className="font-cinzel font-bold text-[#d4af37] text-base tracking-[0.2em]">
+            MESSAGES
+          </h1>
+          <button
+            onClick={() => setShowNewChat(true)}
+            className="w-10 h-10 bg-gradient-to-br from-[#d4af37] to-[#c9a74f] text-black rounded-xl flex items-center justify-center shadow-lg shadow-[#d4af37]/30 hover:shadow-[#d4af37]/50 transition-all active:scale-95"
+          >
+            <svg
+              className="w-5 h-5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2.5}
+                d="M12 4v16m8-8H4"
+              />
+            </svg>
+          </button>
+        </div>
+
+        {/* Tabs */}
+        <div className="flex gap-2">
+          <button
+            onClick={() => setActiveTab("chats")}
+            className={`flex-1 py-3 rounded-xl font-cinzel font-bold text-sm tracking-wider transition-all ${
+              activeTab === "chats"
+                ? "bg-gradient-to-br from-[#d4af37] to-[#c9a74f] text-black shadow-lg shadow-[#d4af37]/30"
+                : "bg-zinc-800/40 text-gray-400 hover:text-white"
+            }`}
+          >
+            CONVERSATIONS
+            {conversations.filter((c) => c.unreadCount > 0).length > 0 && (
+              <span className="ml-2 px-2 py-0.5 bg-black/20 rounded-full text-xs">
+                {conversations.filter((c) => c.unreadCount > 0).length}
+              </span>
+            )}
+          </button>
+          <button
+            onClick={() => setActiveTab("invitations")}
+            className={`flex-1 py-3 rounded-xl font-cinzel font-bold text-sm tracking-wider transition-all ${
+              activeTab === "invitations"
+                ? "bg-gradient-to-br from-[#d4af37] to-[#c9a74f] text-black shadow-lg shadow-[#d4af37]/30"
+                : "bg-zinc-800/40 text-gray-400 hover:text-white"
+            }`}
+          >
+            INVITATIONS
+            {invitations.length > 0 && (
+              <span className="ml-2 px-2 py-0.5 bg-black/20 rounded-full text-xs">
+                {invitations.length}
+              </span>
+            )}
+          </button>
         </div>
       </div>
 
-      {/* Contenu avec padding pour nav */}
-      <div className="flex-1 overflow-y-auto pb-24">
-        {activeTab === "chats" ? (
-          <div className="p-4 space-y-3">
-            {conversations.length === 0 ? (
-              <div className="py-20 text-center">
-                <div className="w-20 h-20 rounded-full bg-amber-500/10 flex items-center justify-center mx-auto mb-4">
-                  <FiMessageCircle className="w-10 h-10 text-amber-500" />
-                </div>
-                <p className="text-gray-300 text-sm font-medium mb-1">
-                  Aucune conversation
-                </p>
-                <p className="text-gray-500 text-xs mb-6">
-                  Démarrez une nouvelle discussion premium
-                </p>
-                <button
-                  onClick={() => setShowNewChat(true)}
-                  className="px-6 py-3 bg-gradient-to-r from-amber-500 to-amber-600 text-white rounded-xl text-sm font-bold shadow-lg shadow-amber-500/30 hover:shadow-amber-500/50 transition-all active:scale-95"
-                >
-                  Nouvelle conversation
-                </button>
+      {/* Liste conversations */}
+      {activeTab === "chats" && (
+        <div className="flex-1 overflow-y-auto px-4 py-4">
+          {conversations.length === 0 ? (
+            <div className="h-full flex flex-col items-center justify-center opacity-40">
+              <div className="w-16 h-16 rounded-2xl bg-[#d4af37]/10 flex items-center justify-center mb-3">
+                <span className="text-3xl">💬</span>
               </div>
-            ) : (
-              conversations.map((conv) => (
+              <p className="text-gray-400 text-sm font-crimson text-center">
+                Aucune conversation
+                <br />
+                Cliquez sur + pour démarrer
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {conversations.map((conv) => (
                 <button
                   key={conv.id}
                   onClick={() =>
                     conv.status === "accepted" && handleConversationSelect(conv)
                   }
                   disabled={conv.status !== "accepted"}
-                  className={`w-full bg-white/5 backdrop-blur-sm rounded-2xl p-4 border border-white/10 text-left transition-all ${
+                  className={`w-full bg-gradient-to-br from-zinc-800/60 to-zinc-700/60 backdrop-blur-xl border border-[#d4af37]/25 rounded-2xl p-4 flex items-center gap-4 transition-all ${
                     conv.status === "accepted"
-                      ? "hover:bg-white/10 hover:border-amber-500/30 active:scale-98"
+                      ? "hover:border-[#d4af37]/50 hover:shadow-xl hover:shadow-[#d4af37]/10"
                       : "opacity-40"
                   }`}
                 >
-                  <div className="flex items-center gap-3">
-                    <div className="w-14 h-14 rounded-full bg-gradient-to-br from-amber-500 to-amber-600 text-white flex items-center justify-center font-bold text-sm flex-shrink-0 shadow-lg shadow-amber-500/30">
-                      {conv.participant.firstname.charAt(0)}
-                      {conv.participant.lastname.charAt(0)}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-baseline justify-between mb-1">
-                        <p className="font-bold text-white text-sm truncate tracking-wide">
-                          {conv.participant.firstname}{" "}
-                          {conv.participant.lastname}
-                        </p>
-                        {conv.lastMessage && (
-                          <span className="text-xs text-gray-500 ml-2 font-medium">
-                            {new Date(
-                              conv.lastMessage.timestamp
-                            ).toLocaleTimeString("fr-FR", {
-                              hour: "2-digit",
-                              minute: "2-digit",
-                            })}
-                          </span>
-                        )}
-                      </div>
-                      {conv.status === "pending" ? (
-                        <div className="flex items-center gap-1.5 text-amber-500">
-                          <FiClock className="w-3.5 h-3.5" />
-                          <p className="text-xs font-medium">
-                            En attente d'acceptation
-                          </p>
-                        </div>
-                      ) : conv.lastMessage ? (
-                        <div className="flex items-center gap-2">
-                          {conv.unreadCount > 0 && (
-                            <div className="w-2 h-2 bg-amber-500 rounded-full flex-shrink-0 animate-pulse" />
-                          )}
-                          <p
-                            className={`text-sm truncate ${
-                              conv.unreadCount > 0
-                                ? "text-white font-bold"
-                                : "text-gray-400 font-medium"
-                            }`}
-                          >
-                            {conv.lastMessage.content}
-                          </p>
-                        </div>
-                      ) : (
-                        <p className="text-xs text-gray-500 italic">
-                          Aucun message pour le moment
-                        </p>
+                  <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-[#d4af37] to-[#c9a74f] text-black flex items-center justify-center font-black text-sm shadow-lg shadow-[#d4af37]/30 flex-shrink-0">
+                    {conv.participant.firstname.charAt(0)}
+                    {conv.participant.lastname.charAt(0)}
+                  </div>
+                  <div className="flex-1 text-left min-w-0">
+                    <div className="flex items-center justify-between mb-1">
+                      <p className="font-cinzel font-bold text-white text-sm truncate">
+                        {conv.participant.firstname} {conv.participant.lastname}
+                      </p>
+                      {conv.lastMessage && (
+                        <span className="text-xs text-gray-400 font-crimson ml-2 flex-shrink-0">
+                          {new Date(
+                            conv.lastMessage.timestamp
+                          ).toLocaleTimeString("fr-FR", {
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          })}
+                        </span>
                       )}
                     </div>
-                    {conv.unreadCount > 0 && (
-                      <div className="bg-gradient-to-r from-amber-500 to-amber-600 text-white text-xs rounded-full min-w-[24px] h-6 flex items-center justify-center px-2 font-bold flex-shrink-0 shadow-lg shadow-amber-500/40">
-                        {conv.unreadCount}
-                      </div>
+                    {conv.status === "pending" ? (
+                      <p className="text-xs text-[#d4af37] font-crimson">
+                        ⏳ En attente d'acceptation
+                      </p>
+                    ) : conv.lastMessage ? (
+                      <p
+                        className={`text-xs font-crimson truncate ${
+                          conv.unreadCount > 0
+                            ? "text-white font-bold"
+                            : "text-gray-400"
+                        }`}
+                      >
+                        {conv.lastMessage.content}
+                      </p>
+                    ) : (
+                      <p className="text-xs text-gray-500 font-crimson italic">
+                        Nouvelle conversation
+                      </p>
                     )}
                   </div>
+                  {conv.unreadCount > 0 && (
+                    <div className="w-6 h-6 bg-[#d4af37] text-black rounded-full flex items-center justify-center font-bold text-xs flex-shrink-0">
+                      {conv.unreadCount}
+                    </div>
+                  )}
                 </button>
-              ))
-            )}
-          </div>
-        ) : (
-          <div className="p-4 space-y-3">
-            {invitations.length === 0 ? (
-              <div className="py-20 text-center">
-                <div className="w-20 h-20 rounded-full bg-amber-500/10 flex items-center justify-center mx-auto mb-4">
-                  <FiMail className="w-10 h-10 text-amber-500" />
-                </div>
-                <p className="text-gray-300 text-sm font-medium">
-                  Aucune invitation
-                </p>
-                <p className="text-gray-500 text-xs mt-1">Vous êtes à jour</p>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Liste invitations */}
+      {activeTab === "invitations" && (
+        <div className="flex-1 overflow-y-auto px-4 py-4">
+          {invitations.length === 0 ? (
+            <div className="h-full flex flex-col items-center justify-center opacity-40">
+              <div className="w-16 h-16 rounded-2xl bg-[#d4af37]/10 flex items-center justify-center mb-3">
+                <span className="text-3xl">✉️</span>
               </div>
-            ) : (
-              invitations.map((inv) => (
+              <p className="text-gray-400 text-sm font-crimson">
+                Aucune invitation
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {invitations.map((inv) => (
                 <div
                   key={inv.id}
-                  className="bg-white/5 backdrop-blur-sm rounded-2xl p-4 border border-amber-500/20"
+                  className="bg-gradient-to-br from-zinc-800/60 to-zinc-700/60 backdrop-blur-xl border border-[#d4af37]/25 rounded-2xl p-4"
                 >
-                  <div className="flex gap-3">
-                    <div className="w-14 h-14 rounded-full bg-gradient-to-br from-amber-500 to-amber-600 text-white flex items-center justify-center font-bold text-sm flex-shrink-0 shadow-lg shadow-amber-500/30">
+                  <div className="flex items-center gap-4 mb-4">
+                    <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-[#d4af37] to-[#c9a74f] text-black flex items-center justify-center font-black text-sm shadow-lg shadow-[#d4af37]/30 flex-shrink-0">
                       {inv.fromUser?.firstname?.charAt(0) || "?"}
                       {inv.fromUser?.lastname?.charAt(0) || "?"}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="font-bold text-white text-sm mb-1 tracking-wide">
+                      <p className="font-cinzel font-bold text-white text-sm">
                         {inv.fromUser?.firstname} {inv.fromUser?.lastname}
                       </p>
-                      <p className="text-xs text-gray-400 mb-4 font-medium">
+                      <p className="text-xs text-gray-400 font-crimson">
                         {inv.message || "Souhaite vous contacter"}
                       </p>
-                      <div className="flex gap-2">
-                        <button
-                          onClick={() => respondToInvitation(inv.id, "accept")}
-                          className="flex-1 bg-gradient-to-r from-amber-500 to-amber-600 text-white px-4 py-2.5 rounded-xl text-sm font-bold shadow-lg shadow-amber-500/30 hover:shadow-amber-500/50 transition-all active:scale-95"
-                        >
-                          <FiCheck className="inline w-4 h-4 mr-1" />
-                          Accepter
-                        </button>
-                        <button
-                          onClick={() => respondToInvitation(inv.id, "reject")}
-                          className="flex-1 bg-white/5 backdrop-blur-sm border border-white/10 text-gray-300 px-4 py-2.5 rounded-xl text-sm font-bold hover:bg-white/10 transition-all active:scale-95"
-                        >
-                          <FiX className="inline w-4 h-4 mr-1" />
-                          Refuser
-                        </button>
-                      </div>
                     </div>
                   </div>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => respondToInvitation(inv.id, "accept")}
+                      className="flex-1 py-3 bg-gradient-to-br from-[#d4af37] to-[#c9a74f] text-black rounded-xl font-cinzel font-bold text-sm hover:shadow-lg hover:shadow-[#d4af37]/30 transition-all"
+                    >
+                      ACCEPTER
+                    </button>
+                    <button
+                      onClick={() => respondToInvitation(inv.id, "reject")}
+                      className="flex-1 py-3 bg-red-500/10 border border-red-500/30 text-red-400 rounded-xl font-cinzel font-bold text-sm hover:bg-red-500/20 transition-all"
+                    >
+                      REFUSER
+                    </button>
+                  </div>
                 </div>
-              ))
-            )}
-          </div>
-        )}
-      </div>
-
-      {/* BOTTOM NAV LUXE */}
-      <div className="fixed bottom-0 left-0 right-0 bg-black/60 backdrop-blur-md border-t border-amber-500/20 pb-safe">
-        <div className="flex items-center justify-around h-20 px-2">
-          <button
-            onClick={() => setActiveTab("chats")}
-            className={`flex-1 flex flex-col items-center justify-center gap-1.5 transition-all ${
-              activeTab === "chats"
-                ? "text-amber-500"
-                : "text-gray-500 hover:text-gray-400"
-            }`}
-          >
-            <FiMessageCircle className="w-6 h-6" />
-            <span className="text-xs font-bold tracking-wide">Discussions</span>
-            {activeTab === "chats" && (
-              <div className="w-12 h-1 bg-gradient-to-r from-amber-500 to-amber-600 rounded-full mt-0.5" />
-            )}
-          </button>
-
-          <button
-            onClick={() => setShowNewChat(true)}
-            className="w-16 h-16 -mt-10 bg-gradient-to-br from-amber-500 to-amber-600 text-white rounded-2xl shadow-xl shadow-amber-500/40 flex items-center justify-center active:scale-95 transition-all hover:shadow-2xl hover:shadow-amber-500/60"
-          >
-            <FiPlus className="w-8 h-8" />
-          </button>
-
-          <button
-            onClick={() => setActiveTab("invitations")}
-            className={`flex-1 flex flex-col items-center justify-center gap-1.5 relative transition-all ${
-              activeTab === "invitations"
-                ? "text-amber-500"
-                : "text-gray-500 hover:text-gray-400"
-            }`}
-          >
-            <FiMail className="w-6 h-6" />
-            <span className="text-xs font-bold tracking-wide">Invitations</span>
-            {invitations.length > 0 && (
-              <span className="absolute top-1 right-8 bg-gradient-to-r from-red-500 to-red-600 text-white text-xs rounded-full min-w-[20px] h-5 flex items-center justify-center px-1.5 font-bold shadow-lg shadow-red-500/50">
-                {invitations.length}
-              </span>
-            )}
-            {activeTab === "invitations" && (
-              <div className="w-12 h-1 bg-gradient-to-r from-amber-500 to-amber-600 rounded-full mt-0.5" />
-            )}
-          </button>
+              ))}
+            </div>
+          )}
         </div>
-      </div>
+      )}
 
-      {/* Modal luxe */}
+      {/* Modal nouvelle conversation */}
       {showNewChat && (
-        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-end">
-          <div className="bg-gradient-to-br from-gray-900 to-black w-full rounded-t-3xl max-h-[90vh] flex flex-col border-t border-amber-500/20">
-            <div className="p-6 border-b border-amber-500/20">
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+          <div className="w-full max-w-md bg-gradient-to-br from-zinc-800 to-zinc-900 border border-[#d4af37]/25 rounded-3xl shadow-2xl shadow-[#d4af37]/20">
+            <div className="p-6">
               <div className="flex items-center justify-between mb-6">
-                <h2 className="text-xl font-bold text-white tracking-wide">
-                  Nouvelle conversation
+                <h2 className="font-cinzel font-bold text-[#d4af37] text-lg tracking-wider">
+                  NOUVELLE CONVERSATION
                 </h2>
                 <button
                   onClick={() => {
@@ -828,82 +866,87 @@ function ChatPageContent() {
                     setSearchQuery("");
                     setSearchResults([]);
                   }}
-                  className="p-2 text-gray-400 hover:text-white hover:bg-white/5 rounded-full transition-all"
+                  className="text-gray-400 hover:text-white transition-colors"
                 >
-                  <FiX className="w-6 h-6" />
+                  <svg
+                    className="w-6 h-6"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M6 18L18 6M6 6l12 12"
+                    />
+                  </svg>
                 </button>
               </div>
-              <div className="relative">
-                <FiSearch className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
+
+              <div className="relative mb-4">
                 <input
                   type="text"
-                  placeholder="Rechercher un administrateur..."
                   value={searchQuery}
                   onChange={(e) => {
                     setSearchQuery(e.target.value);
                     searchAdmins(e.target.value);
                   }}
-                  className="w-full pl-12 pr-4 py-3.5 bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-amber-500/50 focus:ring-2 focus:ring-amber-500/20 transition-all text-sm font-medium"
+                  placeholder="Rechercher un admin..."
+                  className="w-full bg-zinc-800/60 backdrop-blur-sm border border-[#d4af37]/20 rounded-xl px-5 py-3 text-white placeholder-gray-500 text-sm focus:outline-none focus:border-[#d4af37]/50 focus:ring-2 focus:ring-[#d4af37]/20 transition-all font-crimson"
                   autoFocus
                 />
+                <svg
+                  className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                  />
+                </svg>
               </div>
-            </div>
-            <div className="flex-1 overflow-y-auto p-4">
-              {searchQuery.length < 2 ? (
-                <div className="text-center py-16">
-                  <div className="w-16 h-16 rounded-full bg-amber-500/10 flex items-center justify-center mx-auto mb-4">
-                    <FiSearch className="w-8 h-8 text-amber-500" />
+
+              <div className="space-y-2 max-h-80 overflow-y-auto">
+                {searchQuery.length < 2 ? (
+                  <div className="text-center py-8">
+                    <p className="text-sm text-gray-400 font-crimson">
+                      Tapez au moins 2 caractères
+                    </p>
                   </div>
-                  <p className="text-sm text-gray-400 font-medium">
-                    Tapez au moins 2 caractères
-                  </p>
-                  <p className="text-xs text-gray-600 mt-1">
-                    pour lancer la recherche
-                  </p>
-                </div>
-              ) : searchResults.length > 0 ? (
-                <div className="space-y-3">
-                  {searchResults.map((admin) => (
-                    <div
+                ) : searchResults.length > 0 ? (
+                  searchResults.map((admin) => (
+                    <button
                       key={admin.id}
-                      className="flex items-center justify-between p-4 bg-white/5 backdrop-blur-sm rounded-2xl border border-white/10 hover:bg-white/10 transition-all"
+                      onClick={() => sendInvitation(admin.id)}
+                      className="w-full bg-zinc-800/40 border border-[#d4af37]/10 rounded-xl p-3 flex items-center gap-3 hover:border-[#d4af37]/30 hover:bg-zinc-800/60 transition-all"
                     >
-                      <div className="flex items-center gap-3 flex-1 min-w-0">
-                        <div className="w-12 h-12 rounded-full bg-gradient-to-br from-amber-500 to-amber-600 text-white flex items-center justify-center font-bold text-sm shadow-lg shadow-amber-500/30">
-                          {admin.firstname.charAt(0)}
-                          {admin.lastname.charAt(0)}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-bold text-white truncate tracking-wide">
-                            {admin.firstname} {admin.lastname}
-                          </p>
-                          <p className="text-xs text-gray-500 truncate font-medium">
-                            {admin.email}
-                          </p>
-                        </div>
+                      <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#d4af37] to-[#c9a74f] text-black flex items-center justify-center font-black text-xs flex-shrink-0">
+                        {admin.firstname.charAt(0)}
+                        {admin.lastname.charAt(0)}
                       </div>
-                      <button
-                        onClick={() => sendInvitation(admin.id)}
-                        className="ml-3 px-5 py-2.5 bg-gradient-to-r from-amber-500 to-amber-600 text-white text-sm rounded-xl font-bold shadow-lg shadow-amber-500/30 hover:shadow-amber-500/50 transition-all active:scale-95"
-                      >
-                        Inviter
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="text-center py-16">
-                  <div className="w-16 h-16 rounded-full bg-white/5 flex items-center justify-center mx-auto mb-4">
-                    <FiUsers className="w-8 h-8 text-gray-500" />
+                      <div className="flex-1 text-left min-w-0">
+                        <p className="font-cinzel font-bold text-white text-sm truncate">
+                          {admin.firstname} {admin.lastname}
+                        </p>
+                        <p className="text-xs text-gray-400 font-crimson truncate">
+                          {admin.email}
+                        </p>
+                      </div>
+                    </button>
+                  ))
+                ) : (
+                  <div className="text-center py-8">
+                    <p className="text-sm text-gray-400 font-crimson">
+                      Aucun résultat
+                    </p>
                   </div>
-                  <p className="text-sm text-gray-400 font-medium">
-                    Aucun résultat
-                  </p>
-                  <p className="text-xs text-gray-600 mt-1">
-                    Essayez une autre recherche
-                  </p>
-                </div>
-              )}
+                )}
+              </div>
             </div>
           </div>
         </div>
@@ -916,8 +959,8 @@ export default function ChatPage() {
   return (
     <Suspense
       fallback={
-        <div className="fixed inset-0 bg-gradient-to-br from-gray-900 via-black to-gray-900 flex items-center justify-center">
-          <div className="w-16 h-16 border-4 border-amber-500/30 border-t-amber-500 rounded-full animate-spin"></div>
+        <div className="fixed inset-0 bg-gradient-to-br from-zinc-900 via-zinc-800 to-zinc-900 flex items-center justify-center">
+          <div className="w-12 h-12 border-4 border-[#d4af37] border-t-transparent rounded-full animate-spin"></div>
         </div>
       }
     >

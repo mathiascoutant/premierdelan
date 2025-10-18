@@ -6,426 +6,115 @@ import { useIsPWA } from "../hooks/usePWA";
 export default function PWASplashScreen() {
   const [isVisible, setIsVisible] = useState(false);
   const [progress, setProgress] = useState(0);
-  const [shouldShowSplash, setShouldShowSplash] = useState(true);
-  const [isInitialized, setIsInitialized] = useState(false);
-  const [isDeploymentInProgress, setIsDeploymentInProgress] = useState(false);
-  const [deploymentCheckCount, setDeploymentCheckCount] = useState(0);
   const isPWA = useIsPWA();
 
-  // Vérifier si le splash screen a déjà été affiché dans cette session de navigation
   const hasShownSplash = () => {
     if (typeof window === "undefined") return false;
     return sessionStorage.getItem("pwa_splash_shown") === "true";
   };
 
-  // Marquer que le splash screen a été affiché pour cette session
   const markSplashAsShown = () => {
     if (typeof window !== "undefined") {
       sessionStorage.setItem("pwa_splash_shown", "true");
     }
   };
 
-  // Vérifier s'il y a une action GitHub en cours via l'API GitHub
-  const checkGitHubAction = async () => {
-    try {
-      // Utiliser l'API GitHub Actions pour vérifier les workflows en cours
-      const response = await fetch(
-        "https://api.github.com/repos/mathiascoutant/premierdelan/actions/runs?per_page=5&status=in_progress",
-        {
-          method: "GET",
-          headers: {
-            Accept: "application/vnd.github.v3+json",
-            "User-Agent": "PremierDeLAn-PWA",
-          },
-        }
-      );
-
-      if (!response.ok) {
-        console.log("✅ API GitHub inaccessible - Pas d'action GitHub");
-        return false;
-      }
-
-      const data = await response.json();
-      const inProgressRuns =
-        data.workflow_runs?.filter(
-          (run: any) => run.status === "in_progress" || run.status === "queued"
-        ) || [];
-
-      const hasActionInProgress = inProgressRuns.length > 0;
-
-      console.log(
-        `🔍 API GitHub: ${inProgressRuns.length} action(s) en cours - ${
-          hasActionInProgress ? "Action GitHub en cours" : "Pas d'action GitHub"
-        }`
-      );
-
-      if (hasActionInProgress) {
-        console.log(
-          "📋 Actions en cours:",
-          inProgressRuns.map((run: any) => `${run.name} (${run.status})`)
-        );
-      }
-
-      return hasActionInProgress;
-    } catch (error) {
-      console.log("✅ API GitHub inaccessible - Pas d'action GitHub");
-      return false; // Si erreur, considérer qu'il n'y a pas de déploiement
+  useEffect(() => {
+    if (!isPWA) {
+      return;
     }
-  };
 
-  // Lancer l'animation normale du splash screen
-  const launchNormalAnimation = () => {
-    const progressSteps = [20, 33, 55, 70, 85, 99, 100];
+    if (hasShownSplash()) {
+      return;
+    }
+
+    setIsVisible(true);
+
+    // Animation de progression
+    const progressSteps = [15, 30, 50, 70, 85, 95, 100];
     let currentStep = 0;
 
     const interval = setInterval(() => {
       if (currentStep < progressSteps.length) {
-        const newProgress = progressSteps[currentStep];
-        setProgress(newProgress);
-        console.log("📊 Progression:", newProgress + "%");
+        setProgress(progressSteps[currentStep]);
         currentStep++;
 
-        if (newProgress >= 100) {
+        if (progressSteps[currentStep - 1] >= 100) {
           clearInterval(interval);
-          setTimeout(async () => {
-            // Vérifier s'il y a une action GitHub en cours via l'API
-            console.log(
-              "🔍 Vérification action GitHub via API à la fin de l'animation"
-            );
-            const isGitHubActionInProgress = await checkGitHubAction();
-
-            if (isGitHubActionInProgress) {
-              // Action GitHub en cours, afficher la page de mise à jour
-              console.log(
-                "⏳ Action GitHub en cours - Affichage page mise à jour"
-              );
-              setIsDeploymentInProgress(true);
-              startDeploymentMonitoring();
-            } else {
-              // Pas d'action GitHub, masquer le splash screen
-              console.log("✅ Pas d'action GitHub - Masquage splash screen");
-              setIsVisible(false);
-            }
-          }, 2000);
+          setTimeout(() => {
+            setIsVisible(false);
+            markSplashAsShown();
+          }, 500);
         }
       }
-    }, 500);
+    }, 300);
 
     return () => clearInterval(interval);
-  };
-
-  // Surveiller l'action GitHub via l'API et masquer le splash screen quand terminé
-  const startDeploymentMonitoring = () => {
-    const monitoringInterval = setInterval(async () => {
-      const isGitHubActionInProgress = await checkGitHubAction();
-      setDeploymentCheckCount((prev) => prev + 1);
-
-      if (!isGitHubActionInProgress) {
-        clearInterval(monitoringInterval);
-        console.log("🎉 Action GitHub terminée - Masquage splash screen");
-        setIsDeploymentInProgress(false);
-        setTimeout(() => {
-          setIsVisible(false);
-        }, 1000); // Attendre 1 seconde puis masquer
-      }
-    }, 3000); // Vérifier toutes les 3 secondes (API GitHub)
-
-    return () => clearInterval(monitoringInterval);
-  };
-
-  // Réinitialiser le flag quand la PWA est complètement fermée et rouverte
-  const resetSplashFlag = () => {
-    if (typeof window !== "undefined") {
-      // Vérifier si c'est un nouveau lancement de PWA
-      const lastCloseTime = localStorage.getItem("pwa_last_close_time");
-      const now = Date.now();
-
-      // Si plus de 1 seconde depuis la dernière fermeture, c'est un nouveau lancement
-      if (!lastCloseTime || now - parseInt(lastCloseTime) > 1000) {
-        sessionStorage.removeItem("pwa_splash_shown");
-        localStorage.setItem("pwa_last_close_time", now.toString());
-      }
-    }
-  };
-
-  useEffect(() => {
-    const initializeSplash = async () => {
-      // Marquer comme initialisé d'abord
-      setIsInitialized(true);
-
-      // Réinitialiser le flag au début pour détecter les nouveaux lancements
-      resetSplashFlag();
-
-      // TEST : Afficher le splash screen sur mobile (même si pas PWA)
-      const checkIfPWAMode = () => {
-        // Ne JAMAIS afficher sur localhost (développement)
-        const isLocalhost =
-          window.location.hostname === "localhost" ||
-          window.location.hostname === "127.0.0.1";
-        if (isLocalhost) {
-          return false;
-        }
-
-        // Vérifications pour détecter PWA installée
-        const isStandalone = window.matchMedia(
-          "(display-mode: standalone)"
-        ).matches;
-        const isFullscreen = window.matchMedia(
-          "(display-mode: fullscreen)"
-        ).matches;
-        const isIOSStandalone = (window.navigator as any).standalone === true;
-
-        // Vérifications supplémentaires pour éviter les faux positifs
-        const isInBrowser = !isStandalone && !isFullscreen && !isIOSStandalone;
-        const isChromeOnMac = /Macintosh.*Chrome/.test(navigator.userAgent);
-        const isDesktop =
-          !/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
-            navigator.userAgent
-          );
-
-        // Ne JAMAIS afficher si on est dans un navigateur web classique
-        if (isInBrowser) {
-          return false;
-        }
-
-        // Ne JAMAIS afficher sur desktop (même en PWA)
-        if (isDesktop) {
-          return false;
-        }
-
-        // Afficher SEULEMENT si vraiment en mode PWA installée sur mobile
-        return isStandalone || isFullscreen || isIOSStandalone;
-      };
-
-      const urlParams = new URLSearchParams(window.location.search);
-      const forceSplash = urlParams.get("splash") === "true";
-
-      console.log("🔍 Vérification PWA:", {
-        isStandalone: window.matchMedia("(display-mode: standalone)").matches,
-        isFullscreen: window.matchMedia("(display-mode: fullscreen)").matches,
-        isIOSStandalone: (window.navigator as any).standalone,
-        isInBrowser:
-          !window.matchMedia("(display-mode: standalone)").matches &&
-          !window.matchMedia("(display-mode: fullscreen)").matches &&
-          !(window.navigator as any).standalone,
-        isDesktop:
-          !/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
-            navigator.userAgent
-          ),
-        isChromeOnMac: /Macintosh.*Chrome/.test(navigator.userAgent),
-        hostname: window.location.hostname,
-        hasShown: hasShownSplash(),
-        userAgent: navigator.userAgent,
-      });
-
-      // Démarrer l'animation immédiatement si on est en PWA ou mobile
-      if (checkIfPWAMode() && !hasShownSplash()) {
-        console.log("🚀 PWA détectée - Lancement du splash screen");
-        console.log("📱 État avant affichage:", {
-          isVisible,
-          shouldShowSplash,
-          isInitialized,
-        });
-        setIsVisible(true);
-        markSplashAsShown();
-
-        // Toujours lancer l'animation normale d'abord
-        console.log("🚀 Lancement animation normale");
-        const cleanup = launchNormalAnimation();
-
-        // Pas de vérification au démarrage, seulement à la fin de l'animation
-        console.log(
-          "🚀 Lancement animation normale - Vérification déploiement à la fin"
-        );
-
-        return cleanup;
-      } else {
-        console.log("🌐 Pas en PWA ou déjà affiché - Pas de splash screen");
-        setShouldShowSplash(false);
-      }
-    };
-
-    initializeSplash();
-  }, []);
-
-  // Écouter la fermeture de la PWA pour enregistrer le timestamp
-  useEffect(() => {
-    const handleBeforeUnload = () => {
-      if (typeof window !== "undefined") {
-        localStorage.setItem("pwa_last_close_time", Date.now().toString());
-      }
-    };
-
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === "hidden") {
-        localStorage.setItem("pwa_last_close_time", Date.now().toString());
-      }
-    };
-
-    // Écouter les événements de fermeture
-    window.addEventListener("beforeunload", handleBeforeUnload);
-    window.addEventListener("pagehide", handleBeforeUnload);
-    document.addEventListener("visibilitychange", handleVisibilityChange);
-
-    return () => {
-      window.removeEventListener("beforeunload", handleBeforeUnload);
-      window.removeEventListener("pagehide", handleBeforeUnload);
-      document.removeEventListener("visibilitychange", handleVisibilityChange);
-    };
-  }, []);
-
-  // Ne pas afficher tant que l'initialisation n'est pas terminée
-  if (!isInitialized) {
-    return (
-      <div className="fixed inset-0 z-[9998] bg-ink flex items-center justify-center">
-        <div className="text-gold text-xl">Chargement...</div>
-      </div>
-    );
-  }
+  }, [isPWA]);
 
   if (!isVisible) return null;
 
   return (
-    <>
-      {/* Masquer le contenu de la page pendant le splash */}
-      <div className="fixed inset-0 z-[9998] bg-ink"></div>
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-gradient-to-br from-zinc-900 via-zinc-800 to-zinc-900">
+      {/* Pattern de fond */}
+      <div
+        className="absolute inset-0 opacity-30"
+        style={{
+          backgroundImage: `radial-gradient(circle at 2px 2px, rgba(212,175,55,0.2) 1px, transparent 0)`,
+          backgroundSize: "40px 40px",
+        }}
+      ></div>
 
-      {/* Splash screen */}
-      <div className="pwa-splash-screen flex items-center justify-center">
-        {/* Effet de particules de fond */}
-        <div className="absolute inset-0 pointer-events-none overflow-hidden">
-          <div className="absolute top-1/4 left-1/4 w-2 h-2 bg-gold/20 rounded-full animate-pulse"></div>
-          <div
-            className="absolute top-1/3 right-1/4 w-1 h-1 bg-gold/30 rounded-full animate-pulse"
-            style={{ animationDelay: "1s" }}
-          ></div>
-          <div
-            className="absolute bottom-1/3 left-1/3 w-1.5 h-1.5 bg-gold/25 rounded-full animate-pulse"
-            style={{ animationDelay: "2s" }}
-          ></div>
-          <div
-            className="absolute bottom-1/4 right-1/3 w-1 h-1 bg-gold/20 rounded-full animate-pulse"
-            style={{ animationDelay: "0.5s" }}
-          ></div>
+      {/* Blurs lumineux */}
+      <div className="absolute top-1/4 right-1/4 w-96 h-96 bg-[#d4af37]/20 rounded-full blur-[150px]"></div>
+      <div className="absolute bottom-1/4 left-1/4 w-96 h-96 bg-[#c9a74f]/20 rounded-full blur-[150px]"></div>
+
+      {/* Contenu */}
+      <div className="relative z-10 flex flex-col items-center px-8 animate-fade-in">
+        {/* Logo avec animation pulse */}
+        <div className="mb-8 relative">
+          <div className="absolute inset-0 bg-gradient-to-br from-[#d4af37] to-[#c9a74f] rounded-3xl blur-xl opacity-50 animate-pulse"></div>
+          <div className="relative w-24 h-24 rounded-3xl bg-gradient-to-br from-[#d4af37] to-[#c9a74f] flex items-center justify-center shadow-2xl shadow-[#d4af37]/50">
+            <span className="text-5xl">⚜</span>
+          </div>
         </div>
 
-        {/* Contenu centré */}
-        <div className="relative z-10 text-center px-4 sm:px-8 w-full max-w-sm mx-auto flex flex-col items-center justify-center">
-          {/* Logo moderne */}
-          <div className="mb-12 sm:mb-16 flex justify-center">
-            <div className="relative w-24 h-24 sm:w-32 sm:h-32 overflow-hidden">
-              {/* Effet de pulsation */}
-              <div className="absolute inset-0 w-24 h-24 sm:w-32 sm:h-32 bg-gold/10 rounded-full animate-ping"></div>
+        {/* Titre */}
+        <h1 className="text-4xl font-cinzel font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#d4af37] via-[#f4d03f] to-[#d4af37] mb-2 tracking-wider text-center">
+          PREMIER DE L'AN
+        </h1>
 
-              {/* Cercle de fond avec effet de lueur */}
-              <div className="relative w-24 h-24 sm:w-32 sm:h-32 bg-gradient-to-br from-gold/20 to-gold/5 rounded-full flex items-center justify-center border border-gold/30 shadow-2xl">
-                <div className="text-4xl sm:text-5xl text-gold">⚜</div>
-              </div>
-            </div>
+        <p className="text-sm text-gray-400 font-crimson mb-8 tracking-widest">
+          ÉDITION 2026
+        </p>
+
+        {/* Barre de progression */}
+        <div className="w-64 mb-4">
+          <div className="h-1.5 bg-zinc-800/60 rounded-full overflow-hidden backdrop-blur-sm border border-[#d4af37]/20">
+            <div
+              className="h-full bg-gradient-to-r from-[#d4af37] via-[#f4d03f] to-[#d4af37] transition-all duration-300 ease-out shadow-lg shadow-[#d4af37]/50"
+              style={{ width: `${progress}%` }}
+            ></div>
           </div>
-
-          {/* Titre moderne */}
-          <div className="mb-8 sm:mb-12">
-            <h1 className="font-cinzel text-2xl sm:text-3xl text-gold mb-2 tracking-wider">
-              PREMIER DE L&apos;AN
-            </h1>
-            <div className="w-12 sm:w-16 h-px bg-gold/50 mx-auto mb-3"></div>
-            <p className="font-crimson text-parchment/80 text-xs sm:text-sm tracking-wider">
-              Édition 2026
-            </p>
-          </div>
-
-          {/* Contenu conditionnel selon le statut du déploiement */}
-          {isDeploymentInProgress ? (
-            /* Page de mise à jour */
-            <div className="space-y-6">
-              <div className="mb-8 text-center">
-                <div className="w-16 h-16 mx-auto bg-gold/20 rounded-full flex items-center justify-center mb-4">
-                  <div className="text-2xl text-gold animate-spin">⚙</div>
-                </div>
-                <h2 className="font-cinzel text-xl text-gold mb-2">
-                  Mise à jour en cours
-                </h2>
-                <p className="text-sm font-crimson text-parchment/70">
-                  Déploiement de la nouvelle version...
-                </p>
-              </div>
-
-              {/* Indicateur de vérification */}
-              <div className="space-y-3">
-                <div className="flex items-center justify-center space-x-2">
-                  <div
-                    className="w-2 h-2 bg-gold rounded-full animate-bounce"
-                    style={{ animationDelay: "0ms" }}
-                  ></div>
-                  <div
-                    className="w-2 h-2 bg-gold rounded-full animate-bounce"
-                    style={{ animationDelay: "200ms" }}
-                  ></div>
-                  <div
-                    className="w-2 h-2 bg-gold rounded-full animate-bounce"
-                    style={{ animationDelay: "400ms" }}
-                  ></div>
-                </div>
-                <p className="text-xs font-crimson text-parchment/60">
-                  Vérification #{deploymentCheckCount}...
-                </p>
-              </div>
-            </div>
-          ) : (
-            /* Animation normale */
-            <div className="space-y-3 sm:space-y-4">
-              {/* Barre de progression moderne */}
-              <div className="mb-6 sm:mb-8">
-                {/* Barre de progression */}
-                <div className="relative w-64 sm:w-72 h-1.5 bg-parchment/10 rounded-full overflow-hidden mx-auto mb-4">
-                  {/* Fond avec effet de brillance */}
-                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-parchment/5 to-transparent"></div>
-
-                  {/* Progression */}
-                  <div
-                    className="absolute left-0 top-0 h-full bg-gradient-to-r from-gold to-gold-light rounded-full transition-all duration-500 ease-out shadow-lg"
-                    style={{ width: `${Math.min(progress, 100)}%` }}
-                  >
-                    {/* Effet de brillance sur la progression */}
-                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent"></div>
-                  </div>
-                </div>
-
-                {/* Pourcentage moderne */}
-                <div className="flex items-center justify-center space-x-2">
-                  <span className="text-lg font-cinzel text-gold tabular-nums font-bold">
-                    {Math.round(progress)}%
-                  </span>
-                </div>
-              </div>
-
-              {/* Message de chargement moderne */}
-              <div className="space-y-4">
-                <p className="text-sm font-crimson text-parchment/70 tracking-wide">
-                  Préparation de votre expérience médiévale...
-                </p>
-
-                {/* Indicateur de chargement moderne */}
-                <div className="flex items-center justify-center space-x-2">
-                  <div
-                    className="w-2 h-2 bg-gold rounded-full animate-bounce"
-                    style={{ animationDelay: "0ms" }}
-                  ></div>
-                  <div
-                    className="w-2 h-2 bg-gold rounded-full animate-bounce"
-                    style={{ animationDelay: "200ms" }}
-                  ></div>
-                  <div
-                    className="w-2 h-2 bg-gold rounded-full animate-bounce"
-                    style={{ animationDelay: "400ms" }}
-                  ></div>
-                </div>
-              </div>
-            </div>
-          )}
         </div>
+
+        {/* Pourcentage */}
+        <p className="text-[#d4af37] text-sm font-cinzel font-bold tracking-wider">
+          {progress}%
+        </p>
+
+        {/* Message de chargement */}
+        <p className="text-gray-500 text-xs font-crimson mt-4 animate-pulse">
+          Chargement de l'expérience...
+        </p>
       </div>
-    </>
+
+      {/* Ornement en bas */}
+      <div className="absolute bottom-8 left-0 right-0 flex justify-center gap-2 opacity-30">
+        <div className="w-2 h-2 rounded-full bg-[#d4af37]"></div>
+        <div className="w-2 h-2 rounded-full bg-[#d4af37]"></div>
+        <div className="w-2 h-2 rounded-full bg-[#d4af37]"></div>
+      </div>
+    </div>
   );
 }
