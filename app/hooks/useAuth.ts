@@ -9,6 +9,7 @@ export interface User {
   email: string;
   phone?: string;
   photo?: string;
+  code_soiree?: string;
   admin?: number; // 1 = admin, 0 ou undefined = user normal
 }
 

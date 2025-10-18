@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, Suspense, useRef } from "react";
+import { useState, useEffect, Suspense, useRef, useCallback } from "react";
 import { useAuth } from "../hooks/useAuth";
 import { useRouter, useSearchParams } from "next/navigation";
 import { apiRequest } from "../config/api";
@@ -197,7 +197,7 @@ function ChatPageContent() {
     }
   };
 
-  const loadMessages = async (conversationId: string) => {
+  const loadMessages = useCallback(async (conversationId: string) => {
     try {
       const data = await apiRequest(
         `https://believable-spontaneity-production.up.railway.app/api/admin/chat/conversations/${conversationId}/messages`,
@@ -214,7 +214,7 @@ function ChatPageContent() {
     } catch (error) {
       setMessages([]);
     }
-  };
+  }, []);
 
   const sendMessage = async () => {
     if (!newMessage.trim() || !selectedConversation) return;
@@ -312,14 +312,17 @@ function ChatPageContent() {
     }
   };
 
-  const handleConversationSelect = (conversation: Conversation) => {
-    setSelectedConversation(conversation);
-    loadMessages(conversation.id);
+  const handleConversationSelect = useCallback(
+    (conversation: Conversation) => {
+      setSelectedConversation(conversation);
+      loadMessages(conversation.id);
 
-    setTimeout(() => {
-      markConversationAsRead(conversation.id);
-    }, 1000);
-  };
+      setTimeout(() => {
+        markConversationAsRead(conversation.id);
+      }, 1000);
+    },
+    [loadMessages]
+  );
 
   const markConversationAsRead = async (conversationId: string) => {
     try {
